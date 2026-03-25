@@ -1,0 +1,271 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+
+html {
+    scroll-behavior: smooth;
+    overflow-y: scroll;
+}
+
+body {
+    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+    system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo",
+    "Noto Sans KR", "Malgun Gothic", sans-serif;
+    background-color: #f8fafc;
+}
+
+.tab-btn {
+    position: relative;
+    transition: color 0.2s;
+}
+
+.tab-btn::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%) scaleX(0);
+    width: 60%;
+    height: 2px;
+    background: #2563eb;
+    border-radius: 2px;
+    transition: transform .25s ease;
+}
+
+.tab-btn.active::after {
+    transform: translateX(-50%) scaleX(1);
+}
+
+.tab-btn.active {
+    color: #2563eb;
+}
+
+#dropzone.drag-over {
+    border-color: #2563eb;
+    background-color: #eff6ff;
+}
+
+.stat-card {
+    transition: box-shadow .2s, transform .2s;
+}
+
+.stat-card:hover {
+    box-shadow: 0 8px 24px rgba(37, 99, 235, .12);
+    transform: translateY(-2px);
+}
+
+.data-table tbody tr:hover {
+    background-color: #eff6ff;
+}
+
+/* 등급 배지 */
+.gb {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1px 7px;
+    border-radius: 9999px;
+    font-size: .68rem;
+    font-weight: 700;
+}
+
+.gb-1 {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.gb-2 {
+    background: #e0e7ff;
+    color: #4338ca;
+}
+
+.gb-3 {
+    background: #ede9fe;
+    color: #6d28d9;
+}
+
+.gb-4 {
+    background: #fce7f3;
+    color: #9d174d;
+}
+
+.gb-5 {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.gb-6 {
+    background: #ffedd5;
+    color: #9a3412;
+}
+
+.gb-7 {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.gb-8 {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.gb-9 {
+    background: #e2e8f0;
+    color: #64748b;
+}
+
+/* 양식 카드 */
+.format-card {
+    cursor: pointer;
+    transition: all .2s;
+}
+
+.format-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(37, 99, 235, .1);
+}
+
+.format-card.selected {
+    border-color: #2563eb !important;
+}
+
+.format-card.selected .fmt-check {
+    display: flex !important;
+}
+
+/* 필드 태그 */
+.ftag {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 4px;
+    font-size: .68rem;
+    font-weight: 600;
+    margin: 1px 1px;
+}
+
+.ftag-on {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.ftag-off {
+    background: #f1f5f9;
+    color: #cbd5e1;
+    text-decoration: line-through;
+}
+
+::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+/* 세련된 알약 모양 태그 (자바스크립트에서 이 클래스를 사용하도록 설정하세요) */
+.ftag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    transition: all 0.2s ease-in-out;
+    border: 1px solid transparent; /* 기본 테두리 공간 차지 */
+}
+
+/* 지원되는 필드 */
+.ftag-on {
+    background-color: #eff6ff; /* bg-blue-50 */
+    color: #2563eb; /* text-blue-600 */
+    border-color: #bfdbfe; /* border-blue-200 */
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* 지원되지 않는 필드 (취소선) */
+.ftag-off {
+    background-color: #f8fafc; /* bg-slate-50 */
+    color: #94a3b8; /* text-slate-400 */
+    border-color: #e2e8f0; /* border-slate-200 */
+    text-decoration: line-through;
+    text-decoration-color: #cbd5e1; /* 취소선 색상 조금 진하게 */
+    opacity: 0.6;
+}
+
+/* 얇고 예쁜 커스텀 스크롤바 (테이블 미리보기 등에 적용) */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* 부드러운 등장 애니메이션 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
+
+    #tab-upload, #tab-export {
+        display: none !important;
+    }
+
+    #tab-report {
+        display: block !important;
+    }
+
+    body {
+        background: white;
+    }
+
+    .print-wrap {
+        padding: 12mm 12mm;
+    }
+
+    section.print-page {
+        break-before: page;
+    }
+
+    section.print-page:first-of-type {
+        break-before: auto;
+    }
+
+    canvas {
+        max-width: 100% !important;
+    }
+
+    tr {
+        page-break-inside: avoid;
+    }
+
+    .overflow-x-auto {
+        overflow: visible !important;
+    }
+}

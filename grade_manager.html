@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>모의고사 성적 분석 레포트 및 양식 변환 시스템</title>
+    <link rel="stylesheet" href="css/style.css"/>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body class="min-h-screen">
+
+<!-- ═══ 헤더 ═══ -->
+<header class="no-print bg-white border-b border-slate-200 sticky top-0 z-50">
+    <div class="max-w-screen-xl mx-auto px-6 py-3.5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shadow">
+                <i class="fa-solid fa-graduation-cap text-white text-base"></i>
+            </div>
+            <div>
+                <h1 class="text-base font-bold text-slate-800 leading-tight">수능 모의고사 레포트 시스템</h1>
+                <p class="text-base text-slate-400">모의고사 성적 분석 시스템</p>
+            </div>
+        </div>
+        <div id="data-badge" class="flex items-center gap-2 px-3 py-1.5 rounded-full
+         bg-slate-100 text-slate-500 text-base font-semibold">
+            <span class="w-2 h-2 rounded-full bg-slate-300"></span>
+            <span id="badge-text">데이터 없음</span>
+        </div>
+    </div>
+    <nav class="max-w-screen-xl mx-auto px-6 flex border-t border-slate-100">
+        <button class="tab-btn active px-5 py-3 text-base font-semibold text-slate-500"
+                data-tab="upload" onclick="switchTab('upload')">
+            <i class="fa-solid fa-file-arrow-up mr-1.5"></i>데이터 불러오기
+        </button>
+        <button class="tab-btn px-5 py-3 text-base font-semibold text-slate-500"
+                data-tab="report" onclick="switchTab('report')">
+            <i class="fa-solid fa-chart-bar mr-1.5"></i>성적 보고서
+        </button>
+        <button class="tab-btn px-5 py-3 text-base font-semibold text-slate-500"
+                data-tab="export" onclick="switchTab('export')">
+            <i class="fa-solid fa-file-export mr-1.5"></i>내보내기
+        </button>
+    </nav>
+</header>
+
+<main class="max-w-screen-xl mx-auto px-6 py-7">
+
+    <!-- ═══════════════════════════════════
+         TAB 1: 데이터 불러오기
+    ═══════════════════════════════════ -->
+    <div id="tab-upload" class="animate-fade-in">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <div class="lg:col-span-2 space-y-6">
+                <div class="flex flex-col border-b border-slate-200 pb-4">
+                    <h2 class="text-2xl font-extrabold text-slate-800 tracking-tight">데이터 업로드</h2>
+                    <p class="text-sm text-slate-500 mt-1">수능 성적 데이터(.xlsx)를 업로드하고 변환할 양식을 선택해 주세요.</p>
+                </div>
+
+                <div id="dropzone"
+                     class="border-2 border-dashed border-slate-300 rounded-3xl bg-slate-50/50 p-12
+                        flex flex-col items-center gap-4 cursor-pointer transition-all duration-300
+                        hover:border-blue-400 hover:bg-blue-50 hover:shadow-md group"
+                     onclick="document.getElementById('fileInput').click()"
+                     ondragover="handleDragOver(event)" ondragleave="handleDragLeave()"
+                     ondrop="handleDrop(event)">
+                    <div class="w-20 h-20 rounded-2xl bg-white shadow-sm flex items-center justify-center
+                            group-hover:scale-110 group-hover:shadow transition-all duration-300">
+                        <i class="fa-solid fa-file-excel text-green-500 text-4xl"></i>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-lg font-bold text-slate-700 group-hover:text-blue-700 transition-colors">
+                            파일을 드래그하거나 클릭하여 선택
+                        </p>
+                        <p class="text-sm text-slate-400 mt-1.5 font-medium">지원 형식: .xlsx, .xls 파일</p>
+                    </div>
+                    <input type="file" id="fileInput" accept=".xlsx,.xls" class="hidden"
+                           onchange="handleFileSelect(event)"/>
+                </div>
+
+                <div id="file-info" class="hidden bg-white border border-blue-200 shadow-sm rounded-2xl
+                                       px-6 py-5 flex items-center gap-5 relative overflow-hidden">
+                    <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
+                    <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-file-excel text-blue-500 text-2xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p id="file-name" class="font-bold text-slate-800 text-lg truncate"></p>
+                        <p id="file-meta" class="text-sm text-slate-500 mt-0.5 font-medium"></p>
+                    </div>
+                    <button onclick="clearFile()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-500
+                                                     hover:bg-red-50 hover:text-red-500 transition-colors flex items-center justify-center">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+
+                <div id="format-area" class="hidden space-y-4 pt-2">
+                    <p class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-blue-500"></span> 입력 양식 선택
+                    </p>
+                    <div class="grid grid-cols-2 gap-4" id="format-cards"></div>
+                </div>
+
+                <div id="sheet-area" class="hidden bg-white border border-slate-200 shadow-sm rounded-2xl p-5">
+                    <label class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-3">
+                        <span class="w-2 h-2 rounded-full bg-indigo-500"></span> 시트 선택
+                    </label>
+                    <div class="relative">
+                        <select id="sheet-select" onchange="renderRawPreview()"
+                                class="w-full appearance-none border border-slate-300 rounded-xl pl-4 pr-10 py-3 text-base font-medium text-slate-700
+                                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-50 hover:bg-white transition-colors">
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                            <i class="fa-solid fa-chevron-down text-sm"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="parse-btn" onclick="parseData()"
+                        class="hidden w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700
+                           text-white font-extrabold rounded-2xl py-4 text-lg shadow-md hover:shadow-lg
+                           transform transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-bolt text-yellow-300"></i> 데이터 분석 시작하기
+                </button>
+
+                <div id="preview-section"
+                     class="hidden bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                    <span class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-table border border-slate-300 rounded p-1"></i> 원본 데이터 미리보기
+                    </span>
+                        <span id="preview-count"
+                              class="text-xs font-bold px-2.5 py-1 bg-white border border-slate-200 rounded-full text-slate-500"></span>
+                    </div>
+                    <div class="overflow-x-auto max-h-60 custom-scrollbar">
+                        <table class="w-full text-sm text-left">
+                            <thead id="preview-thead"
+                                   class="bg-white text-slate-500 font-bold sticky top-0 shadow-sm"></thead>
+                            <tbody id="preview-tbody" class="divide-y divide-slate-100 text-slate-600"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+
+                <div class="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 relative overflow-hidden">
+                    <div class="absolute -right-6 -top-6 w-24 h-24 bg-blue-50 rounded-full blur-2xl z-0 pointer-events-none"></div>
+
+                    <div class="relative z-10">
+                        <h3 class="text-base font-extrabold text-slate-800 mb-4 flex items-center">
+                            <i class="fa-solid fa-tags mr-2 text-blue-500"></i>양식 지원 필드
+                        </h3>
+
+                        <div id="format-detail"
+                             class="min-h-[220px] bg-slate-50 border border-slate-100 rounded-2xl p-4
+                                flex flex-wrap content-start gap-2 items-start justify-center text-sm text-slate-400 font-medium text-center">
+                            <div class="flex flex-col items-center justify-center w-full h-full opacity-60 mt-8">
+                                <i class="fa-regular fa-hand-pointer text-2xl mb-2"></i>
+                                왼쪽에서 양식을 선택해 주세요
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-slate-200 shadow-sm rounded-3xl p-6">
+                    <h3 class="text-base font-extrabold text-slate-800 mb-4 flex items-center">
+                        <i class="fa-solid fa-list-check mr-2 text-indigo-500"></i>처리 순서
+                    </h3>
+                    <ol class="space-y-3 relative before:absolute before:inset-y-2 before:left-[11px] before:w-0.5 before:bg-slate-100">
+                        <li class="flex gap-3 items-center relative z-10">
+                            <span class="w-6 h-6 rounded-full bg-white border-2 border-indigo-500 text-indigo-600 font-bold flex items-center justify-center text-xs flex-shrink-0">1</span>
+                            <span class="text-sm font-semibold text-slate-700">엑셀 파일 업로드</span>
+                        </li>
+                        <li class="flex gap-3 items-center relative z-10">
+                            <span class="w-6 h-6 rounded-full bg-white border-2 border-slate-200 text-slate-400 font-bold flex items-center justify-center text-xs flex-shrink-0">2</span>
+                            <span class="text-sm font-medium text-slate-500">분석할 양식 선택</span>
+                        </li>
+                        <li class="flex gap-3 items-center relative z-10">
+                            <span class="w-6 h-6 rounded-full bg-white border-2 border-slate-200 text-slate-400 font-bold flex items-center justify-center text-xs flex-shrink-0">3</span>
+                            <span class="text-sm font-medium text-slate-500">데이터 파싱 및 시각화</span>
+                        </li>
+                        <li class="flex gap-3 items-center relative z-10">
+                            <span class="w-6 h-6 rounded-full bg-white border-2 border-slate-200 text-slate-400 font-bold flex items-center justify-center text-xs flex-shrink-0">4</span>
+                            <span class="text-sm font-medium text-slate-500">결과 보고서 확인 및 내보내기</span>
+                        </li>
+                    </ol>
+                </div>
+
+                <div class="flex flex-col gap-3">
+                    <div class="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-4 flex gap-3 items-start">
+                        <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="fa-solid fa-shield-halved text-emerald-600 text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-extrabold text-emerald-800">100% 로컬 처리 보장</p>
+                            <p class="text-xs font-medium text-emerald-600 mt-1 leading-relaxed">
+                                학생들의 민감한 성적 데이터는 오직 선생님의 브라우저에서만 처리되며, 어떠한 외부 서버로도 전송되지 않습니다.
+                            </p>
+                        </div>
+                    </div>
+
+                    <button onclick="loadSampleData()"
+                            class="w-full bg-white border border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50
+                               font-bold rounded-2xl py-3 text-sm transition-all shadow-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-flask text-blue-500"></i> 샘플 데이터로 기능 체험하기
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         TAB 2: 성적 보고서
+    ═══════════════════════════════════ -->
+    <div id="tab-report" class="hidden">
+        <div class="print-wrap">
+            <!-- 액션바 -->
+            <div class="no-print flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800">성적 보고서</h2>
+                    <p id="report-subtitle" class="text-base text-slate-500 mt-0.5"></p>
+                </div>
+                <button onclick="window.print()"
+                        class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white
+                     font-semibold px-5 py-2.5 rounded-xl text-base transition-colors">
+                    <i class="fa-solid fa-print"></i>보고서 PDF 인쇄
+                </button>
+            </div>
+            <!-- 빈 상태 -->
+            <div id="report-empty" class="flex flex-col items-center justify-center py-24">
+                <i class="fa-solid fa-chart-pie text-5xl mb-4 text-slate-200"></i>
+                <p class="font-semibold text-slate-500">아직 불러온 데이터가 없습니다</p>
+                <p class="text-base text-slate-400 mt-1">'데이터 불러오기' 탭에서 엑셀 파일을 업로드해 주세요.</p>
+                <button onclick="switchTab('upload')"
+                        class="mt-5 bg-blue-600 text-white px-5 py-2 rounded-lg text-base
+                     font-semibold hover:bg-blue-700 transition-colors no-print">
+                    데이터 불러오기로 이동
+                </button>
+            </div>
+            <!-- 보고서 본문 -->
+            <div id="report-content" class="hidden space-y-8">
+                <div class="hidden print:block mb-4 pb-3 border-b-2 border-blue-600">
+                    <h1 id="print-title" class="text-2xl font-bold text-slate-800"></h1>
+                    <p id="print-date" class="text-base text-slate-500 mt-1"></p>
+                </div>
+                <!-- ①요약통계 -->
+                <section class="print-page">
+                    <div class="flex items-center gap-2 mb-4 no-print">
+                        <span class="w-1 h-5 rounded bg-blue-600 inline-block"></span>
+                        <h3 class="font-bold text-slate-800">요약 통계</h3>
+                    </div>
+                    <div id="stat-cards" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+                    <div id="stat-cards-2" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4"></div>
+                </section>
+                <!-- ②상위20인 -->
+                <section class="print-page">
+                    <div class="flex items-center justify-between mb-4 no-print">
+                        <div class="flex items-center gap-2">
+                            <span class="w-1 h-5 rounded bg-blue-600 inline-block"></span>
+                            <h3 class="font-bold text-slate-800">표준점수합 상위 20인</h3>
+                        </div>
+                        <span class="text-base text-slate-400">국어+수학+탐구1+탐구2 표준점수 합산 기준</span>
+                    </div>
+                    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="data-table w-full text-base">
+                                <thead id="top20-thead" class="bg-slate-50 text-slate-600 font-bold"></thead>
+                                <tbody id="top20-tbody" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                <!-- ③등급분포 -->
+                <section class="print-page">
+                    <div class="flex items-center gap-2 mb-4 no-print">
+                        <span class="w-1 h-5 rounded bg-blue-600 inline-block"></span>
+                        <h3 class="font-bold text-slate-800">과목별 등급 분포</h3>
+                    </div>
+                    <div id="chart-grid" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         TAB 3: 내보내기
+    ═══════════════════════════════════ -->
+    <div id="tab-export" class="hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 space-y-5">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800">양식 변환 & 내보내기</h2>
+                    <p class="text-base text-slate-500 mt-0.5">내부 표준 데이터를 각 시스템 양식으로 변환하여 다운로드합니다.</p>
+                </div>
+                <div id="export-cards" class="space-y-3"></div>
+            </div>
+            <div class="space-y-4">
+                <div class="bg-white border border-slate-200 rounded-2xl p-5">
+                    <h3 class="text-base font-bold text-slate-700 mb-3">
+                        <i class="fa-solid fa-circle-info mr-1.5 text-blue-500"></i>현재 데이터 현황
+                    </h3>
+                    <div id="export-summary">
+                        <div class="py-6 text-center text-slate-400 text-base">
+                            <i class="fa-solid fa-inbox text-3xl mb-2 block text-slate-200"></i>
+                            불러온 데이터가 없습니다
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                    <p class="text-base font-bold text-amber-700 mb-1.5">
+                        <i class="fa-solid fa-triangle-exclamation mr-1"></i>유의사항
+                    </p>
+                    <ul class="text-base text-amber-600 space-y-1 list-disc pl-4">
+                        <li>미지원 컬럼은 빈 셀로 내보냅니다.</li>
+                        <li>대상 양식의 헤더 행이 자동 생성됩니다.</li>
+                        <li>내보내기 전 파싱이 완료되어야 합니다.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- 토스트 -->
+<div id="toast" class="fixed bottom-8 right-8 z-[100] transform translate-y-12 opacity-0
+                       transition-all duration-300 ease-out pointer-events-none">
+    <div id="toast-inner" class="flex items-center gap-3 px-5 py-4 rounded-2xl shadow-xl
+                                 text-sm font-bold text-white min-w-[280px] bg-slate-800">
+        <div id="toast-icon-bg"
+             class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0 transition-colors">
+            <i id="toast-icon" class="fa-solid fa-check text-white"></i>
+        </div>
+        <span id="toast-msg" class="flex-1 tracking-wide">메시지 내용</span>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     JavaScript
+═══════════════════════════════════════════════════════════════ -->
+<script src="js/utils.js"></script>
+<script src="js/schema.js"></script>
+<script src="js/parser.js"></script>
+<script src="js/exporter.js"></script>
+<script src="js/report.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>
