@@ -24,12 +24,7 @@ function setGlobalBasis(basis) {
         }
     });
 
-    // 기준이 바뀌면 요약 통계도 다시 그립니다.
-    renderStats();
-
-    // 섹션 1, 2 다시 그리기 (섹션 3은 별도 지표를 따르므로 제외)
-    renderTopN();
-    renderScoreDistribution();
+    renderAll();
 }
 
 /* ───────────────────────────────────────────
@@ -55,14 +50,22 @@ function renderReport() {
     }
 
     // 모든 섹션 렌더링
+    renderAll();
+}
+
+/* ───────────────────────────────────────────
+   § 모든 렌더링 함수
+─────────────────────────────────────────── */
+function renderAll() {
     renderStats();
     renderTopN();
     renderScoreDistribution();
+    renderSubjectSelection();
     renderCharts();
 }
 
 /* ───────────────────────────────────────────
-   § 0. 요약 통계
+   § 요약 통계
 ─────────────────────────────────────────── */
 function renderStats() {
     const d = ST.data;
@@ -98,7 +101,7 @@ function renderStats() {
 }
 
 /* ───────────────────────────────────────────
-   § 1. 상위 N명 명단 렌더링 (전역 기준 적용)
+   § 상위 N명 명단 렌더링 (전역 기준 적용)
 ─────────────────────────────────────────── */
 function renderTopN() {
     const limit = parseInt(document.getElementById('top-n-count').value, 10);
@@ -170,7 +173,7 @@ function handleRowClick(el) {
 }
 
 /* ───────────────────────────────────────────
-   § 2. 점수 급간별 인원 분포 (전역 기준 적용 및 가로 표 추가)
+   § 점수 급간별 인원 분포 (전역 기준 적용 및 가로 표 추가)
 ─────────────────────────────────────────── */
 function renderScoreDistribution() {
     const intervalSize = parseInt(document.getElementById('interval-size').value, 10);
@@ -318,7 +321,144 @@ function renderScoreDistribution() {
 }
 
 /* ───────────────────────────────────────────
-   § 3. 과목별 성적 분포 종합 (등급 or 백분위)
+   § 선택과목 비율 분석
+─────────────────────────────────────────── */
+function renderSubjectSelection() {
+    if (!ST.data || ST.data.length === 0) return;
+    if (!ST.charts) ST.charts = {};
+
+    const aggregate = (getSubject, getScore) => {
+        const stats = {};
+        ST.data.forEach(student => {
+            const subjects = [].concat(getSubject(student));
+            const scoreObjs = [].concat(getScore(student));
+
+            subjects.forEach((sub, idx) => {
+                // 데이터 타입 방어 코드: null, undefined 이거나 문자가 아니면 무시
+                if (!sub || typeof sub !== 'string' || sub.trim() === '') return;
+
+                if (!stats[sub]) {
+                    stats[sub] = {count: 0, sumRaw: 0, validRawCount: 0, sumGrade: 0, validGradeCount: 0};
+                }
+
+                const scoreObj = scoreObjs[idx];
+                stats[sub].count += 1;
+
+                if (scoreObj) {
+                    let rawScore = 0;
+                    let hasRaw = false;
+
+                    if (typeof scoreObj.common_raw === 'number' || typeof scoreObj.select_raw === 'number') {
+                        rawScore = (scoreObj.common_raw || 0) + (scoreObj.select_raw || 0);
+                        hasRaw = true;
+                    } else if (typeof scoreObj.raw === 'number') {
+                        rawScore = scoreObj.raw;
+                        hasRaw = true;
+                    }
+
+                    if (hasRaw) {
+                        stats[sub].sumRaw += rawScore;
+                        stats[sub].validRawCount += 1;
+                    }
+
+                    if (typeof scoreObj.grade === 'number') {
+                        stats[sub].sumGrade += scoreObj.grade;
+                        stats[sub].validGradeCount += 1;
+                    }
+                }
+            });
+        });
+        return stats;
+    };
+
+    const korStats = aggregate(s => s.korean?.subject, s => s.korean);
+    const mathStats = aggregate(s => s.math?.subject, s => s.math);
+    const inqStats = aggregate(
+        s => [s.inquiry1?.subject, s.inquiry2?.subject],
+        s => [s.inquiry1, s.inquiry2]
+    );
+
+    const drawChart = (chartKey, canvasId, statsId, statsData) => {
+        // HTML 요소가 없으면 에러 내지 않고 조용히 종료
+        const canvasEl = document.getElementById(canvasId);
+        const statsContainer = document.getElementById(statsId);
+        if (!canvasEl || !statsContainer) return;
+
+        const labels = Object.keys(statsData).sort((a, b) => statsData[b].count - statsData[a].count);
+
+        if (ST.charts[chartKey]) {
+            ST.charts[chartKey].destroy();
+            delete ST.charts[chartKey];
+        }
+
+        if (labels.length === 0) {
+            statsContainer.innerHTML = '<p class="text-center text-slate-400 mt-4 text-sm font-medium">선택과목 데이터가 없습니다.</p>';
+            return;
+        }
+
+        const counts = labels.map(l => statsData[l].count);
+        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#64748b', '#0ea5e9', '#d946ef'];
+
+        ST.charts[chartKey] = new Chart(canvasEl.getContext('2d'), {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: counts,
+                    backgroundColor: colors.slice(0, labels.length),
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false, // ★ true에서 false로 변경하여 부모 div에 맞춤
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15, font: {size: 11} } }
+                }
+            }
+        });
+
+        const total = counts.reduce((a, b) => a + b, 0);
+        let html = `
+            <table class="w-full text-center mt-4 border-t border-slate-100 pt-2 text-sm">
+                <thead>
+                    <tr class="text-slate-500 font-semibold border-b border-slate-100 bg-slate-50">
+                        <th class="py-2 rounded-tl-lg">과목</th>
+                        <th class="py-2">비율(인원)</th>
+                        <th class="py-2">원점평균</th>
+                        <th class="py-2 rounded-tr-lg">평균등급</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+        `;
+
+        labels.forEach(l => {
+            const d = statsData[l];
+            const pct = ((d.count / total) * 100).toFixed(1);
+            const avgRaw = d.validRawCount > 0 ? (d.sumRaw / d.validRawCount).toFixed(1) : '-';
+            const avgGrade = d.validGradeCount > 0 ? (d.sumGrade / d.validGradeCount).toFixed(1) : '-';
+
+            html += `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="py-2 font-medium text-slate-700">${l}</td>
+                    <td class="py-2 text-slate-600">${pct}% <span class="text-xs text-slate-400">(${d.count})</span></td>
+                    <td class="py-2 text-blue-600 font-semibold">${avgRaw}</td>
+                    <td class="py-2 text-emerald-600 font-semibold">${avgGrade}</td>
+                </tr>
+            `;
+        });
+        html += `</tbody></table>`;
+        statsContainer.innerHTML = html;
+    };
+
+    drawChart('korSelectPie', 'kor-select-chart', 'kor-select-stats', korStats);
+    drawChart('mathSelectPie', 'math-select-chart', 'math-select-stats', mathStats);
+    drawChart('inqSelectPie', 'inq-select-chart', 'inq-select-stats', inqStats);
+}
+
+/* ───────────────────────────────────────────
+   § 과목별 성적 분포 종합 (등급 or 백분위)
 ─────────────────────────────────────────── */
 function renderCharts() {
     const MAX_GRADE = 9;
@@ -330,11 +470,11 @@ function renderCharts() {
         ST.charts = {};
     }
 
-    // 기존 과목 차트들을 파괴하고 객체에서도 완전히 삭제
     Object.keys(ST.charts).forEach(key => {
-        if (key !== 'scoreDist' && ST.charts[key]) {
-            ST.charts[key].destroy(); // 1. 캔버스 및 메모리에서 차트 파괴
-            delete ST.charts[key];    // 2. ST.charts 객체에서 찌꺼기 키 완전 삭제
+        // 'chart-subj-' 로 시작하는 하단 바 차트들만 골라서 삭제
+        if (key.startsWith('chart-subj-') && ST.charts[key]) {
+            ST.charts[key].destroy();
+            delete ST.charts[key];
         }
     });
 
@@ -626,8 +766,7 @@ window.addEventListener('resize', () => {
         // 보고서 탭이 활성화되어 있을 때만 다시 그립니다.
         const reportContent = document.getElementById('report-content');
         if (reportContent && !reportContent.classList.contains('hidden')) {
-            renderScoreDistribution(); // 섹션 2 차트 재렌더링
-            renderCharts();            // 섹션 3 차트 재렌더링
+            renderAll();
         }
     }, 250); // 0.25초 대기 후 실행
 });
