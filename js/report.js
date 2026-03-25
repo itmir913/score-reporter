@@ -147,7 +147,8 @@ function renderTopN() {
         const displaySum = basis === 'pct' ? sumScore.toFixed(1) : Math.round(sumScore);
         return `
             <tr class="hover:bg-slate-50 cursor-pointer transition-colors divide-x divide-slate-100 border-b border-slate-100"
-                onclick="showStudentDetail('${s.name}', '${s.class}', '${s.number}')">
+                data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}"
+    onclick="handleRowClick(this)">
                 <td class="px-2 py-2 text-center font-bold text-slate-500">${i + 1}</td>
                 <td class="px-2 py-2 text-center">${s.class || '-'}</td>
                 <td class="px-2 py-2 text-center">${s.number || '-'}</td>
@@ -162,6 +163,16 @@ function renderTopN() {
             </tr>
         `;
     }).join('');
+}
+
+// 행 클릭 시 데이터를 읽어와 상세 모달을 띄우는 핸들러
+function handleRowClick(el) {
+    const name = el.dataset.name;
+    const cls = el.dataset.class;
+    const num = el.dataset.num;
+
+    // 기존에 사용하던 상세 보기 함수 호출
+    showStudentDetail(name, cls, num);
 }
 
 /* ───────────────────────────────────────────
@@ -517,7 +528,7 @@ function showBinStudentsModal(label, students) {
         const sum = ['korean', 'math', 'inquiry1', 'inquiry2'].reduce((acc, cur) => acc + (s[cur]?.[basis] || 0), 0);
         return `
             <tr class="hover:bg-blue-50 cursor-pointer transition-colors group" 
-                onclick="showStudentDetail('${s.name}', '${s.class}', '${s.number}')">
+                data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" onclick="handleRowClick(this)">
                 <td class="border-b border-slate-200 p-3 text-slate-600">${s.class}반</td>
                 <td class="border-b border-slate-200 p-3 text-slate-600">${s.number}번</td>
                 <td class="border-b border-slate-200 p-3 font-bold text-slate-800">${s.name}</td>

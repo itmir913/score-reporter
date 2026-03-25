@@ -25,3 +25,14 @@ function dlBlob(blob, name) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
+
+// HTML 속성용 안전한 이스케이프 함수
+function escapeAttr(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
