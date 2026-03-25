@@ -221,21 +221,43 @@ function renderScoreDistribution() {
         }
     });
 
-    // --- ★ 표 렌더링 (가로 방향) ---
+    // --- ★ 표 렌더링 (가로 방향, N개씩 줄바꿈) ---
     const thead = document.getElementById('score-dist-thead');
     const tbody = document.getElementById('score-dist-tbody');
 
-    // 헤더 행: '구분' + 각 급간 레이블
-    thead.innerHTML = `<tr>
-        <th class="px-4 py-3 text-center bg-slate-100 whitespace-nowrap">점수 급간</th>
-        ${labels.map(label => `<th class="px-3 py-3 text-center whitespace-nowrap">${label}</th>`).join('')}
-    </tr>`;
+    // thead는 비워두고 tbody 안에 여러 줄의 표를 렌더링합니다.
+    thead.innerHTML = '';
 
-    // 데이터 행: '인원수' + 각 급간 인원수 카운트
-    tbody.innerHTML = `<tr>
-        <td class="px-4 py-3 text-center font-bold bg-slate-50 text-slate-700 whitespace-nowrap">인원 (명)</td>
-        ${counts.map(c => `<td class="px-3 py-3 text-center text-slate-600 ${c > 0 ? 'font-bold text-emerald-600' : ''}">${c}</td>`).join('')}
-    </tr>`;
+    const chunkSize = 10; // 한 줄에 표시할 급간 개수 (화면 너비에 맞춰 조절 가능)
+    let tableHtml = '';
+
+    for (let i = 0; i < labels.length; i += chunkSize) {
+        const chunkLabels = labels.slice(i, i + chunkSize);
+        const chunkCounts = counts.slice(i, i + chunkSize);
+
+        // 빈칸 채우기 (마지막 줄의 열 개수를 맞추기 위함)
+        const emptyCells = Array(chunkSize - chunkLabels.length).fill('<td class="px-3 py-3"></td>').join('');
+
+        // 1. 점수 급간 행 (헤더 스타일)
+        tableHtml += `
+            <tr class="bg-slate-100 text-slate-700 font-bold border-t-2 border-slate-200">
+                <td class="px-4 py-3 text-center whitespace-nowrap border-r border-slate-200 w-28 text-base">점수 급간</td>
+                ${chunkLabels.map(label => `<td class="px-3 py-3 text-center whitespace-nowrap min-w-[65px] text-base">${label}</td>`).join('')}
+                ${emptyCells}
+            </tr>
+        `;
+
+        // 2. 인원수 행
+        tableHtml += `
+            <tr class="bg-white border-b border-slate-200">
+                <td class="px-4 py-3 text-center font-bold text-slate-700 whitespace-nowrap border-r border-slate-200 text-base">인원 (명)</td>
+                ${chunkCounts.map(c => `<td class="px-3 py-3 text-center text-base text-slate-600 ${c > 0 ? 'font-black text-emerald-600' : ''}">${c}</td>`).join('')}
+                ${emptyCells}
+            </tr>
+        `;
+    }
+
+    tbody.innerHTML = tableHtml;
 }
 
 /* ───────────────────────────────────────────

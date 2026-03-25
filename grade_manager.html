@@ -287,12 +287,12 @@
                 </section>
 
                 <section class="print-page">
-                    <div class="flex items-center justify-between mb-4 no-print flex-wrap gap-4">
+                    <div class="flex items-center justify-between mb-4 flex-wrap gap-4">
                         <div class="flex items-center gap-2">
                             <span class="w-1.5 h-6 rounded bg-blue-600 inline-block"></span>
                             <h3 id="top-n-title" class="font-bold text-slate-800 text-xl">상위 학생 명단</h3>
                         </div>
-                        <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl">
+                        <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl no-print">
                             <label for="top-n-count" class="text-base font-semibold text-slate-700 pl-2">표시 인원:</label>
                             <select id="top-n-count" onchange="renderTopN()"
                                     class="rounded-lg border-none bg-white shadow-sm text-base py-1.5 pl-3 pr-8 focus:ring-2 focus:ring-blue-500">
@@ -316,12 +316,12 @@
                 </section>
 
                 <section class="print-page">
-                    <div class="flex items-center justify-between mb-4 no-print flex-wrap gap-4">
+                    <div class="flex items-center justify-between mb-4 flex-wrap gap-4">
                         <div class="flex items-center gap-2">
                             <span class="w-1.5 h-6 rounded bg-emerald-500 inline-block"></span>
                             <h3 id="dist-title" class="font-bold text-slate-800 text-xl">총점 급간별 인원 분포</h3>
                         </div>
-                        <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl">
+                        <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl no-print">
                             <label for="interval-size" class="text-base font-semibold text-slate-700 pl-2">급간
                                 크기:</label>
                             <select id="interval-size" onchange="renderScoreDistribution()"
@@ -347,12 +347,12 @@
                 </section>
 
                 <section class="print-page">
-                    <div class="flex items-center justify-between mb-4 no-print flex-wrap gap-4">
+                    <div class="flex items-center justify-between mb-4 flex-wrap gap-4">
                         <div class="flex items-center gap-2">
                             <span class="w-1.5 h-6 rounded bg-violet-500 inline-block"></span>
                             <h3 class="font-bold text-slate-800 text-xl">과목별 성적 분포 종합</h3>
                         </div>
-                        <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-4 no-print">
                             <span class="text-base text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg font-medium hidden md:block">탐구 과목은 선택 1, 2를 통합 집계</span>
                             <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl">
                                 <label for="chart-basis" class="text-base font-semibold text-slate-700 pl-2">분석
@@ -365,7 +365,7 @@
                             </div>
                         </div>
                     </div>
-                    <div id="chart-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+                    <div id="chart-grid" class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
                 </section>
             </div>
         </div>

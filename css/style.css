@@ -229,43 +229,69 @@ body {
 }
 
 @media print {
-    .no-print {
+    /* 1. 배경색 및 차트 색상 강제 인쇄 (브라우저 설정 무시하고 출력) */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* 2. 불필요한 요소 숨김 */
+    .no-print, #tab-upload, #tab-export {
         display: none !important;
     }
 
-    #tab-upload, #tab-export {
-        display: none !important;
-    }
-
+    /* 3. 보고서 영역 활성화 및 여백 설정 */
     #tab-report {
         display: block !important;
     }
 
     body {
         background: white;
+        margin: 0;
+        padding: 0;
     }
 
     .print-wrap {
-        padding: 12mm 12mm;
+        padding: 0; /* @page margin으로 조절하는 것이 더 정확합니다 */
     }
 
+    /* 4. 섹션별 페이지 관리 */
     section.print-page {
-        break-before: page;
+        break-before: page; /* 섹션 시작 시 페이지 넘김 */
+        margin-bottom: 2rem;
     }
 
     section.print-page:first-of-type {
         break-before: auto;
     }
 
-    canvas {
-        max-width: 100% !important;
+    /* 5. 콘텐츠 잘림 방지 (중요) */
+    /* 표의 행(tr)이나 차트 카드 자체가 페이지 중간에 걸쳐서 잘리는 것을 방지 */
+    tr, .stat-card, #chart-grid > div, .bg-white.border {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
     }
 
-    tr {
-        page-break-inside: avoid;
-    }
-
+    /* 6. 가로 스크롤 제거 및 표 전체 출력 */
     .overflow-x-auto {
         overflow: visible !important;
+        display: block !important;
+    }
+
+    table {
+        table-layout: auto !important;
+        width: 100% !important;
+    }
+
+    /* 7. 차트 크기 최적화 */
+    canvas {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+
+    /* 8. 용지 설정 (A4, 여백 10mm) */
+    @page {
+        size: A4 portrait;
+        margin: 10mm;
     }
 }
