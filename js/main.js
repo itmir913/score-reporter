@@ -237,10 +237,12 @@ function renderRawPreview() {
         return;
     }
 
-    const maxCol = Math.max(...rows.slice(0, 10).map(r => r.length));
-    const schema = SCHEMAS[ST.fmtId];
+    // ★ 미리보기로 표시할 행의 개수를 상수로 정의
+    const PREVIEW_ROW_COUNT = 7;
 
-    // 전역 FIELD_LABELS 사용 (main.js 상단에 정의되어 있어야 함)
+    // 정의한 상수만큼만 잘라서(slice) 최대 컬럼 수를 계산합니다.
+    const maxCol = Math.max(0, ...rows.slice(0, PREVIEW_ROW_COUNT).map(r => r.length));
+    const schema = SCHEMAS[ST.fmtId];
 
     // 1. 선택된 양식의 매핑 데이터를 가져와 '컬럼 인덱스'를 기준으로 역매핑
     const idxToKey = {};
@@ -277,21 +279,24 @@ function renderRawPreview() {
         return str.length > maxLength ? str.substring(0, maxLength) + '...' : str;
     };
 
-    // 3. ★ 테이블 본문(Tbody) 렌더링 - 노란색 배경 진하게 적용
-    tbody.innerHTML = rows.slice(0, Math.min(rows.length, 5)).map((r, i) => `
+    // 3. ★ 테이블 본문(Tbody) 렌더링 (상수 적용)
+    tbody.innerHTML = rows.slice(0, Math.min(rows.length, PREVIEW_ROW_COUNT)).map((r, i) => `
             <tr class="${i < schema.headerRows ? 'bg-amber-100 text-amber-950 font-semibold' : 'hover:bg-slate-50 transition-colors'}">
                 ${Array(maxCol).fill(0).map((_, ci) => {
         const originalText = r[ci] !== undefined ? r[ci] : '';
-        // td 태그의 title 속성에 원본 텍스트를 넣어 마우스 호버 시 툴팁으로 보이게 함
-        return `<td class="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-base text-slate-700 cursor-default" title="${originalText}">
-                        ${truncateText(originalText, 15)}
+        // td 태그의 title 속성에 원본 텍스트를 넣어 마우스 호버 시 툴팁으로 보이게 함 (XSS 방지 escapeAttr 적용)
+        return `<td class="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-base text-slate-700 cursor-default" title="${escapeAttr(originalText)}">
+                        ${escapeAttr(truncateText(originalText, 15))}
                     </td>`;
     }).join('')}
             </tr>
         `).join('');
 
     document.getElementById('preview-section').classList.remove('hidden');
-    document.getElementById('preview-count').innerText = `총 ${rows.length}행 중 5행`;
+
+    // 안내 문구도 상수를 활용해 동적으로 표시되도록 수정
+    const showingCount = Math.min(rows.length, PREVIEW_ROW_COUNT);
+    document.getElementById('preview-count').innerText = `총 ${rows.length}행 중 ${showingCount}행`;
 }
 
 // 데이터 파싱 실행
