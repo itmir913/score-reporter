@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>모의고사 성적 분석 레포트</title>
+    <title>모의고사 성적 분석 보고서</title>
     <link rel="stylesheet" href="css/style.css"/>
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -21,8 +21,12 @@
                 <i class="fa-solid fa-graduation-cap text-white text-base"></i>
             </div>
             <div>
-                <h1 class="text-base font-bold text-slate-800 leading-tight">수능 모의고사 레포트 시스템</h1>
-                <p class="text-base text-slate-400">모의고사 성적 분석 시스템</p>
+                <h1 class="text-base font-bold text-slate-800 leading-tight">
+                    수능 모의고사 성적 리포트 시스템
+                </h1>
+                <p class="text-base text-slate-400">
+                    학력평가 성적을 불러와 분석하고, 보고서를 생성·내보내는 웹 서비스
+                </p>
             </div>
         </div>
         <div id="data-badge" class="flex items-center gap-2 px-3 py-1.5 rounded-full
@@ -175,12 +179,17 @@
                         </h3>
 
                         <div id="format-detail"
-                             class="min-h-[220px] bg-slate-50 border border-slate-100 rounded-2xl p-4
-                                flex flex-wrap content-start gap-2 items-start justify-center text-base text-slate-400 font-medium text-center">
-                            <div class="flex flex-col items-center justify-center w-full h-full opacity-60 mt-8">
-                                <i class="fa-regular fa-hand-pointer text-2xl mb-2"></i>
-                                왼쪽에서 양식을 선택해 주세요
+                             class="relative min-h-[220px] bg-slate-50 border border-slate-100 rounded-2xl p-4 flex flex-wrap content-start gap-2 items-start justify-center text-base text-slate-400 font-medium text-center">
+
+                            <!-- 안내 문구 (overlay) -->
+                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div class="flex flex-col items-center opacity-60">
+                                    <i class="fa-regular fa-hand-pointer text-2xl mb-2"></i>
+                                    <p>왼쪽에서 양식을 선택해 주세요</p>
+                                </div>
                             </div>
+
+                            <!-- 이후 동적으로 카드들 들어오는 영역 -->
                         </div>
                     </div>
                 </div>
@@ -239,9 +248,11 @@
     <div id="tab-report" class="hidden animate-fade-in">
         <div class="print-wrap">
             <div class="no-print flex items-center justify-between mb-6">
-                <div>
-                    <h2 class="text-xl font-bold text-slate-800">성적 분석 보고서</h2>
-                    <p id="report-subtitle" class="text-base text-slate-500 mt-0.5"></p>
+                <div class="flex flex-col border-b border-slate-200 pb-4">
+                    <h2 class="text-2xl font-extrabold text-slate-800 tracking-tight">
+                        성적 분석 보고서
+                    </h2>
+                    <p id="report-subtitle" class="text-base text-slate-500 mt-1"></p>
                 </div>
                 <button onclick="window.print()"
                         class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-xl text-base transition-colors shadow-sm">
@@ -405,9 +416,13 @@
     <div id="tab-export" class="hidden animate-fade-in">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 space-y-5">
-                <div>
-                    <h2 class="text-lg font-bold text-slate-800">양식 변환 & 내보내기</h2>
-                    <p class="text-base text-slate-500 mt-0.5">내부 표준 데이터를 각 시스템 양식으로 변환하여 다운로드합니다.</p>
+                <div class="flex flex-col border-b border-slate-200 pb-4">
+                    <h2 class="text-2xl font-extrabold text-slate-800 tracking-tight">
+                        양식 변환 & 내보내기
+                    </h2>
+                    <p class="text-base text-slate-500 mt-1">
+                        내부 표준 데이터를 각 시스템 양식으로 변환하여 다운로드합니다.
+                    </p>
                 </div>
                 <div id="export-cards" class="space-y-3"></div>
             </div>
@@ -453,22 +468,33 @@
 </div>
 
 <!-- 성적 분포 명단 팝업 -->
-<div id="bin-students-modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[110] flex items-center justify-center p-4 no-print">
+<div id="bin-students-modal"
+     class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[110] flex items-center justify-center p-4 no-print">
     <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col overflow-hidden">
         <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
             <h3 id="bin-modal-title" class="text-xl font-bold text-slate-800">구간별 명단</h3>
-            <button onclick="closeModal('bin-students-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-2xl"></i></button>
+            <button onclick="closeModal('bin-students-modal')" class="text-slate-400 hover:text-slate-600"><i
+                    class="fa-solid fa-xmark text-2xl"></i></button>
         </div>
 
         <div class="p-4 overflow-y-auto custom-scrollbar">
             <table class="w-full border-separate border-spacing-0 text-center text-sm">
                 <thead>
                 <tr>
-                    <th class="sticky top-0 z-20 bg-slate-50 border-b border-slate-300 p-3 font-bold text-slate-700">반</th>
-                    <th class="sticky top-0 z-20 bg-slate-50 border-b border-slate-300 p-3 font-bold text-slate-700">번호</th>
-                    <th class="sticky top-0 z-20 bg-slate-50 border-b border-slate-300 p-3 font-bold text-slate-700">이름</th>
-                    <th class="sticky top-0 z-20 bg-slate-50 border-b border-slate-300 p-3 font-bold text-slate-700">총점</th>
-                    <th class="sticky top-0 z-20 bg-slate-50 border-b border-slate-300 p-3 font-bold text-slate-700">비고</th>
+                    <th class="sticky top-0 z-20 bg-slate-50 border-b border-slate-300 p-3 font-bold text-slate-700">반
+                    </th>
+                    <th class="sticky top-0 z-20 bg-slate-50 border-b border-slate-300 p-3 font-bold text-slate-700">
+                        번호
+                    </th>
+                    <th class="sticky top-0 z-20 bg-slate-50 border-b border-slate-300 p-3 font-bold text-slate-700">
+                        이름
+                    </th>
+                    <th class="sticky top-0 z-20 bg-slate-50 border-b border-slate-300 p-3 font-bold text-slate-700">
+                        총점
+                    </th>
+                    <th class="sticky top-0 z-20 bg-slate-50 border-b border-slate-300 p-3 font-bold text-slate-700">
+                        비고
+                    </th>
                 </tr>
                 </thead>
                 <tbody id="bin-modal-tbody">
