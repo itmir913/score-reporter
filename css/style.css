@@ -234,6 +234,11 @@ body {
     background: white;
 }
 
+canvas, img {
+    max-width: 100% !important;
+    height: auto !important;
+}
+
 /* ───────────────────────────────────────────
    § 인쇄(PDF) 최적화 통합 스타일
 ─────────────────────────────────────────── */
@@ -319,12 +324,6 @@ body {
         outline: none !important;
     }
 
-    /* 9. 차트 및 이미지 크기 최적화 */
-    canvas, img {
-        max-width: 100% !important;
-        height: auto !important;
-    }
-
     /* 점수 급간 표가 부모 div를 절대 벗어나지 못하도록 강제 */
     #score-dist-tbody {
         display: table-row-group !important;
@@ -367,5 +366,7 @@ body {
     }
 
     /* 순위, 반, 번호 등 짧은 텍스트 컬럼 너비 최적화 */
-    .w-16 { width: 30px !important; }
+    .w-16 {
+        width: 30px !important;
+    }
 }

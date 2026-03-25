@@ -272,6 +272,7 @@ function renderScoreDistribution() {
    § 3. 과목별 성적 분포 종합 (등급 or 백분위)
 ─────────────────────────────────────────── */
 function renderCharts() {
+    const MAX_GRADE = 9;
     const grid = document.getElementById('chart-grid');
     grid.innerHTML = '';
     const chartBasis = document.getElementById('chart-basis').value; // 'grade' or 'pct'
@@ -286,20 +287,27 @@ function renderCharts() {
 
     const dataCounts = {};
 
-    const addData = (subjName, value) => {
+    // ★ 수정된 addData: 과목별로 기준(basis)을 강제할 수 있도록 인자 추가
+    const addData = (subjName, value, forceBasis = null) => {
         if (!subjName || typeof value !== 'number') return;
+
+        // 해당 과목이 사용할 최종 기준 결정
+        const finalBasis = forceBasis || chartBasis;
+
         if (!dataCounts[subjName]) {
-            // 등급은 9개 배열, 백분위는 10개 배열(0~9, 10~19 ... 90~100)
-            dataCounts[subjName] = chartBasis === 'grade' ? Array(9).fill(0) : Array(10).fill(0);
+            dataCounts[subjName] = {
+                counts: finalBasis === 'grade' ? Array(MAX_GRADE).fill(0) : Array(10).fill(0),
+                basis: finalBasis // 차트 생성 시 참조하기 위해 저장
+            };
         }
 
-        if (chartBasis === 'grade') {
-            if (value >= 1 && value <= 9) dataCounts[subjName][value - 1]++;
-        } else if (chartBasis === 'pct') {
+        if (finalBasis === 'grade') {
+            if (value >= 1 && value <= MAX_GRADE) dataCounts[subjName].counts[value - 1]++;
+        } else {
             if (value >= 0 && value <= 100) {
                 let bin = Math.floor(value / 10);
-                if (bin === 10) bin = 9; // 100점은 90~100 구간에 포함
-                dataCounts[subjName][bin]++;
+                if (bin === 10) bin = 9;
+                dataCounts[subjName].counts[bin]++;
             }
         }
     };
@@ -308,35 +316,38 @@ function renderCharts() {
         if (s.korean && s.korean[chartBasis]) addData('국어 종합', s.korean[chartBasis]);
         if (s.math && s.math[chartBasis]) addData('수학 종합', s.math[chartBasis]);
 
-        // 영어, 한국사는 백분위가 없을 수 있으므로 예외 처리
-        if (chartBasis === 'grade') {
-            if (s.english?.grade) addData('영어', s.english.grade);
-            if (s.history?.grade) addData('한국사', s.history.grade);
-        }
+        // ★ 영어와 한국사는 chartBasis와 상관없이 무조건 'grade'로 강제 전달
+        if (s.english?.grade) addData('영어', s.english.grade, 'grade');
+        if (s.hist?.grade) addData('한국사', s.hist.grade, 'grade');
 
         if (s.inquiry1?.subject && s.inquiry1[chartBasis]) addData(s.inquiry1.subject, s.inquiry1[chartBasis]);
         if (s.inquiry2?.subject && s.inquiry2[chartBasis]) addData(s.inquiry2.subject, s.inquiry2[chartBasis]);
     });
 
-    const xLabels = chartBasis === 'grade' ? ['1', '2', '3', '4', '5', '6', '7', '8', '9'] : ['0~9', '10s', '20s', '30s', '40s', '50s', '60s', '70s', '80s', '90~100'];
-
-    const colors = [{bg: 'rgba(139, 92, 246, 0.7)', border: '#7c3aed'}, // Violet
-        {bg: 'rgba(59, 130, 246, 0.7)', border: '#2563eb'}, // Blue
-        {bg: 'rgba(236, 72, 153, 0.7)', border: '#db2777'}, // Pink
-        {bg: 'rgba(245, 158, 11, 0.7)', border: '#d97706'}  // Amber
+    const colors = [
+        {bg: 'rgba(139, 92, 246, 0.7)', border: '#7c3aed'},
+        {bg: 'rgba(59, 130, 246, 0.7)', border: '#2563eb'},
+        {bg: 'rgba(236, 72, 153, 0.7)', border: '#db2777'},
+        {bg: 'rgba(245, 158, 11, 0.7)', border: '#d97706'}
     ];
 
     let colorIdx = 0;
 
-    Object.entries(dataCounts).forEach(([subjName, counts], index) => {
+    Object.entries(dataCounts).forEach(([subjName, obj], index) => {
+        const {counts, basis} = obj;
         if (counts.every(c => c === 0)) return;
+
+        // ★ 차트별 전용 라벨 생성 (영어/한국사는 무조건 등급 라벨을 가짐)
+        const currentLabels = basis === 'grade'
+            ? Array.from({length: MAX_GRADE}, (_, i) => (i + 1).toString())
+            : ['0~9', '10s', '20s', '30s', '40s', '50s', '60s', '70s', '80s', '90~100'];
 
         const id = `chart-subj-${index}`;
         const div = document.createElement('div');
         div.className = 'bg-white border border-slate-200 rounded-2xl p-5 shadow-sm';
         div.innerHTML = `
             <p class="text-base font-bold text-slate-700 mb-3 border-b border-slate-100 pb-2 flex justify-between items-center">
-                <span>${subjName}</span>
+                <span>${subjName} <small class="text-slate-400 font-normal">(${basis === 'grade' ? '등급' : '백분위'})</small></span>
                 <span class="text-base font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded">총 ${counts.reduce((a, b) => a + b, 0)}명</span>
             </p>
             <div class="relative w-full"><canvas id="${id}"></canvas></div>
@@ -349,7 +360,8 @@ function renderCharts() {
         ST.charts[id] = new Chart(document.getElementById(id).getContext('2d'), {
             type: 'bar',
             data: {
-                labels: xLabels, datasets: [{
+                labels: currentLabels,
+                datasets: [{
                     label: '인원(명)',
                     data: counts,
                     backgroundColor: theme.bg,
@@ -357,18 +369,22 @@ function renderCharts() {
                     borderWidth: 1,
                     borderRadius: 4
                 }]
-            }, options: {
+            },
+            options: {
                 responsive: true,
                 maintainAspectRatio: true,
                 aspectRatio: 1.5,
                 plugins: {
-                    legend: {display: false}, tooltip: {
+                    legend: {display: false},
+                    tooltip: {
                         callbacks: {
-                            title: (ctx) => chartBasis === 'grade' ? `${ctx[0].label}등급` : `${ctx[0].label}% 구간`,
+                            // ★ 툴팁도 해당 차트의 기준(basis)에 맞게 표시
+                            title: (ctx) => basis === 'grade' ? `${ctx[0].label}등급` : `${ctx[0].label}% 구간`,
                             label: (ctx) => ` ${ctx.raw}명`
                         }
                     }
-                }, scales: {
+                },
+                scales: {
                     y: {beginAtZero: true, ticks: {stepSize: 1, font: {size: 12}}},
                     x: {grid: {display: false}, ticks: {font: {size: 12, weight: 'bold'}}}
                 }
@@ -376,3 +392,17 @@ function renderCharts() {
         });
     });
 }
+
+// 디바운스(Debounce)를 적용하여 리사이즈 이벤트가 너무 자주 발생하는 것을 방지합니다.
+let resizeTimer;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+        // 보고서 탭이 활성화되어 있을 때만 다시 그립니다.
+        const reportContent = document.getElementById('report-content');
+        if (reportContent && !reportContent.classList.contains('hidden')) {
+            renderScoreDistribution(); // 섹션 2 차트 재렌더링
+            renderCharts();            // 섹션 3 차트 재렌더링
+        }
+    }, 250); // 0.25초 대기 후 실행
+});
