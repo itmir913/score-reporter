@@ -124,7 +124,7 @@ function renderTopN() {
     const sortedData = [...ST.data].sort((a, b) => getSum(b, basis) - getSum(a, basis));
     const topData = sortedData.slice(0, limit);
 
-    document.getElementById('top-n-title').innerText = `${basisLabel} 합 상위 ${limit}명 학생`;
+    document.getElementById('top-n-title').innerText = `${basisLabel} 합(국어+수학+탐구) 상위 ${limit}명 학생`;
 
     const thead = document.getElementById('top20-thead');
     thead.innerHTML = `
@@ -168,7 +168,7 @@ function renderScoreDistribution() {
     const basis = globalReportBasis;
     const basisLabel = labelMap[basis];
 
-    document.getElementById('dist-title').innerText = `총점 급간별 인원 분포 (${basisLabel})`;
+    document.getElementById('dist-title').innerText = `${basisLabel} 합(국어+수학+탐구) 급간별 인원 분포`;
 
     const sums = ST.data.map(s => {
         let sum = 0;
