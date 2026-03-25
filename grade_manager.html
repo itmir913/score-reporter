@@ -58,7 +58,7 @@
             <div class="lg:col-span-2 space-y-6">
                 <div class="flex flex-col border-b border-slate-200 pb-4">
                     <h2 class="text-2xl font-extrabold text-slate-800 tracking-tight">데이터 업로드</h2>
-                    <p class="text-base text-slate-500 mt-1">수능 성적 데이터(.xlsx)를 업로드하고 변환할 양식을 선택해 주세요.</p>
+                    <p class="text-base text-slate-500 mt-1">모의고사 성적 데이터(.xlsx)를 업로드하고 양식을 선택해 주세요.</p>
                 </div>
 
                 <div id="dropzone"
@@ -260,11 +260,6 @@
             </div>
 
             <div id="report-content" class="hidden space-y-10">
-                <div class="hidden print:block mb-4 pb-3 border-b-2 border-blue-600">
-                    <h1 id="print-title" class="text-2xl font-bold text-slate-800"></h1>
-                    <p id="print-date" class="text-base text-slate-500 mt-1"></p>
-                </div>
-
                 <section class="print-page">
                     <div class="text-center pt-12 pb-16 space-y-4 border-b-2 border-slate-100 mb-12">
                         <h1 contenteditable="true"
@@ -283,7 +278,7 @@
                                 분석</h4>
                         </div>
                         <div contenteditable="true"
-                             class="text-xl text-slate-700 leading-relaxed cursor-pointer bg-slate-50 p-10 rounded-[2rem] border border-slate-100 hover:bg-white hover:border-blue-200 transition-all outline-none"
+                             class="text-xl text-slate-700 leading-relaxed cursor-pointer bg-slate-50 p-10 rounded-[2rem] border border-slate-100 bg-white hover:border-blue-200 transition-all outline-none"
                              title="클릭하여 분석 내용을 입력하세요">
                             이곳을 클릭하여 이번 시험에 대한 전체적인 총평과 학습 전략을 입력하세요.<br>
                             (작성 팁: 영역별 난이도 변화, 학생들의 취약 구간, 향후 학습 방향 등을 자유롭게 서술하세요.)
@@ -364,7 +359,7 @@
                         </div>
                     </div>
                     <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                        <div class="relative h-72 w-full mb-6">
+                        <div class="relative w-full max-w-4xl mx-auto mb-8">
                             <canvas id="score-dist-chart"></canvas>
                         </div>
                         <div class="overflow-x-auto custom-scrollbar border-t border-slate-100 pt-4">

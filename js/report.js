@@ -42,8 +42,6 @@ function renderReport() {
     empty.classList.add('hidden');
 
     document.getElementById('report-subtitle').innerText = `총 ${ST.data.length}명 분석 완료`;
-    document.getElementById('print-title').innerText = '성적 분석 보고서';
-    document.getElementById('print-date').innerText = `출력일시: ${new Date().toLocaleString()}`;
 
     // ★ 추가: 새 헤더 날짜 업데이트
     const dateStr = `분석 일시: ${new Date().toLocaleString()}`;
@@ -81,19 +79,19 @@ function renderStats() {
     const engGradeAvg = fmt(avgOf(d.map(s => s.english?.grade)));
 
     document.getElementById('stat-cards').innerHTML = `
-        <div class="stat-card bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-center shadow-sm">
+        <div class="stat-card bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-center items-center text-center shadow-sm">
             <span class="text-base text-slate-500 font-bold mb-1 uppercase tracking-wide">총 응시 인원</span>
             <span class="text-3xl font-black text-slate-800">${total}명</span>
         </div>
-        <div class="stat-card bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-center shadow-sm">
+        <div class="stat-card bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-center items-center text-center shadow-sm">
             <span class="text-base text-slate-500 font-bold mb-1 uppercase tracking-wide">국어 ${basisLabel} 평균</span>
             <span class="text-3xl font-black text-blue-600">${korAvg}점</span>
         </div>
-        <div class="stat-card bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-center shadow-sm">
+        <div class="stat-card bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-center items-center text-center shadow-sm">
             <span class="text-base text-slate-500 font-bold mb-1 uppercase tracking-wide">수학 ${basisLabel} 평균</span>
             <span class="text-3xl font-black text-emerald-600">${mathAvg}점</span>
         </div>
-        <div class="stat-card bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-center shadow-sm">
+        <div class="stat-card bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-center items-center text-center shadow-sm">
             <span class="text-base text-slate-500 font-bold mb-1 uppercase tracking-wide">영어 등급 평균</span>
             <span class="text-3xl font-black text-violet-600">${engGradeAvg}등급</span>
         </div>
@@ -205,7 +203,8 @@ function renderScoreDistribution() {
     if (ST.charts['scoreDist']) ST.charts['scoreDist'].destroy();
 
     ST.charts['scoreDist'] = new Chart(document.getElementById(canvasId).getContext('2d'), {
-        type: 'bar', data: {
+        type: 'bar',
+        data: {
             labels: labels, datasets: [{
                 label: '인원(명)',
                 data: counts,
@@ -217,7 +216,10 @@ function renderScoreDistribution() {
                 barPercentage: 0.95
             }]
         }, options: {
-            responsive: true, maintainAspectRatio: false, plugins: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 2.5,
+            plugins: {
                 legend: {display: false},
                 tooltip: {callbacks: {title: (ctx) => `${ctx[0].label}점 구간`, label: (ctx) => ` ${ctx.raw}명`}}
             }, scales: {
