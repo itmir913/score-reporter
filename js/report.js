@@ -332,13 +332,17 @@ function renderCharts() {
     grid.innerHTML = '';
     const chartBasis = document.getElementById('chart-basis').value; // 'grade' or 'pct'
 
-    if (ST.charts) {
-        Object.keys(ST.charts).forEach(key => {
-            if (key !== 'scoreDist' && ST.charts[key]) ST.charts[key].destroy();
-        });
-    } else {
+    if (!ST.charts) {
         ST.charts = {};
     }
+
+    // 기존 과목 차트들을 파괴하고 객체에서도 완전히 삭제
+    Object.keys(ST.charts).forEach(key => {
+        if (key !== 'scoreDist' && ST.charts[key]) {
+            ST.charts[key].destroy(); // 1. 캔버스 및 메모리에서 차트 파괴
+            delete ST.charts[key];    // 2. ST.charts 객체에서 찌꺼기 키 완전 삭제
+        }
+    });
 
     const dataCounts = {};
 
