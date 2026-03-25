@@ -311,6 +311,12 @@ function parseData() {
         renderReport();
         renderExportCards();
         switchTab('report');
+
+        // 보고서 탭으로 전환 후 최상단으로 부드럽게 스크롤
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
     } catch (err) {
         console.error(err);
         showToast('데이터 파싱 중 오류가 발생했습니다.', true);

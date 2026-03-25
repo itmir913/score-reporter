@@ -45,6 +45,12 @@ function renderReport() {
     document.getElementById('print-title').innerText = '성적 분석 보고서';
     document.getElementById('print-date').innerText = `출력일시: ${new Date().toLocaleString()}`;
 
+    // ★ 추가: 새 헤더 날짜 업데이트
+    const dateStr = `분석 일시: ${new Date().toLocaleString()}`;
+    if (document.getElementById('print-date-top')) {
+        document.getElementById('print-date-top').innerText = dateStr;
+    }
+
     // 모든 섹션 렌더링
     renderStats();
     renderTopN();
@@ -228,33 +234,33 @@ function renderScoreDistribution() {
     // thead는 비워두고 tbody 안에 여러 줄의 표를 렌더링합니다.
     thead.innerHTML = '';
 
-    const chunkSize = 10; // 한 줄에 표시할 급간 개수 (화면 너비에 맞춰 조절 가능)
+    // --- (이전 코드 동일) ---
+    const chunkSize = 8; // ★ 10에서 8로 변경 (A4 portrait 최적화)
     let tableHtml = '';
 
     for (let i = 0; i < labels.length; i += chunkSize) {
         const chunkLabels = labels.slice(i, i + chunkSize);
         const chunkCounts = counts.slice(i, i + chunkSize);
 
-        // 빈칸 채우기 (마지막 줄의 열 개수를 맞추기 위함)
-        const emptyCells = Array(chunkSize - chunkLabels.length).fill('<td class="px-3 py-3"></td>').join('');
+        const emptyCells = Array(chunkSize - chunkLabels.length).fill('<td class="px-1 py-2"></td>').join('');
 
-        // 1. 점수 급간 행 (헤더 스타일)
+        // 1. 점수 급간 행 (px-2 -> px-1, text-base 제거)
         tableHtml += `
-            <tr class="bg-slate-100 text-slate-700 font-bold border-t-2 border-slate-200">
-                <td class="px-4 py-3 text-center whitespace-nowrap border-r border-slate-200 w-28 text-base">점수 급간</td>
-                ${chunkLabels.map(label => `<td class="px-3 py-3 text-center whitespace-nowrap min-w-[65px] text-base">${label}</td>`).join('')}
-                ${emptyCells}
-            </tr>
-        `;
+        <tr class="bg-slate-100 text-slate-700 font-bold border-t-2 border-slate-200">
+            <td class="px-1 py-3 text-center border-r border-slate-200 w-[14%] text-xs md:text-sm">점수 급간</td>
+            ${chunkLabels.map(label => `<td class="px-1 py-3 text-center text-[10px] sm:text-xs md:text-sm tracking-tighter">${label}</td>`).join('')}
+            ${emptyCells}
+        </tr>
+    `;
 
         // 2. 인원수 행
         tableHtml += `
-            <tr class="bg-white border-b border-slate-200">
-                <td class="px-4 py-3 text-center font-bold text-slate-700 whitespace-nowrap border-r border-slate-200 text-base">인원 (명)</td>
-                ${chunkCounts.map(c => `<td class="px-3 py-3 text-center text-base text-slate-600 ${c > 0 ? 'font-black text-emerald-600' : ''}">${c}</td>`).join('')}
-                ${emptyCells}
-            </tr>
-        `;
+        <tr class="bg-white border-b border-slate-200">
+            <td class="px-1 py-3 text-center font-bold text-slate-700 border-r border-slate-200 text-xs md:text-sm">인원 (명)</td>
+            ${chunkCounts.map(c => `<td class="px-1 py-3 text-center text-xs md:text-sm text-slate-600 ${c > 0 ? 'font-black text-emerald-600' : ''}">${c}</td>`).join('')}
+            ${emptyCells}
+        </tr>
+    `;
     }
 
     tbody.innerHTML = tableHtml;
@@ -331,7 +337,7 @@ function renderCharts() {
                 <span>${subjName}</span>
                 <span class="text-base font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded">총 ${counts.reduce((a, b) => a + b, 0)}명</span>
             </p>
-            <div class="relative h-56 w-full"><canvas id="${id}"></canvas></div>
+            <div class="relative w-full"><canvas id="${id}"></canvas></div>
         `;
         grid.appendChild(div);
 
@@ -339,7 +345,8 @@ function renderCharts() {
         colorIdx++;
 
         ST.charts[id] = new Chart(document.getElementById(id).getContext('2d'), {
-            type: 'bar', data: {
+            type: 'bar',
+            data: {
                 labels: xLabels, datasets: [{
                     label: '인원(명)',
                     data: counts,
@@ -349,7 +356,10 @@ function renderCharts() {
                     borderRadius: 4
                 }]
             }, options: {
-                responsive: true, maintainAspectRatio: false, plugins: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 1.5,
+                plugins: {
                     legend: {display: false}, tooltip: {
                         callbacks: {
                             title: (ctx) => chartBasis === 'grade' ? `${ctx[0].label}등급` : `${ctx[0].label}% 구간`,
