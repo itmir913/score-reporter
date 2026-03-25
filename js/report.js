@@ -144,6 +144,7 @@ function renderTopN() {
     const tbody = document.getElementById('top20-tbody');
     tbody.innerHTML = topData.map((s, i) => {
         const sumScore = getSum(s, basis);
+        const displaySum = basis === 'pct' ? sumScore.toFixed(1) : Math.round(sumScore);
         return `
             <tr class="hover:bg-slate-50 cursor-pointer transition-colors divide-x divide-slate-100 border-b border-slate-100"
                 onclick="showStudentDetail('${s.name}', '${s.class}', '${s.number}')">
@@ -151,7 +152,9 @@ function renderTopN() {
                 <td class="px-2 py-2 text-center">${s.class || '-'}</td>
                 <td class="px-2 py-2 text-center">${s.number || '-'}</td>
                 <td class="px-2 py-2 text-center font-semibold text-slate-800 whitespace-nowrap">${s.name || '-'}</td>
-                <td class="px-2 py-2 text-center font-bold text-blue-600 bg-blue-50/20">${sumScore > 0 ? sumScore : '-'}</td>
+                <td class="px-2 py-2 text-center font-bold text-blue-600 bg-blue-50/20">
+                    ${sumScore > 0 ? displaySum : '-'}
+                </td>
                 <td class="px-1 py-2 text-center">${s.korean?.subject || '-'}</td>
                 <td class="px-1 py-2 text-center">${s.math?.subject || '-'}</td>
                 <td class="px-1 py-2 text-center">${s.inquiry1?.subject || '-'}</td>
@@ -182,8 +185,7 @@ function renderScoreDistribution() {
     if (sums.length === 0) return;
 
     const maxScore = Math.max(...sums);
-    const upperLimit = Math.ceil(maxScore / intervalSize) * intervalSize;
-    const numBins = Math.ceil(upperLimit / intervalSize);
+    const numBins = Math.floor(maxScore / intervalSize) + 1;
 
     const labels = [];
     const counts = [];
@@ -468,10 +470,20 @@ function renderCharts() {
 ─────────────────────────────────────────── */
 
 /**
- * 1. 모달 닫기 공통 함수
+ * 1. 모달 열고 닫기 공통 함수
  */
-function closeModal(id) {
-    document.getElementById(id).classList.add('hidden');
+function openModal(modalId) {
+    document.getElementById(modalId).classList.remove('hidden');
+    // 모달을 표시하는 코드 아래에 추가
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden'; // html까지 확실하게 잠금
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+    // body와 html 모두 스크롤 제한 해제
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
 }
 
 /**
@@ -524,12 +536,7 @@ function showBinStudentsModal(label, students) {
     }
 
     // 4. 명단 모달 표시 및 스크롤 초기화
-    const modal = document.getElementById('bin-students-modal');
-    modal.classList.remove('hidden');
-
-    // 모달을 열 때 항상 스크롤을 맨 위로 (이게 없으면 헤더가 겹쳐 보일 수 있음)
-    const scrollContainer = modal.querySelector('.overflow-y-auto');
-    if (scrollContainer) scrollContainer.scrollTop = 0;
+    openModal('bin-students-modal');
 }
 
 /**
@@ -557,7 +564,12 @@ function showStudentDetail(name, cls, num) {
         const isAbs = r.isAbs;
 
         // 공통+선택 점수를 합산하거나, 그냥 raw 점수를 가져옵니다.
-        const totalRaw = (d.common_raw || 0) + (d.select_raw || 0) || d.raw || '-';
+        let totalRaw = '-';
+        if (typeof d.common_raw === 'number' || typeof d.select_raw === 'number') {
+            totalRaw = (d.common_raw || 0) + (d.select_raw || 0);
+        } else if (typeof d.raw === 'number') {
+            totalRaw = d.raw;
+        }
 
         return `
             <tr class="hover:bg-slate-50">
@@ -570,7 +582,7 @@ function showStudentDetail(name, cls, num) {
         `;
     }).join('');
 
-    document.getElementById('student-modal').classList.remove('hidden');
+    openModal('student-modal');
 }
 
 // 디바운스(Debounce)를 적용하여 리사이즈 이벤트가 너무 자주 발생하는 것을 방지합니다.
