@@ -1,23 +1,28 @@
 // ★ 전역 상태: 현재 통계 기준 (raw: 원점수, std: 표준점수)
 let globalReportBasis = 'raw';
 
+const labelMap = {'raw': '원점수', 'std': '표준점수', 'pct': '백분위'};
+
 /* ───────────────────────────────────────────
    § 통계 기준 설정 및 UI 업데이트
 ─────────────────────────────────────────── */
 function setGlobalBasis(basis) {
     globalReportBasis = basis;
 
-    // 버튼 스타일 업데이트
-    const btnRaw = document.getElementById('btn-basis-raw');
-    const btnStd = document.getElementById('btn-basis-std');
+    // 모든 버튼의 활성화 스타일 초기화
+    const buttons = {
+        raw: document.getElementById('btn-basis-raw'),
+        std: document.getElementById('btn-basis-std'),
+        pct: document.getElementById('btn-basis-pct')
+    };
 
-    if (basis === 'raw') {
-        btnRaw.className = 'px-4 py-2 text-base font-bold rounded-md bg-white text-blue-600 shadow-sm transition-all';
-        btnStd.className = 'px-4 py-2 text-base font-medium rounded-md text-slate-500 hover:text-slate-700 transition-all';
-    } else {
-        btnStd.className = 'px-4 py-2 text-base font-bold rounded-md bg-white text-blue-600 shadow-sm transition-all';
-        btnRaw.className = 'px-4 py-2 text-base font-medium rounded-md text-slate-500 hover:text-slate-700 transition-all';
-    }
+    Object.keys(buttons).forEach(key => {
+        if (key === basis) {
+            buttons[key].className = 'px-4 py-2 text-base font-bold rounded-md bg-white text-blue-600 shadow-sm transition-all';
+        } else {
+            buttons[key].className = 'px-4 py-2 text-base font-medium rounded-md text-slate-500 hover:text-slate-700 transition-all';
+        }
+    });
 
     // 기준이 바뀌면 요약 통계도 다시 그립니다.
     renderStats();
@@ -65,7 +70,7 @@ function renderStats() {
 
     // ★ 추가됨: 현재 선택된 전역 기준(raw 또는 std) 가져오기
     const basis = globalReportBasis;
-    const basisLabel = basis === 'std' ? '표준점수' : '원점수';
+    const basisLabel = labelMap[basis];
 
     const fmt = (v) => isNaN(v) ? '-' : v.toFixed(1);
     const avgOf = (arr) => {
@@ -85,11 +90,11 @@ function renderStats() {
         </div>
         <div class="stat-card bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-center items-center text-center shadow-sm">
             <span class="text-base text-slate-500 font-bold mb-1 uppercase tracking-wide">국어 ${basisLabel} 평균</span>
-            <span class="text-3xl font-black text-blue-600">${korAvg}점</span>
+            <span class="text-3xl font-black text-blue-600">${korAvg}</span>
         </div>
         <div class="stat-card bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-center items-center text-center shadow-sm">
             <span class="text-base text-slate-500 font-bold mb-1 uppercase tracking-wide">수학 ${basisLabel} 평균</span>
-            <span class="text-3xl font-black text-emerald-600">${mathAvg}점</span>
+            <span class="text-3xl font-black text-emerald-600">${mathAvg}</span>
         </div>
         <div class="stat-card bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-center items-center text-center shadow-sm">
             <span class="text-base text-slate-500 font-bold mb-1 uppercase tracking-wide">영어 등급 평균</span>
@@ -104,6 +109,7 @@ function renderStats() {
 function renderTopN() {
     const limit = parseInt(document.getElementById('top-n-count').value, 10);
     const basis = globalReportBasis;
+    const basisLabel = labelMap[basis];
 
     const getSum = (s, type) => {
         let sum = 0;
@@ -118,8 +124,7 @@ function renderTopN() {
     const sortedData = [...ST.data].sort((a, b) => getSum(b, basis) - getSum(a, basis));
     const topData = sortedData.slice(0, limit);
 
-    const basisLabel = basis === 'std' ? '표준점수 합' : '원점수 합';
-    document.getElementById('top-n-title').innerText = `${basisLabel} 상위 ${limit}명 학생`;
+    document.getElementById('top-n-title').innerText = `${basisLabel} 합 상위 ${limit}명 학생`;
 
     const thead = document.getElementById('top20-thead');
     thead.innerHTML = `
@@ -128,7 +133,7 @@ function renderTopN() {
             <th class="px-2 py-2 text-center w-10">반</th>
             <th class="px-2 py-2 text-center w-20">번호</th>
             <th class="px-2 py-2 text-center w-30">이름</th>
-            <th class="px-2 py-2 text-center text-blue-700 bg-blue-50/50 w-24">${basisLabel}</th>
+            <th class="px-2 py-2 text-center text-blue-700 bg-blue-50/50 w-24">${basisLabel} 합</th>
             <th class="px-1 py-2 text-center">국어 선택</th>
             <th class="px-1 py-2 text-center">수학 선택</th>
             <th class="px-1 py-2 text-center">탐구1</th>
@@ -161,7 +166,7 @@ function renderTopN() {
 function renderScoreDistribution() {
     const intervalSize = parseInt(document.getElementById('interval-size').value, 10);
     const basis = globalReportBasis;
-    const basisLabel = basis === 'std' ? '표준점수' : '원점수';
+    const basisLabel = labelMap[basis];
 
     document.getElementById('dist-title').innerText = `총점 급간별 인원 분포 (${basisLabel})`;
 
