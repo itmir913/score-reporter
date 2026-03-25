@@ -348,4 +348,24 @@ body {
         padding: 0 !important;
         margin: 0 !important;
     }
+
+    /* 상위 N명 테이블 인쇄 최적화 */
+    #top20-thead th,
+    #top20-tbody td {
+        font-size: 10px !important; /* 폰트 크기 축소 */
+        padding: 4px 2px !important; /* 상하좌우 여백 최소화 */
+        line-height: 1.2 !important;
+        letter-spacing: -0.05em !important; /* 글자 간격 축소 */
+    }
+
+    /* 선택과목 컬럼이 너무 길어지지 않도록 너비 제한 */
+    #top20-tbody td:nth-child(n+6) {
+        max-width: 60px !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* 순위, 반, 번호 등 짧은 텍스트 컬럼 너비 최적화 */
+    .w-16 { width: 30px !important; }
 }

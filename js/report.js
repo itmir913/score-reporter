@@ -119,20 +119,20 @@ function renderTopN() {
     const topData = sortedData.slice(0, limit);
 
     const basisLabel = basis === 'std' ? '표준점수 합' : '원점수 합';
-    document.getElementById('top-n-title').innerText = `${basisLabel} 상위 학생`;
+    document.getElementById('top-n-title').innerText = `${basisLabel} 상위 ${limit}명 학생`;
 
     const thead = document.getElementById('top20-thead');
     thead.innerHTML = `
-        <tr>
-            <th class="px-4 py-3 text-center w-16">순위</th>
-            <th class="px-4 py-3 text-center">반</th>
-            <th class="px-4 py-3 text-center">번호</th>
-            <th class="px-4 py-3 text-center">이름</th>
-            <th class="px-4 py-3 text-center text-blue-700 bg-blue-50/50">${basisLabel}</th>
-            <th class="px-4 py-3 text-center">국어 선택</th>
-            <th class="px-4 py-3 text-center">수학 선택</th>
-            <th class="px-4 py-3 text-center">탐구1 선택</th>
-            <th class="px-4 py-3 text-center">탐구2 선택</th>
+        <tr class="divide-x divide-slate-200">
+            <th class="px-2 py-2 text-center w-15">순위</th>
+            <th class="px-2 py-2 text-center w-10">반</th>
+            <th class="px-2 py-2 text-center w-20">번호</th>
+            <th class="px-2 py-2 text-center w-30">이름</th>
+            <th class="px-2 py-2 text-center text-blue-700 bg-blue-50/50 w-24">${basisLabel}</th>
+            <th class="px-1 py-2 text-center">국어 선택</th>
+            <th class="px-1 py-2 text-center">수학 선택</th>
+            <th class="px-1 py-2 text-center">탐구1</th>
+            <th class="px-1 py-2 text-center">탐구2</th>
         </tr>
     `;
 
@@ -140,16 +140,16 @@ function renderTopN() {
     tbody.innerHTML = topData.map((s, i) => {
         const sumScore = getSum(s, basis);
         return `
-            <tr class="hover:bg-slate-50 transition-colors">
-                <td class="px-4 py-3 text-center font-bold text-slate-500">${i + 1}</td>
-                <td class="px-4 py-3 text-center">${s.class || '-'}</td>
-                <td class="px-4 py-3 text-center">${s.number || '-'}</td>
-                <td class="px-4 py-3 text-center font-semibold text-slate-800">${s.name || '-'}</td>
-                <td class="px-4 py-3 text-center font-bold text-blue-600 bg-blue-50/20">${sumScore > 0 ? sumScore : '-'}</td>
-                <td class="px-4 py-3 text-center text-base">${s.korean?.subject || '-'}</td>
-                <td class="px-4 py-3 text-center text-base">${s.math?.subject || '-'}</td>
-                <td class="px-4 py-3 text-center text-base">${s.inquiry1?.subject || '-'}</td>
-                <td class="px-4 py-3 text-center text-base">${s.inquiry2?.subject || '-'}</td>
+            <tr class="hover:bg-slate-50 transition-colors divide-x divide-slate-100 border-b border-slate-100">
+                <td class="px-2 py-2 text-center font-bold text-slate-500">${i + 1}</td>
+                <td class="px-2 py-2 text-center">${s.class || '-'}</td>
+                <td class="px-2 py-2 text-center">${s.number || '-'}</td>
+                <td class="px-2 py-2 text-center font-semibold text-slate-800 whitespace-nowrap">${s.name || '-'}</td>
+                <td class="px-2 py-2 text-center font-bold text-blue-600 bg-blue-50/20">${sumScore > 0 ? sumScore : '-'}</td>
+                <td class="px-1 py-2 text-center">${s.korean?.subject || '-'}</td>
+                <td class="px-1 py-2 text-center">${s.math?.subject || '-'}</td>
+                <td class="px-1 py-2 text-center">${s.inquiry1?.subject || '-'}</td>
+                <td class="px-1 py-2 text-center">${s.inquiry2?.subject || '-'}</td>
             </tr>
         `;
     }).join('');
