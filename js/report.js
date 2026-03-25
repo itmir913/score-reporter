@@ -54,8 +54,8 @@ function renderStats() {
 
 function renderTop20() {
     const ranked = [...ST.data].map(s => {
-        const sum = (s.korean.std||0) + (s.math.std||0) + (s.inquiry1.std||0) + (s.inquiry2.std||0);
-        return { ...s, sumStd: sum };
+        const sum = (s.korean.std || 0) + (s.math.std || 0) + (s.inquiry1.std || 0) + (s.inquiry2.std || 0);
+        return {...s, sumStd: sum};
     }).sort((a, b) => b.sumStd - a.sumStd).slice(0, 20);
 
     document.getElementById('top20-thead').innerHTML = `
@@ -72,7 +72,7 @@ function renderTop20() {
         `;
     document.getElementById('top20-tbody').innerHTML = ranked.map((s, idx) => `
             <tr>
-                <td class="px-4 py-2 font-bold text-slate-800">${idx+1}</td>
+                <td class="px-4 py-2 font-bold text-slate-800">${idx + 1}</td>
                 <td class="px-4 py-2 font-semibold">${s.name}</td>
                 <td class="px-4 py-2 text-center font-bold text-blue-600">${s.sumStd}</td>
                 <td class="px-4 py-2 text-center">${s.korean.std ?? '-'}</td>
@@ -92,9 +92,9 @@ function renderCharts() {
     ST.charts = {};
 
     const chartConfigs = [
-        { label: '국어', key: s => s.korean.grade, color: 'rgba(37, 99, 235, 0.5)', border: '#2563eb', subjKey: 'kor' },
-        { label: '수학', key: s => s.math.grade, color: 'rgba(16, 185, 129, 0.5)', border: '#10b981', subjKey: 'math' },
-        { label: '영어', key: s => s.english.grade, color: 'rgba(139, 92, 246, 0.5)', border: '#8b5cf6', subjKey: 'eng' }
+        {label: '국어', key: s => s.korean.grade, color: 'rgba(37, 99, 235, 0.5)', border: '#2563eb', subjKey: 'kor'},
+        {label: '수학', key: s => s.math.grade, color: 'rgba(16, 185, 129, 0.5)', border: '#10b981', subjKey: 'math'},
+        {label: '영어', key: s => s.english.grade, color: 'rgba(139, 92, 246, 0.5)', border: '#8b5cf6', subjKey: 'eng'}
     ];
 
     chartConfigs.forEach(cfg => {
@@ -125,10 +125,10 @@ function renderCharts() {
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: {legend: {display: false}},
                 scales: {
-                    y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: '#f1f5f9' } },
-                    x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                    y: {beginAtZero: true, ticks: {stepSize: 1, font: {size: 10}}, grid: {color: '#f1f5f9'}},
+                    x: {grid: {display: false}, ticks: {font: {size: 10}}}
                 }
             }
         });
