@@ -250,6 +250,7 @@
                     <i class="fa-solid fa-print"></i>보고서 PDF 인쇄
                 </button>
             </div>
+
             <!-- 빈 상태 -->
             <div id="report-empty" class="flex flex-col items-center justify-center py-24">
                 <i class="fa-solid fa-chart-pie text-5xl mb-4 text-slate-200"></i>
@@ -261,46 +262,85 @@
                     데이터 불러오기로 이동
                 </button>
             </div>
+
             <!-- 보고서 본문 -->
             <div id="report-content" class="hidden space-y-8">
                 <div class="hidden print:block mb-4 pb-3 border-b-2 border-blue-600">
                     <h1 id="print-title" class="text-2xl font-bold text-slate-800"></h1>
                     <p id="print-date" class="text-base text-slate-500 mt-1"></p>
                 </div>
-                <!-- ①요약통계 -->
+
                 <section class="print-page">
-                    <div class="flex items-center gap-2 mb-4 no-print">
-                        <span class="w-1 h-5 rounded bg-blue-600 inline-block"></span>
-                        <h3 class="font-bold text-slate-800">요약 통계</h3>
-                    </div>
-                    <div id="stat-cards" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
-                    <div id="stat-cards-2" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4"></div>
-                </section>
-                <!-- ②상위20인 -->
-                <section class="print-page">
-                    <div class="flex items-center justify-between mb-4 no-print">
+                    <div class="flex items-center justify-between mb-4 no-print flex-wrap gap-4">
                         <div class="flex items-center gap-2">
                             <span class="w-1 h-5 rounded bg-blue-600 inline-block"></span>
-                            <h3 class="font-bold text-slate-800">표준점수합 상위 20인</h3>
+                            <h3 id="top-n-title" class="font-bold text-slate-800 text-lg">상위 학생 명단</h3>
                         </div>
-                        <span class="text-base text-slate-400">국어+수학+탐구1+탐구2 표준점수 합산 기준</span>
+
+                        <div class="flex items-center gap-3 bg-slate-100 p-2 rounded-xl">
+                            <div class="flex items-center gap-2 px-2">
+                                <label for="top-n-count" class="text-base font-semibold text-slate-700">표시 인원:</label>
+                                <select id="top-n-count" onchange="renderTopN()" class="rounded-lg border-slate-300 text-base py-1 pl-2 pr-8 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="10">10명</option>
+                                    <option value="20" selected>20명</option>
+                                    <option value="30">30명</option>
+                                    <option value="50">50명</option>
+                                    <option value="100">100명</option>
+                                </select>
+                            </div>
+                            <div class="w-px h-6 bg-slate-300"></div>
+                            <div class="flex items-center gap-2 px-2">
+                                <label for="top-n-basis" class="text-base font-semibold text-slate-700">기준 점수:</label>
+                                <select id="top-n-basis" onchange="renderTopN()" class="rounded-lg border-slate-300 text-base py-1 pl-2 pr-8 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="std" selected>표준점수 합</option>
+                                    <option value="raw">원점수 합</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+                    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
                         <div class="overflow-x-auto">
                             <table class="data-table w-full text-base">
-                                <thead id="top20-thead" class="bg-slate-50 text-slate-600 font-bold"></thead>
+                                <thead id="top20-thead" class="bg-slate-100 text-slate-700 font-bold border-b-2 border-slate-200"></thead>
                                 <tbody id="top20-tbody" class="divide-y divide-slate-100"></tbody>
                             </table>
                         </div>
                     </div>
                 </section>
-                <!-- ③등급분포 -->
+
                 <section class="print-page">
-                    <div class="flex items-center gap-2 mb-4 no-print">
-                        <span class="w-1 h-5 rounded bg-blue-600 inline-block"></span>
-                        <h3 class="font-bold text-slate-800">과목별 등급 분포</h3>
+                    <div class="flex items-center justify-between mb-4 no-print flex-wrap gap-4">
+                        <div class="flex items-center gap-2">
+                            <span class="w-1 h-5 rounded bg-blue-600 inline-block"></span>
+                            <h3 class="font-bold text-slate-800 text-lg">점수 급간별 인원 분포</h3>
+                        </div>
+
+                        <div class="flex items-center gap-2 bg-slate-100 p-2 rounded-xl">
+                            <label for="interval-size" class="text-base font-semibold text-slate-700 ml-2">급간 크기:</label>
+                            <select id="interval-size" onchange="renderScoreDistribution()" class="rounded-lg border-slate-300 text-base py-1 pl-2 pr-8 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="5">5점</option>
+                                <option value="10" selected>10점</option>
+                                <option value="20">20점</option>
+                            </select>
+                            <span class="text-sm text-slate-500 mr-2">(원점수 합 기준)</span>
+                        </div>
                     </div>
-                    <div id="chart-grid" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
+                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                        <div class="relative h-64 w-full">
+                            <canvas id="score-dist-chart"></canvas>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="print-page">
+                    <div class="flex items-center justify-between mb-4 no-print flex-wrap gap-4">
+                        <div class="flex items-center gap-2">
+                            <span class="w-1 h-5 rounded bg-blue-600 inline-block"></span>
+                            <h3 class="font-bold text-slate-800 text-lg">과목별 등급 분포 종합</h3>
+                        </div>
+                        <span class="text-sm text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg font-medium">탐구 과목은 선택 1, 2를 통합하여 집계합니다.</span>
+                    </div>
+                    <div id="chart-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
                 </section>
             </div>
         </div>
