@@ -58,7 +58,7 @@
             <div class="lg:col-span-2 space-y-6">
                 <div class="flex flex-col border-b border-slate-200 pb-4">
                     <h2 class="text-2xl font-extrabold text-slate-800 tracking-tight">데이터 업로드</h2>
-                    <p class="text-sm text-slate-500 mt-1">수능 성적 데이터(.xlsx)를 업로드하고 변환할 양식을 선택해 주세요.</p>
+                    <p class="text-base text-slate-500 mt-1">수능 성적 데이터(.xlsx)를 업로드하고 변환할 양식을 선택해 주세요.</p>
                 </div>
 
                 <div id="dropzone"
@@ -76,7 +76,7 @@
                         <p class="text-lg font-bold text-slate-700 group-hover:text-blue-700 transition-colors">
                             파일을 드래그하거나 클릭하여 선택
                         </p>
-                        <p class="text-sm text-slate-400 mt-1.5 font-medium">지원 형식: .xlsx, .xls 파일</p>
+                        <p class="text-base text-slate-400 mt-1.5 font-medium">지원 형식: .xlsx, .xls 파일</p>
                     </div>
                     <input type="file" id="fileInput" accept=".xlsx,.xls" class="hidden"
                            onchange="handleFileSelect(event)"/>
@@ -90,7 +90,7 @@
                     </div>
                     <div class="flex-1">
                         <p id="file-name" class="font-bold text-slate-800 text-lg truncate"></p>
-                        <p id="file-meta" class="text-sm text-slate-500 mt-0.5 font-medium"></p>
+                        <p id="file-meta" class="text-base text-slate-500 mt-0.5 font-medium"></p>
                     </div>
                     <button onclick="clearFile()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-500
                                                      hover:bg-red-50 hover:text-red-500 transition-colors flex items-center justify-center">
@@ -99,14 +99,14 @@
                 </div>
 
                 <div id="format-area" class="hidden space-y-4 pt-2">
-                    <p class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                    <p class="text-base font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-blue-500"></span> 입력 양식 선택
                     </p>
                     <div class="grid grid-cols-2 gap-4" id="format-cards"></div>
                 </div>
 
                 <div id="sheet-area" class="hidden bg-white border border-slate-200 shadow-sm rounded-2xl p-5">
-                    <label class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-3">
+                    <label class="text-base font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-3">
                         <span class="w-2 h-2 rounded-full bg-indigo-500"></span> 시트 선택
                     </label>
                     <div class="relative">
@@ -115,7 +115,43 @@
                                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-50 hover:bg-white transition-colors">
                         </select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
-                            <i class="fa-solid fa-chevron-down text-sm"></i>
+                            <i class="fa-solid fa-chevron-down text-base"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="preview-section"
+                     class="hidden bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden mt-2">
+                    <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+        <span class="text-base font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-table border border-slate-300 rounded p-1"></i> 원본 데이터 미리보기
+        </span>
+                        <span id="preview-count"
+                              class="text-base font-bold px-2.5 py-1 bg-white border border-slate-200 rounded-full text-slate-500"></span>
+                    </div>
+
+                    <div class="overflow-x-auto max-h-60 custom-scrollbar">
+                        <table class="w-full text-base text-left">
+                            <thead id="preview-thead"
+                                   class="bg-white text-slate-500 font-bold sticky top-0 shadow-sm z-10"></thead>
+                            <tbody id="preview-tbody" class="divide-y divide-slate-100 text-slate-600"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="bg-amber-50/80 border-t border-amber-200 p-4">
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5 text-lg"></i>
+                            <div class="text-base text-amber-900">
+                                <p class="font-bold mb-1.5 text-base">데이터 분석 전, 아래 두 가지를 꼭 확인해 주세요!</p>
+                                <ol class="list-decimal list-inside space-y-1 text-amber-800 font-medium">
+                                    <li>상단 파란색 글씨(<span class="font-bold text-blue-600">학년, 이름 등</span>)가 각 열의 데이터와 <b>정확히
+                                        매칭</b>되었는지 확인합니다.
+                                    </li>
+                                    <li><span class="bg-amber-200/60 px-1 rounded font-bold">노란색 배경</span>은 <b>헤더(제목)
+                                        행</b>을 의미합니다. <b>실제 학생 데이터가 노란색으로 칠해져 있다면</b> 다른 양식을 선택해 주세요.
+                                    </li>
+                                </ol>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -126,24 +162,6 @@
                            transform transition-all active:scale-[0.98] flex items-center justify-center gap-2">
                     <i class="fa-solid fa-bolt text-yellow-300"></i> 데이터 분석 시작하기
                 </button>
-
-                <div id="preview-section"
-                     class="hidden bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden">
-                    <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                    <span class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-                        <i class="fa-solid fa-table border border-slate-300 rounded p-1"></i> 원본 데이터 미리보기
-                    </span>
-                        <span id="preview-count"
-                              class="text-xs font-bold px-2.5 py-1 bg-white border border-slate-200 rounded-full text-slate-500"></span>
-                    </div>
-                    <div class="overflow-x-auto max-h-60 custom-scrollbar">
-                        <table class="w-full text-sm text-left">
-                            <thead id="preview-thead"
-                                   class="bg-white text-slate-500 font-bold sticky top-0 shadow-sm"></thead>
-                            <tbody id="preview-tbody" class="divide-y divide-slate-100 text-slate-600"></tbody>
-                        </table>
-                    </div>
-                </div>
             </div>
 
             <div class="space-y-6">
@@ -158,7 +176,7 @@
 
                         <div id="format-detail"
                              class="min-h-[220px] bg-slate-50 border border-slate-100 rounded-2xl p-4
-                                flex flex-wrap content-start gap-2 items-start justify-center text-sm text-slate-400 font-medium text-center">
+                                flex flex-wrap content-start gap-2 items-start justify-center text-base text-slate-400 font-medium text-center">
                             <div class="flex flex-col items-center justify-center w-full h-full opacity-60 mt-8">
                                 <i class="fa-regular fa-hand-pointer text-2xl mb-2"></i>
                                 왼쪽에서 양식을 선택해 주세요
@@ -173,20 +191,20 @@
                     </h3>
                     <ol class="space-y-3 relative before:absolute before:inset-y-2 before:left-[11px] before:w-0.5 before:bg-slate-100">
                         <li class="flex gap-3 items-center relative z-10">
-                            <span class="w-6 h-6 rounded-full bg-white border-2 border-indigo-500 text-indigo-600 font-bold flex items-center justify-center text-xs flex-shrink-0">1</span>
-                            <span class="text-sm font-semibold text-slate-700">엑셀 파일 업로드</span>
+                            <span class="w-6 h-6 rounded-full bg-white border-2 border-indigo-500 text-indigo-600 font-bold flex items-center justify-center text-base flex-shrink-0">1</span>
+                            <span class="text-base font-semibold text-slate-700">엑셀 파일 업로드</span>
                         </li>
                         <li class="flex gap-3 items-center relative z-10">
-                            <span class="w-6 h-6 rounded-full bg-white border-2 border-slate-200 text-slate-400 font-bold flex items-center justify-center text-xs flex-shrink-0">2</span>
-                            <span class="text-sm font-medium text-slate-500">분석할 양식 선택</span>
+                            <span class="w-6 h-6 rounded-full bg-white border-2 border-slate-200 text-slate-400 font-bold flex items-center justify-center text-base flex-shrink-0">2</span>
+                            <span class="text-base font-medium text-slate-500">분석할 양식 선택</span>
                         </li>
                         <li class="flex gap-3 items-center relative z-10">
-                            <span class="w-6 h-6 rounded-full bg-white border-2 border-slate-200 text-slate-400 font-bold flex items-center justify-center text-xs flex-shrink-0">3</span>
-                            <span class="text-sm font-medium text-slate-500">데이터 파싱 및 시각화</span>
+                            <span class="w-6 h-6 rounded-full bg-white border-2 border-slate-200 text-slate-400 font-bold flex items-center justify-center text-base flex-shrink-0">3</span>
+                            <span class="text-base font-medium text-slate-500">데이터 파싱 및 시각화</span>
                         </li>
                         <li class="flex gap-3 items-center relative z-10">
-                            <span class="w-6 h-6 rounded-full bg-white border-2 border-slate-200 text-slate-400 font-bold flex items-center justify-center text-xs flex-shrink-0">4</span>
-                            <span class="text-sm font-medium text-slate-500">결과 보고서 확인 및 내보내기</span>
+                            <span class="w-6 h-6 rounded-full bg-white border-2 border-slate-200 text-slate-400 font-bold flex items-center justify-center text-base flex-shrink-0">4</span>
+                            <span class="text-base font-medium text-slate-500">결과 보고서 확인 및 내보내기</span>
                         </li>
                     </ol>
                 </div>
@@ -194,11 +212,11 @@
                 <div class="flex flex-col gap-3">
                     <div class="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-4 flex gap-3 items-start">
                         <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <i class="fa-solid fa-shield-halved text-emerald-600 text-sm"></i>
+                            <i class="fa-solid fa-shield-halved text-emerald-600 text-base"></i>
                         </div>
                         <div>
-                            <p class="text-sm font-extrabold text-emerald-800">100% 로컬 처리 보장</p>
-                            <p class="text-xs font-medium text-emerald-600 mt-1 leading-relaxed">
+                            <p class="text-base font-extrabold text-emerald-800">100% 로컬 처리 보장</p>
+                            <p class="text-base font-medium text-emerald-600 mt-1 leading-relaxed">
                                 학생들의 민감한 성적 데이터는 오직 선생님의 브라우저에서만 처리되며, 어떠한 외부 서버로도 전송되지 않습니다.
                             </p>
                         </div>
@@ -206,7 +224,7 @@
 
                     <button onclick="loadSampleData()"
                             class="w-full bg-white border border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50
-                               font-bold rounded-2xl py-3 text-sm transition-all shadow-sm flex items-center justify-center gap-2">
+                               font-bold rounded-2xl py-3 text-base transition-all shadow-sm flex items-center justify-center gap-2">
                         <i class="fa-solid fa-flask text-blue-500"></i> 샘플 데이터로 기능 체험하기
                     </button>
                 </div>
@@ -332,7 +350,7 @@
 <div id="toast" class="fixed bottom-8 right-8 z-[100] transform translate-y-12 opacity-0
                        transition-all duration-300 ease-out pointer-events-none">
     <div id="toast-inner" class="flex items-center gap-3 px-5 py-4 rounded-2xl shadow-xl
-                                 text-sm font-bold text-white min-w-[280px] bg-slate-800">
+                                 text-base font-bold text-white min-w-[280px] bg-slate-800">
         <div id="toast-icon-bg"
              class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0 transition-colors">
             <i id="toast-icon" class="fa-solid fa-check text-white"></i>

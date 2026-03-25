@@ -240,6 +240,8 @@ function renderRawPreview() {
     const maxCol = Math.max(...rows.slice(0, 10).map(r => r.length));
     const schema = SCHEMAS[ST.fmtId];
 
+    // 전역 FIELD_LABELS 사용 (main.js 상단에 정의되어 있어야 함)
+
     // 1. 선택된 양식의 매핑 데이터를 가져와 '컬럼 인덱스'를 기준으로 역매핑
     const idxToKey = {};
     if (schema && schema._idx) {
@@ -250,36 +252,38 @@ function renderRawPreview() {
         }
     }
 
-    // 2. 테이블 헤더(Thead) 렌더링
+    // 2. ★ 테이블 헤더(Thead) 렌더링 - 강조 스타일 적용
     thead.innerHTML = `<tr>${Array(maxCol).fill(0).map((_, i) => {
         const mappedKey = idxToKey[i];
         const korLabel = mappedKey ? FIELD_LABELS[mappedKey] : '';
 
         if (korLabel) {
-            return `<th class="px-4 py-3 border-b border-slate-200 whitespace-nowrap text-left align-middle bg-blue-50/50">
-                <span class="text-sm font-bold text-blue-700">${korLabel}</span>
+            // 매핑된 열: 굵고 더 큰 파란색 텍스트(text-base), 배경색 약간 어둡게(bg-slate-100)
+            return `<th class="px-4 py-4 border-b-2 border-slate-200 whitespace-nowrap text-left align-middle bg-slate-100 z-10">
+                <span class="text-base font-extrabold text-blue-700 tracking-tight">${korLabel}</span>
             </th>`;
         } else {
-            return `<th class="px-4 py-3 border-b border-slate-200 whitespace-nowrap text-left align-middle">
-                <span class="text-xs font-medium text-slate-400">Col ${i}</span>
+            // 매핑되지 않은 열: 연한 회색으로 Col 번호만 출력 (크기는 text-base 유지)
+            return `<th class="px-4 py-4 border-b-2 border-slate-200 whitespace-nowrap text-left align-middle bg-slate-100 z-10">
+                <span class="text-base font-medium text-slate-400">Col ${i}</span>
             </th>`;
         }
     }).join('')}</tr>`;
 
-    // ★ 추가: 텍스트를 지정한 길이(15자)만큼만 자르는 헬퍼 함수
+    // 텍스트를 지정한 길이(15자)만큼만 자르는 헬퍼 함수
     const truncateText = (text, maxLength = 15) => {
         if (text === undefined || text === null || text === '') return '';
         const str = String(text);
         return str.length > maxLength ? str.substring(0, maxLength) + '...' : str;
     };
 
-    // 3. 테이블 본문(Tbody) 렌더링
+    // 3. ★ 테이블 본문(Tbody) 렌더링 - 노란색 배경 진하게 적용
     tbody.innerHTML = rows.slice(0, Math.min(rows.length, 5)).map((r, i) => `
-            <tr class="${i < schema.headerRows ? 'bg-amber-50/50 text-amber-700 font-medium' : 'hover:bg-slate-50 transition-colors'}">
+            <tr class="${i < schema.headerRows ? 'bg-amber-100 text-amber-950 font-semibold' : 'hover:bg-slate-50 transition-colors'}">
                 ${Array(maxCol).fill(0).map((_, ci) => {
         const originalText = r[ci] !== undefined ? r[ci] : '';
         // td 태그의 title 속성에 원본 텍스트를 넣어 마우스 호버 시 툴팁으로 보이게 함
-        return `<td class="px-4 py-2 border-b border-slate-100 whitespace-nowrap text-sm text-slate-600 cursor-default" title="${originalText}">
+        return `<td class="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-base text-slate-700 cursor-default" title="${originalText}">
                         ${truncateText(originalText, 15)}
                     </td>`;
     }).join('')}
