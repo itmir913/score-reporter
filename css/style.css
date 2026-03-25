@@ -131,27 +131,6 @@ body {
     display: flex !important;
 }
 
-/* 필드 태그 */
-.ftag {
-    display: inline-block;
-    padding: 1px 7px;
-    border-radius: 4px;
-    font-size: .68rem;
-    font-weight: 600;
-    margin: 1px 1px;
-}
-
-.ftag-on {
-    background: #dbeafe;
-    color: #1e40af;
-}
-
-.ftag-off {
-    background: #f1f5f9;
-    color: #cbd5e1;
-    text-decoration: line-through;
-}
-
 ::-webkit-scrollbar {
     width: 5px;
     height: 5px;
