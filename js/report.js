@@ -145,7 +145,8 @@ function renderTopN() {
     tbody.innerHTML = topData.map((s, i) => {
         const sumScore = getSum(s, basis);
         return `
-            <tr class="hover:bg-slate-50 transition-colors divide-x divide-slate-100 border-b border-slate-100">
+            <tr class="hover:bg-slate-50 cursor-pointer transition-colors divide-x divide-slate-100 border-b border-slate-100"
+                onclick="showStudentDetail('${s.name}', '${s.class}', '${s.number}')">
                 <td class="px-2 py-2 text-center font-bold text-slate-500">${i + 1}</td>
                 <td class="px-2 py-2 text-center">${s.class || '-'}</td>
                 <td class="px-2 py-2 text-center">${s.number || '-'}</td>
@@ -210,26 +211,62 @@ function renderScoreDistribution() {
     ST.charts['scoreDist'] = new Chart(document.getElementById(canvasId).getContext('2d'), {
         type: 'bar',
         data: {
-            labels: labels, datasets: [{
+            labels: labels,
+            datasets: [{
                 label: '인원(명)',
                 data: counts,
-                backgroundColor: 'rgba(16, 185, 129, 0.6)', // Emerald
+                backgroundColor: 'rgba(16, 185, 129, 0.6)',
                 borderColor: '#059669',
                 borderWidth: 1,
                 borderRadius: {topLeft: 4, topRight: 4},
                 categoryPercentage: 1.0,
                 barPercentage: 0.95
             }]
-        }, options: {
+        },
+        options: {
             responsive: true,
             maintainAspectRatio: true,
             aspectRatio: 2.5,
+            // ★ 중요: onClick은 options의 자식이 맞지만,
+            // 일부 환경에서 인식이 안 될 경우를 대비해 인자 구성을 확인하세요.
+            onClick: function (event, elements) {
+                if (elements.length > 0) {
+                    const index = elements[0].index;
+                    const label = this.data.labels[index]; // 'this'는 차트 객체를 가리킵니다.
+
+                    const range = label.split('~').map(v => parseFloat(v.trim()));
+                    const min = range[0];
+                    const max = range.length > 1 ? range[1] : min;
+
+                    const basis = globalReportBasis;
+                    const studentsInBin = ST.data.filter(s => {
+                        let sum = 0;
+                        ['korean', 'math', 'inquiry1', 'inquiry2'].forEach(subj => {
+                            if (s[subj] && typeof s[subj][basis] === 'number') sum += s[subj][basis];
+                        });
+                        const totalSum = Math.round(sum);
+                        return totalSum >= min && totalSum <= max;
+                    });
+
+                    showBinStudentsModal(label, studentsInBin);
+                }
+            },
+            // 마우스 커서 변경 로직 (이것도 options 직계입니다)
+            onHover: (event, elements) => {
+                event.native.target.style.cursor = (elements && elements.length > 0) ? 'pointer' : 'default';
+            },
             plugins: {
                 legend: {display: false},
-                tooltip: {callbacks: {title: (ctx) => `${ctx[0].label}점 구간`, label: (ctx) => ` ${ctx.raw}명`}}
-            }, scales: {
-                y: {beginAtZero: true, ticks: {stepSize: 1, font: {size: 14}}},
-                x: {grid: {display: false}, ticks: {font: {size: 12}, maxRotation: 45, minRotation: 0}}
+                tooltip: {
+                    callbacks: {
+                        title: (ctx) => `${ctx[0].label}점 구간`,
+                        label: (ctx) => ` ${ctx.raw}명`
+                    }
+                }
+            },
+            scales: {
+                y: {beginAtZero: true, ticks: {stepSize: 1}},
+                x: {grid: {display: false}}
             }
         }
     });
@@ -396,6 +433,116 @@ function renderCharts() {
             }
         });
     });
+}
+
+/* ───────────────────────────────────────────
+   § 모달 제어 및 상세 정보 표시
+─────────────────────────────────────────── */
+
+/**
+ * 1. 모달 닫기 공통 함수
+ */
+function closeModal(id) {
+    document.getElementById(id).classList.add('hidden');
+}
+
+/**
+ * 2. 외부 영역 클릭 시 닫기 처리
+ */
+window.onclick = function (event) {
+    const binModal = document.getElementById('bin-students-modal');
+    const stdModal = document.getElementById('student-modal');
+    if (event.target === binModal) closeModal('bin-students-modal');
+    if (event.target === stdModal) closeModal('student-modal');
+};
+
+/**
+ * 3. 구간별 학생 명단 팝업 (차트 클릭 시 호출)
+ */
+function showBinStudentsModal(label, students) {
+    const basis = globalReportBasis;
+
+    // 1. 점수 높은 순 정렬
+    students.sort((a, b) => {
+        const getSum = (s) => ['korean', 'math', 'inquiry1', 'inquiry2'].reduce((acc, cur) => acc + (s[cur]?.[basis] || 0), 0);
+        return getSum(b) - getSum(a);
+    });
+
+    // 2. 타이틀 세팅
+    document.getElementById('bin-modal-title').innerText = `[${label}점 구간] 학생 명단 (${students.length}명)`;
+
+    // 3. tbody 내용 삽입 (td에 border-b만 남겨서 깔끔하게 표시)
+    const tbody = document.getElementById('bin-modal-tbody');
+    tbody.innerHTML = students.map(s => {
+        const sum = ['korean', 'math', 'inquiry1', 'inquiry2'].reduce((acc, cur) => acc + (s[cur]?.[basis] || 0), 0);
+        return `
+            <tr class="hover:bg-blue-50 cursor-pointer transition-colors group" 
+                onclick="showStudentDetail('${s.name}', '${s.class}', '${s.number}')">
+                <td class="border-b border-slate-200 p-3 text-slate-600">${s.class}반</td>
+                <td class="border-b border-slate-200 p-3 text-slate-600">${s.number}번</td>
+                <td class="border-b border-slate-200 p-3 font-bold text-slate-800">${s.name}</td>
+                <td class="border-b border-slate-200 p-3 text-blue-600 font-bold">
+                    ${sum.toFixed(basis === 'pct' ? 1 : 0)}
+                </td>
+                <td class="border-b border-slate-200 p-3 text-xs text-slate-400 group-hover:text-blue-500 font-medium">
+                    상세보기 >
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    if (students.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="p-12 text-slate-400">해당 구간에 학생이 없습니다.</td></tr>';
+    }
+
+    // 4. 명단 모달 표시 및 스크롤 초기화
+    const modal = document.getElementById('bin-students-modal');
+    modal.classList.remove('hidden');
+
+    // 모달을 열 때 항상 스크롤을 맨 위로 (이게 없으면 헤더가 겹쳐 보일 수 있음)
+    const scrollContainer = modal.querySelector('.overflow-y-auto');
+    if (scrollContainer) scrollContainer.scrollTop = 0;
+}
+
+/**
+ * 4. 개별 학생 상세 성적표 팝업 (명단 클릭 시 호출)
+ */
+function showStudentDetail(name, cls, num) {
+    const s = ST.data.find(item => item.name === name && item.class === cls && item.number === num);
+    if (!s) return;
+
+    document.getElementById('modal-student-info').innerText = `${s.class}반 ${s.number}번 ${s.name} 성적표`;
+
+    const rows = [
+        {label: '국어', data: s.korean},
+        {label: '수학', data: s.math},
+        {label: '영어', data: s.english, isAbs: true},
+        {label: '한국사', data: s.hist, isAbs: true},
+        {label: '탐구1', data: s.inquiry1},
+        {label: '탐구2', data: s.inquiry2},
+        {label: '제2외국어', data: s.fl2, isAbs: true}
+    ];
+
+    const tbody = document.getElementById('modal-score-tbody');
+    tbody.innerHTML = rows.map(r => {
+        const d = r.data || {};
+        const isAbs = r.isAbs;
+
+        // 공통+선택 점수를 합산하거나, 그냥 raw 점수를 가져옵니다.
+        const totalRaw = (d.common_raw || 0) + (d.select_raw || 0) || d.raw || '-';
+
+        return `
+            <tr class="hover:bg-slate-50">
+                <td class="border border-slate-300 p-2 bg-emerald-50 font-bold">${r.label}</td>
+                <td class="border border-slate-300 p-2">${d.subject || '-'}</td>
+                <td class="border border-slate-300 p-2 font-bold">${totalRaw}</td> <td class="border border-slate-300 p-2">${isAbs ? '-' : (d.std || '-')}</td>
+                <td class="border border-slate-300 p-2">${isAbs ? '-' : (d.pct || '-')}</td>
+                <td class="border border-slate-300 p-2 font-bold text-blue-600">${d.grade || '-'}</td>
+            </tr>
+        `;
+    }).join('');
+
+    document.getElementById('student-modal').classList.remove('hidden');
 }
 
 // 디바운스(Debounce)를 적용하여 리사이즈 이벤트가 너무 자주 발생하는 것을 방지합니다.

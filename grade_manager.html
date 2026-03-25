@@ -452,6 +452,59 @@
     </div>
 </div>
 
+<!-- 성적 분포 명단 팝업 -->
+<div id="bin-students-modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[110] flex items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
+            <h3 id="bin-modal-title" class="text-xl font-bold text-slate-800">구간별 명단</h3>
+            <button onclick="closeModal('bin-students-modal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-2xl"></i></button>
+        </div>
+
+        <div class="p-4 overflow-y-auto custom-scrollbar">
+            <table class="w-full border-separate border-spacing-0 text-center text-sm">
+                <thead>
+                <tr>
+                    <th class="sticky top-0 z-20 bg-slate-50 border-b border-slate-300 p-3 font-bold text-slate-700">반</th>
+                    <th class="sticky top-0 z-20 bg-slate-50 border-b border-slate-300 p-3 font-bold text-slate-700">번호</th>
+                    <th class="sticky top-0 z-20 bg-slate-50 border-b border-slate-300 p-3 font-bold text-slate-700">이름</th>
+                    <th class="sticky top-0 z-20 bg-slate-50 border-b border-slate-300 p-3 font-bold text-slate-700">총점</th>
+                    <th class="sticky top-0 z-20 bg-slate-50 border-b border-slate-300 p-3 font-bold text-slate-700">비고</th>
+                </tr>
+                </thead>
+                <tbody id="bin-modal-tbody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 개별 학생 성적표 팝업 -->
+<div id="student-modal"
+     class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[120] flex items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-blue-50 shrink-0">
+            <h3 id="modal-student-info" class="text-xl font-bold text-slate-800">학생 성적 상세</h3>
+            <button onclick="closeModal('student-modal')" class="text-slate-400 hover:text-slate-600"><i
+                    class="fa-solid fa-xmark text-2xl"></i></button>
+        </div>
+        <div class="p-8 overflow-y-auto">
+            <table class="w-full border-collapse border border-slate-300 text-center text-sm">
+                <thead class="bg-yellow-50 sticky top-0">
+                <tr>
+                    <th class="border border-slate-300 p-3">과목</th>
+                    <th class="border border-slate-300 p-3">선택과목</th>
+                    <th class="border border-slate-300 p-3">원점수</th>
+                    <th class="border border-slate-300 p-3">표준점수</th>
+                    <th class="border border-slate-300 p-3">백분위</th>
+                    <th class="border border-slate-300 p-3">등급</th>
+                </tr>
+                </thead>
+                <tbody id="modal-score-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <!-- ═══════════════════════════════════════════════════════════════
      JavaScript
 ═══════════════════════════════════════════════════════════════ -->
