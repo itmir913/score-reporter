@@ -3,7 +3,9 @@
 ─────────────────────────────────────────── */
 class GradeExporter {
     static toXlsx(students, target, fileName) {
-        const maxCol = Math.max(...Object.values(target._idx).filter(i => i !== null));
+        // 스키마 인덱스 중 가장 큰 값(가장 우측 컬럼) 계산
+        const maxCol = Math.max(...Object.values(target._idx).filter(i => i !== null && i !== undefined));
+
         const getVal = (s, key) => {
             const MAP = {
                 grade_year: 'grade_year',
@@ -54,57 +56,36 @@ class GradeExporter {
             return s[fn] ?? '';
         };
 
-        const LABELS = {
-            grade_year: '학년',
-            class: '반',
-            number: '번호',
-            name: '이름',
-            kor_subject: '국어_선택과목명',
-            kor_raw: '국어_원점수',
-            kor_std: '국어_표준점수',
-            kor_pct: '국어_백분위',
-            kor_grade: '국어_등급',
-            math_subject: '수학_선택과목명',
-            math_raw: '수학_원점수',
-            math_std: '수학_표준점수',
-            math_pct: '수학_백분위',
-            math_grade: '수학_등급',
-            eng_raw: '영어_원점수',
-            eng_grade: '영어_등급',
-            inq1_subject: '탐구1_과목명',
-            inq1_raw: '탐구1_원점수',
-            inq1_std: '탐구1_표준점수',
-            inq1_pct: '탐구1_백분위',
-            inq1_grade: '탐구1_등급',
-            inq2_subject: '탐구2_과목명',
-            inq2_raw: '탐구2_원점수',
-            inq2_std: '탐구2_표준점수',
-            inq2_pct: '탐구2_백분위',
-            inq2_grade: '탐구2_등급',
-            hist_raw: '한국사_원점수',
-            hist_grade: '한국사_등급',
-            fl2_subject: '제2외국어_과목명',
-            fl2_raw: '제2외국어_원점수',
-            fl2_grade: '제2외국어_등급',
-        };
+        // 타겟 스키마에 정의된 고정 헤더 가져오기
+        const headerRows = target.exportHeaders || [];
 
-        const hdr = new Array(maxCol + 1).fill('');
-        for (const [k, i] of Object.entries(target._idx)) {
-            if (i !== null && i !== undefined) hdr[i] = LABELS[k] || k;
-        }
-
+        // 데이터 행 생성
         const dataRows = students.map(s => {
             const row = new Array(maxCol + 1).fill('');
             for (const [k, i] of Object.entries(target._idx)) {
-                if (i !== null && i !== undefined) row[i] = getVal(s, k);
+                if (i !== null && i !== undefined) {
+                    row[i] = getVal(s, k);
+                }
             }
             return row;
         });
 
+        // 전체 시트 데이터 병합 (스키마 헤더 + 실제 데이터)
+        const sheetData = [...headerRows, ...dataRows];
+
         const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.aoa_to_sheet([hdr, ...dataRows]);
-        ws['!cols'] = hdr.map((h, ci) => ({
-            wch: Math.max(String(h || '').length, ...dataRows.map(r => String(r[ci] || '').length), 4) + 2,
+        const ws = XLSX.utils.aoa_to_sheet(sheetData);
+
+        // 컬럼 너비 자동 조정 로직 (헤더 마지막 줄과 데이터 기준)
+        const lastHeaderIndex = Math.max(0, headerRows.length - 1);
+        const refRowForWidth = headerRows[lastHeaderIndex] || [];
+
+        ws['!cols'] = Array.from({length: maxCol + 1}).map((_, ci) => ({
+            wch: Math.max(
+                String(refRowForWidth[ci] || '').length,
+                ...dataRows.map(r => String(r[ci] || '').length),
+                4 // 최소 너비
+            ) + 2
         }));
         XLSX.utils.book_append_sheet(wb, ws, '성적데이터');
         const wbout = XLSX.write(wb, {bookType: 'xlsx', type: 'array'});

@@ -2,13 +2,14 @@
        § FormatSchema 클래스
     ─────────────────────────────────────────── */
 class FormatSchema {
-    constructor({id, label, color, icon, headerRows, fields}) {
+    constructor({id, label, color, icon, headerRows, fields, exportHeaders}) {
         this.id = id;
         this.label = label;
         this.color = color;
         this.icon = icon;
         this.headerRows = headerRows;
         this.fields = fields;
+        this.exportHeaders = exportHeaders || [];
 
         this._idx = {};
         for (const [k, col] of Object.entries(fields)) {
@@ -54,6 +55,10 @@ const SCHEMAS = {
     daegyohyeop: new FormatSchema({
         id: 'daegyohyeop', label: '대교협', color: 'indigo', icon: 'fa-landmark',
         headerRows: 2,
+        exportHeaders: [
+            ['학년도', '학년', '반', '번호', '이름', '한국사', '', '국어', '', '', '', '', '수학', '', '', '', '', '영어', '', '탐구영역1', '', '', '', '', '탐구영역2', '', '', '', '', '제2외국어', '', ''],
+            ['', '', '', '', '', '원점수', '등급', '선택', '원점수', '표준점수', '백분위', '등급', '선택', '원점수', '표준점수', '백분위', '등급', '원점수', '등급', '선택', '원점수', '표준점수', '백분위', '등급', '선택', '원점수', '표준점수', '백분위', '등급', '과목명', '원점수', '등급']
+        ],
         fields: {
             grade_year: 'B',
             class: 'C',
@@ -105,6 +110,10 @@ const SCHEMAS = {
     univcoop: new FormatSchema({
         id: 'univcoop', label: '유니브', color: 'blue', icon: 'fa-building-columns',
         headerRows: 2,
+        exportHeaders: [
+            ['계열번호', '학년', '반', '번호', '이름', '국어', '', '', '', '', '', '', '수학', '', '', '', '', '', '', '영어', '', '', '', '탐구영역', '선택1', '', '', '', '', '선택2', '', '', '', '', '한국사', '', '', '', '제2외국어', '', '', '', ''],
+            ['', '', '', '', '', '국어선택', '공통원점수', '선택원점수', '원점수총점', '표준점수', '백분위', '등급', '수학선택', '공통원점수', '선택원점수', '원점수총점', '표준점수', '백분위', '등급', '원점수', '표준점수', '백분위', '등급', '', '과목명', '원점수', '표준점수', '백분위', '등급', '과목명', '원점수', '표준점수', '백분위', '등급', '원점수', '표준점수', '백분위', '등급', '과목명', '원점수', '표준점수', '백분위', '등급']
+        ],
         fields: {
             grade_year: 'B',
             class: 'C',
@@ -156,6 +165,9 @@ const SCHEMAS = {
     kimyoungil: new FormatSchema({
         id: 'kimyoungil', label: '김영일', color: 'violet', icon: 'fa-book',
         headerRows: 1,
+        exportHeaders: [
+            ['아이디', '이름', '학년', '시험일자', '출제기관', '한국사(원점수)', '한국사(등급)', '국어선택과목', '국어(공통)', '국어(선택)', '국어(원점수)', '국어(표준점수)', '국어(백분위)', '국어(등급)', '수학선택과목', '수학(공통)', '수학(선택)', '수학(원점수)', '수학(표준점수)', '수학(백분위)', '수학(등급)', '영어(원점수)', '영어(등급)', '탐1과목명', '탐1(원점수)', '탐1(표준점수)', '탐1(백분위)', '탐1(등급)', '탐2과목명', '탐2(원점수)', '탐2(표준점수)', '탐2(백분위)', '탐2(등급)', '제2외국어과목명', '제2외(원점수)', '제2외(등급)', '잠금상태']
+        ],
         fields: {
             grade_year: 'C',
             class: '',
@@ -207,6 +219,10 @@ const SCHEMAS = {
     kkumkugo: new FormatSchema({
         id: 'kkumkugo', label: '꿈꾸GO', color: 'emerald', icon: 'fa-star',
         headerRows: 2,
+        exportHeaders: [
+            ['학년', '반', '번호', '이름', '국어영역', '', '', '', '', '수학영역', '', '', '', '', '영어영역', '', '한국사', '', '탐구영역', '탐구선택1', '', '', '', '', '탐구선택2', '', '', '', '', '제2외국어/한문', '', ''],
+            ['', '', '', '', '국어선택', '원점수', '표준점수', '백분위', '등급', '수학선택', '원점수', '표준점수', '백분위', '등급', '원점수', '등급', '원점수', '등급', '', '과목명', '원점수', '표준점수', '백분위', '등급', '과목명', '원점수', '표준점수', '백분위', '등급', '과목명', '원점수', '등급']
+        ],
         fields: {
             grade_year: 'A',
             class: 'B',
