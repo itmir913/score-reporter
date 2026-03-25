@@ -348,4 +348,42 @@ canvas, img {
     .w-16 {
         width: 30px !important;
     }
+
+    /* [추가] 선택과목 분석 섹션 인쇄 최적화 */
+    /* 1. 국어, 수학 차트 그리드 정렬 */
+    .grid-cols-1.md\:grid-cols-2 {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important; /* 무조건 2열 */
+        gap: 20px !important;
+    }
+
+    /* 2. 각 차트 컨테이너 중앙 정렬 */
+    .relative.w-full.h-56,
+    .relative.w-full.h-64 {
+        margin-left: auto !important;
+        margin-right: auto !important;
+        display: block !important;
+    }
+
+    /* 3. 탐구 영역 (가로 배치 강제) */
+    .md\:col-span-2 {
+        grid-column: span 2 / span 2 !important; /* 2칸 다 쓰기 */
+    }
+
+    .flex.flex-col.md\:flex-row {
+        display: flex !important;
+        flex-direction: row !important; /* 인쇄 시 가로로 배치 */
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 30px !important;
+    }
+
+    /* 탐구 차트와 표 너비 고정 */
+    .flex.flex-col.md\:flex-row > .relative {
+        width: 50% !important; /* 차트 영역 */
+    }
+
+    .flex.flex-col.md\:flex-row > div:last-child {
+        width: 50% !important; /* 표 영역 */
+    }
 }
