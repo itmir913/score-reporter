@@ -9,6 +9,52 @@ const ST = {
     charts: {}
 };
 
+
+// 영문 변수명을 한글 라벨로 변환해주는 매핑 사전
+const FIELD_LABELS = {
+    grade_year: '학년',
+    class: '반',
+    number: '번호',
+    name: '이름',
+    kor_subject: '국어_선택과목명',
+    kor_common_raw: '국어_공통원점수',
+    kor_select_raw: '국어_선택원점수',
+    kor_raw: '국어_원점수',
+    kor_std: '국어_표준점수',
+    kor_pct: '국어_백분위',
+    kor_grade: '국어_등급',
+    math_subject: '수학_선택과목명',
+    math_common_raw: '수학_공통원점수',
+    math_select_raw: '수학_선택원점수',
+    math_raw: '수학_원점수',
+    math_std: '수학_표준점수',
+    math_pct: '수학_백분위',
+    math_grade: '수학_등급',
+    eng_raw: '영어_원점수',
+    eng_std: '영어_표준점수',
+    eng_pct: '영어_백분위',
+    eng_grade: '영어_등급',
+    inq1_subject: '탐구1_과목명',
+    inq1_raw: '탐구1_원점수',
+    inq1_std: '탐구1_표준점수',
+    inq1_pct: '탐구1_백분위',
+    inq1_grade: '탐구1_등급',
+    inq2_subject: '탐구2_과목명',
+    inq2_raw: '탐구2_원점수',
+    inq2_std: '탐구2_표준점수',
+    inq2_pct: '탐구2_백분위',
+    inq2_grade: '탐구2_등급',
+    hist_raw: '한국사_원점수',
+    hist_std: '한국사_표준점수',
+    hist_pct: '한국사_백분위',
+    hist_grade: '한국사_등급',
+    fl2_subject: '제2외국어_과목명',
+    fl2_raw: '제2외국어_원점수',
+    fl2_std: '제2외국어_표준점수',
+    fl2_pct: '제2외국어_백분위',
+    fl2_grade: '제2외국어_등급'
+};
+
 // 탭 전환 로직
 function switchTab(tabId) {
     ['upload', 'report', 'export'].forEach(t => {
@@ -143,17 +189,36 @@ function renderFormatCards() {
 
 function selectFormat(id) {
     ST.fmtId = id;
-    document.querySelectorAll('.format-card').forEach(el => el.classList.remove('selected'));
-    document.getElementById(`fmt-${id}`).classList.add('selected');
+
+    // 1. 선택된 카드 디자인 활성화
+    document.querySelectorAll('.format-card').forEach(el => {
+        el.classList.remove('selected', 'border-blue-500', 'bg-blue-50', 'ring-2', 'ring-blue-200');
+        el.classList.add('border-slate-200');
+        const check = el.querySelector('.fmt-check');
+        if (check) check.classList.add('hidden');
+    });
+
+    const selectedCard = document.getElementById(`fmt-${id}`);
+    if (selectedCard) {
+        selectedCard.classList.remove('border-slate-200');
+        selectedCard.classList.add('selected', 'border-blue-500', 'bg-blue-50', 'ring-2', 'ring-blue-200');
+        const check = selectedCard.querySelector('.fmt-check');
+        if (check) check.classList.remove('hidden');
+    }
 
     document.getElementById('sheet-area').classList.remove('hidden');
     document.getElementById('parse-btn').classList.remove('hidden');
 
     const s = SCHEMAS[id];
-    document.getElementById('format-detail').innerHTML = `
-            <p class="mb-2 font-bold text-slate-600">${s.label} 지원 필드</p>
-            <div>${Object.entries(s.fields).map(([k, v]) => `<span class="ftag ${v ? 'ftag-on' : 'ftag-off'}">${k}</span>`).join('')}</div>
-        `;
+
+    // 2. 우측 "양식 지원 필드" 렌더링 (★ FIELD_LABELS 기준으로 순서 고정!)
+    document.getElementById('format-detail').innerHTML = Object.entries(FIELD_LABELS).map(([k, korName]) => {
+        // 현재 선택된 양식(schema)에서 해당 키(k)가 지원되는지(값이 있는지) 확인
+        const isSupported = s.fields[k] && s.fields[k].trim() !== '';
+
+        return `<span class="ftag ${isSupported ? 'ftag-on' : 'ftag-off'}">${korName}</span>`;
+    }).join('');
+
     renderRawPreview();
 }
 
@@ -173,11 +238,51 @@ function renderRawPreview() {
     }
 
     const maxCol = Math.max(...rows.slice(0, 10).map(r => r.length));
-    thead.innerHTML = `<tr>${Array(maxCol).fill(0).map((_, i) => `<th class="px-3 py-2 border-b">Col ${i}</th>`).join('')}</tr>`;
+    const schema = SCHEMAS[ST.fmtId];
 
+    // 1. 선택된 양식의 매핑 데이터를 가져와 '컬럼 인덱스'를 기준으로 역매핑
+    const idxToKey = {};
+    if (schema && schema._idx) {
+        for (const [key, idx] of Object.entries(schema._idx)) {
+            if (idx !== null && idx !== undefined) {
+                idxToKey[idx] = key;
+            }
+        }
+    }
+
+    // 2. 테이블 헤더(Thead) 렌더링
+    thead.innerHTML = `<tr>${Array(maxCol).fill(0).map((_, i) => {
+        const mappedKey = idxToKey[i];
+        const korLabel = mappedKey ? FIELD_LABELS[mappedKey] : '';
+
+        if (korLabel) {
+            return `<th class="px-4 py-3 border-b border-slate-200 whitespace-nowrap text-left align-middle bg-blue-50/50">
+                <span class="text-sm font-bold text-blue-700">${korLabel}</span>
+            </th>`;
+        } else {
+            return `<th class="px-4 py-3 border-b border-slate-200 whitespace-nowrap text-left align-middle">
+                <span class="text-xs font-medium text-slate-400">Col ${i}</span>
+            </th>`;
+        }
+    }).join('')}</tr>`;
+
+    // ★ 추가: 텍스트를 지정한 길이(15자)만큼만 자르는 헬퍼 함수
+    const truncateText = (text, maxLength = 15) => {
+        if (text === undefined || text === null || text === '') return '';
+        const str = String(text);
+        return str.length > maxLength ? str.substring(0, maxLength) + '...' : str;
+    };
+
+    // 3. 테이블 본문(Tbody) 렌더링
     tbody.innerHTML = rows.slice(0, Math.min(rows.length, 5)).map((r, i) => `
-            <tr class="${i < SCHEMAS[ST.fmtId].headerRows ? 'bg-amber-50 text-amber-700' : ''}">
-                ${Array(maxCol).fill(0).map((_, ci) => `<td class="px-3 py-1 border-b whitespace-nowrap">${r[ci] !== undefined ? r[ci] : ''}</td>`).join('')}
+            <tr class="${i < schema.headerRows ? 'bg-amber-50/50 text-amber-700 font-medium' : 'hover:bg-slate-50 transition-colors'}">
+                ${Array(maxCol).fill(0).map((_, ci) => {
+        const originalText = r[ci] !== undefined ? r[ci] : '';
+        // td 태그의 title 속성에 원본 텍스트를 넣어 마우스 호버 시 툴팁으로 보이게 함
+        return `<td class="px-4 py-2 border-b border-slate-100 whitespace-nowrap text-sm text-slate-600 cursor-default" title="${originalText}">
+                        ${truncateText(originalText, 15)}
+                    </td>`;
+    }).join('')}
             </tr>
         `).join('');
 
