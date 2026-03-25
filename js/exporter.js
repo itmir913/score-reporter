@@ -4,7 +4,7 @@
 class GradeExporter {
     static toXlsx(students, target, fileName) {
         // 스키마 인덱스 중 가장 큰 값(가장 우측 컬럼) 계산
-        const maxCol = Math.max(...Object.values(target._idx).filter(i => i !== null && i !== undefined));
+        const maxCol = Math.max(0, ...Object.values(target._idx).filter(i => i !== null && i !== undefined));
 
         const getVal = (s, key) => {
             const MAP = {
