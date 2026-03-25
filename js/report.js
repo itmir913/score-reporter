@@ -242,7 +242,7 @@ function renderScoreDistribution() {
             onClick: function (event, elements) {
                 if (elements.length > 0) {
                     const index = elements[0].index;
-                    const label = this.data.labels[index]; // 'this'는 차트 객체를 가리킵니다.
+                    const label = `${this.data.labels[index]} 급간`; // 'this'는 차트 객체를 가리킵니다.
 
                     const range = label.split('~').map(v => parseFloat(v.trim()));
                     const min = range[0];
@@ -334,7 +334,6 @@ function renderSubjectSelection() {
             const scoreObjs = [].concat(getScore(student));
 
             subjects.forEach((sub, idx) => {
-                // 데이터 타입 방어 코드: null, undefined 이거나 문자가 아니면 무시
                 if (!sub || typeof sub !== 'string' || sub.trim() === '') return;
 
                 if (!stats[sub]) {
@@ -347,7 +346,6 @@ function renderSubjectSelection() {
                 if (scoreObj) {
                     let rawScore = 0;
                     let hasRaw = false;
-
                     if (typeof scoreObj.common_raw === 'number' || typeof scoreObj.select_raw === 'number') {
                         rawScore = (scoreObj.common_raw || 0) + (scoreObj.select_raw || 0);
                         hasRaw = true;
@@ -355,12 +353,10 @@ function renderSubjectSelection() {
                         rawScore = scoreObj.raw;
                         hasRaw = true;
                     }
-
                     if (hasRaw) {
                         stats[sub].sumRaw += rawScore;
                         stats[sub].validRawCount += 1;
                     }
-
                     if (typeof scoreObj.grade === 'number') {
                         stats[sub].sumGrade += scoreObj.grade;
                         stats[sub].validGradeCount += 1;
@@ -378,11 +374,16 @@ function renderSubjectSelection() {
         s => [s.inquiry1, s.inquiry2]
     );
 
-    const drawChart = (chartKey, canvasId, statsId, statsData) => {
-        // HTML 요소가 없으면 에러 내지 않고 조용히 종료
+    // ★ 함수 정의 순서 수정: (canvasId, statsId, statsData, chartKey, type)
+    const drawChart = (canvasId, statsId, statsData, chartKey, type) => {
         const canvasEl = document.getElementById(canvasId);
         const statsContainer = document.getElementById(statsId);
+
+        // 요소가 없거나 데이터가 없으면 중단
         if (!canvasEl || !statsContainer) return;
+
+        const basis = globalReportBasis;
+        const basisLabel = labelMap[basis];
 
         const labels = Object.keys(statsData).sort((a, b) => statsData[b].count - statsData[a].count);
 
@@ -392,7 +393,7 @@ function renderSubjectSelection() {
         }
 
         if (labels.length === 0) {
-            statsContainer.innerHTML = '<p class="text-center text-slate-400 mt-4 text-sm font-medium">선택과목 데이터가 없습니다.</p>';
+            statsContainer.innerHTML = '<p class="text-center text-slate-400 mt-4 text-sm font-medium">데이터가 없습니다.</p>';
             return;
         }
 
@@ -412,9 +413,9 @@ function renderSubjectSelection() {
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false, // ★ true에서 false로 변경하여 부모 div에 맞춤
+                maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15, font: {size: 11} } }
+                    legend: {position: 'bottom', labels: {boxWidth: 12, padding: 15, font: {size: 11}}}
                 }
             }
         });
@@ -424,10 +425,10 @@ function renderSubjectSelection() {
             <table class="w-full text-center mt-4 border-t border-slate-100 pt-2 text-sm">
                 <thead>
                     <tr class="text-slate-500 font-semibold border-b border-slate-100 bg-slate-50">
-                        <th class="py-2 rounded-tl-lg">과목</th>
-                        <th class="py-2">비율(인원)</th>
-                        <th class="py-2">원점평균</th>
-                        <th class="py-2 rounded-tr-lg">평균등급</th>
+                        <th class="py-2 rounded-tl-lg">과목명</th>
+                        <th class="py-2">비율 (인원)</th>
+                        <th class="py-2">평균 ${basisLabel}</th>
+                        <th class="py-2 rounded-tr-lg">평균 등급</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50">
@@ -440,8 +441,9 @@ function renderSubjectSelection() {
             const avgGrade = d.validGradeCount > 0 ? (d.sumGrade / d.validGradeCount).toFixed(1) : '-';
 
             html += `
-                <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="py-2 font-medium text-slate-700">${l}</td>
+                <tr class="hover:bg-blue-50 transition-colors cursor-pointer group" 
+                    onclick="showSelectedSubjectStudents('${type}', '${l}')">
+                    <td class="py-2 font-medium text-slate-700 group-hover:text-blue-600">${l}</td>
                     <td class="py-2 text-slate-600">${pct}% <span class="text-xs text-slate-400">(${d.count})</span></td>
                     <td class="py-2 text-blue-600 font-semibold">${avgRaw}</td>
                     <td class="py-2 text-emerald-600 font-semibold">${avgGrade}</td>
@@ -452,9 +454,25 @@ function renderSubjectSelection() {
         statsContainer.innerHTML = html;
     };
 
-    drawChart('korSelectPie', 'kor-select-chart', 'kor-select-stats', korStats);
-    drawChart('mathSelectPie', 'math-select-chart', 'math-select-stats', mathStats);
-    drawChart('inqSelectPie', 'inq-select-chart', 'inq-select-stats', inqStats);
+    // ★ 호출부 순서 수정: (canvasId, statsId, statsData, chartKey, type)
+    drawChart('kor-select-chart', 'kor-select-stats', korStats, 'korSelectPie', 'kor');
+    drawChart('math-select-chart', 'math-select-stats', mathStats, 'mathSelectPie', 'math');
+    drawChart('inq-select-chart', 'inq-select-stats', inqStats, 'inqSelectPie', 'inq');
+}
+
+// 선택과목별 학생 명단 모달 띄우기
+function showSelectedSubjectStudents(type, subjectName) {
+    if (!ST.data || ST.data.length === 0) return;
+
+    const filtered = ST.data.filter(s => {
+        if (type === 'kor') return s.korean?.subject === subjectName;
+        if (type === 'math') return s.math?.subject === subjectName;
+        if (type === 'inq') return s.inquiry1?.subject === subjectName || s.inquiry2?.subject === subjectName;
+        return false;
+    });
+
+    // 기존에 있는 모달 함수 호출
+    showBinStudentsModal(`${subjectName} 선택`, filtered);
 }
 
 /* ───────────────────────────────────────────
@@ -682,7 +700,7 @@ function showBinStudentsModal(label, students) {
     });
 
     // 2. 타이틀 세팅
-    document.getElementById('bin-modal-title').innerText = `[${label} 구간] 학생 명단 (${students.length}명)`;
+    document.getElementById('bin-modal-title').innerText = `[${label}] 학생 명단 (${students.length}명)`;
 
     // 3. tbody 내용 삽입 (td에 border-b만 남겨서 깔끔하게 표시)
     const tbody = document.getElementById('bin-modal-tbody');
