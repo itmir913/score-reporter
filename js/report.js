@@ -72,12 +72,6 @@ function renderStats() {
     const basis = globalReportBasis;
     const basisLabel = labelMap[basis];
 
-    const fmt = (v) => isNaN(v) ? '-' : v.toFixed(1);
-    const avgOf = (arr) => {
-        const valid = arr.filter(v => typeof v === 'number');
-        return valid.length ? valid.reduce((a, b) => a + b, 0) / valid.length : NaN;
-    };
-
     // ★ 수정됨: s.korean?.std 대신 s.korean?.[basis] 를 사용하여 동적으로 점수 가져오기
     const korAvg = fmt(avgOf(d.map(s => s.korean?.[basis])));
     const mathAvg = fmt(avgOf(d.map(s => s.math?.[basis])));
