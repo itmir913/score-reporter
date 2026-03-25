@@ -515,12 +515,19 @@ function closeModal(modalId) {
 /**
  * 2. 외부 영역 클릭 시 닫기 처리
  */
-window.onclick = function (event) {
+window.addEventListener('click', function (event) {
     const binModal = document.getElementById('bin-students-modal');
     const stdModal = document.getElementById('student-modal');
-    if (event.target === binModal) closeModal('bin-students-modal');
-    if (event.target === stdModal) closeModal('student-modal');
-};
+
+    // event.target이 모달의 배경(최상위 래퍼)일 때만 닫기 실행
+    // (모달 내부의 흰색 창을 클릭했을 때는 event.target이 달라지므로 무시됨)
+    if (event.target === binModal) {
+        closeModal('bin-students-modal');
+    }
+    if (event.target === stdModal) {
+        closeModal('student-modal');
+    }
+});
 
 /**
  * 3. 구간별 학생 명단 팝업 (차트 클릭 시 호출)
