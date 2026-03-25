@@ -329,17 +329,15 @@ function renderCharts() {
 
     const dataCounts = {};
 
-    // ★ 수정된 addData: 과목별로 기준(basis)을 강제할 수 있도록 인자 추가
     const addData = (subjName, value, forceBasis = null) => {
         if (!subjName || typeof value !== 'number') return;
-
-        // 해당 과목이 사용할 최종 기준 결정
         const finalBasis = forceBasis || chartBasis;
 
         if (!dataCounts[subjName]) {
             dataCounts[subjName] = {
                 counts: finalBasis === 'grade' ? Array(MAX_GRADE).fill(0) : Array(10).fill(0),
-                basis: finalBasis // 차트 생성 시 참조하기 위해 저장
+                basis: finalBasis,
+                originalName: subjName // 필터링 시 과목 식별용
             };
         }
 
@@ -357,11 +355,8 @@ function renderCharts() {
     ST.data.forEach(s => {
         if (s.korean && s.korean[chartBasis]) addData('국어 종합', s.korean[chartBasis]);
         if (s.math && s.math[chartBasis]) addData('수학 종합', s.math[chartBasis]);
-
-        // ★ 영어와 한국사는 chartBasis와 상관없이 무조건 'grade'로 강제 전달
         if (s.english?.grade) addData('영어', s.english.grade, 'grade');
         if (s.hist?.grade) addData('한국사', s.hist.grade, 'grade');
-
         if (s.inquiry1?.subject && s.inquiry1[chartBasis]) addData(s.inquiry1.subject, s.inquiry1[chartBasis]);
         if (s.inquiry2?.subject && s.inquiry2[chartBasis]) addData(s.inquiry2.subject, s.inquiry2[chartBasis]);
     });
@@ -379,10 +374,9 @@ function renderCharts() {
         const {counts, basis} = obj;
         if (counts.every(c => c === 0)) return;
 
-        // ★ 차트별 전용 라벨 생성 (영어/한국사는 무조건 등급 라벨을 가짐)
         const currentLabels = basis === 'grade'
             ? Array.from({length: MAX_GRADE}, (_, i) => (i + 1).toString())
-            : ['0~9', '10s', '20s', '30s', '40s', '50s', '60s', '70s', '80s', '90~100'];
+            : ['0~9', '10~19', '20~29', '30~39', '40~49', '50~59', '60~69', '70~79', '80~89', '90~100'];
 
         const id = `chart-subj-${index}`;
         const div = document.createElement('div');
@@ -392,7 +386,7 @@ function renderCharts() {
                 <span>${subjName} <small class="text-slate-400 font-normal">(${basis === 'grade' ? '등급' : '백분위'})</small></span>
                 <span class="text-base font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded">총 ${counts.reduce((a, b) => a + b, 0)}명</span>
             </p>
-            <div class="relative w-full"><canvas id="${id}"></canvas></div>
+            <div class="relative w-full cursor-pointer"><canvas id="${id}"></canvas></div>
         `;
         grid.appendChild(div);
 
@@ -416,19 +410,53 @@ function renderCharts() {
                 responsive: true,
                 maintainAspectRatio: true,
                 aspectRatio: 1.5,
+                // ★ 클릭 이벤트 추가
+                onClick: (event, elements) => {
+                    if (elements.length > 0) {
+                        const idx = elements[0].index;
+                        const label = currentLabels[idx];
+
+                        // 클릭한 해당 과목의 학생들만 필터링
+                        const studentsInBin = ST.data.filter(s => {
+                            let targetValue = null;
+
+                            // 1. 과목 찾기
+                            if (subjName === '국어 종합') targetValue = s.korean?.[basis];
+                            else if (subjName === '수학 종합') targetValue = s.math?.[basis];
+                            else if (subjName === '영어') targetValue = s.english?.grade;
+                            else if (subjName === '한국사') targetValue = s.hist?.grade;
+                            else if (s.inquiry1?.subject === subjName) targetValue = s.inquiry1[basis];
+                            else if (s.inquiry2?.subject === subjName) targetValue = s.inquiry2[basis];
+
+                            if (targetValue === null || typeof targetValue !== 'number') return false;
+
+                            // 2. 등급 기준일 때
+                            if (basis === 'grade') {
+                                return Math.round(targetValue) === (idx + 1);
+                            }
+                            // 3. 백분위 기준일 때 (10단위 구간)
+                            else {
+                                const min = idx * 10;
+                                const max = (idx === 9) ? 100 : (idx * 10 + 9);
+                                return targetValue >= min && targetValue <= max;
+                            }
+                        });
+
+                        showBinStudentsModal(`${subjName} ${label}${basis === 'grade' ? '등급' : '%'}`, studentsInBin);
+                    }
+                },
                 plugins: {
                     legend: {display: false},
                     tooltip: {
                         callbacks: {
-                            // ★ 툴팁도 해당 차트의 기준(basis)에 맞게 표시
                             title: (ctx) => basis === 'grade' ? `${ctx[0].label}등급` : `${ctx[0].label}% 구간`,
                             label: (ctx) => ` ${ctx.raw}명`
                         }
                     }
                 },
                 scales: {
-                    y: {beginAtZero: true, ticks: {stepSize: 1, font: {size: 12}}},
-                    x: {grid: {display: false}, ticks: {font: {size: 12, weight: 'bold'}}}
+                    y: {beginAtZero: true, ticks: {stepSize: 1}},
+                    x: {grid: {display: false}}
                 }
             }
         });
@@ -469,7 +497,7 @@ function showBinStudentsModal(label, students) {
     });
 
     // 2. 타이틀 세팅
-    document.getElementById('bin-modal-title').innerText = `[${label}점 구간] 학생 명단 (${students.length}명)`;
+    document.getElementById('bin-modal-title').innerText = `[${label} 구간] 학생 명단 (${students.length}명)`;
 
     // 3. tbody 내용 삽입 (td에 border-b만 남겨서 깔끔하게 표시)
     const tbody = document.getElementById('bin-modal-tbody');
