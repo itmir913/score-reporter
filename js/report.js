@@ -1,3 +1,32 @@
+// ★ 전역 상태: 현재 통계 기준 (raw: 원점수, std: 표준점수)
+let globalReportBasis = 'raw';
+
+/* ───────────────────────────────────────────
+   § 통계 기준 설정 및 UI 업데이트
+─────────────────────────────────────────── */
+function setGlobalBasis(basis) {
+    globalReportBasis = basis;
+
+    // 버튼 스타일 업데이트
+    const btnRaw = document.getElementById('btn-basis-raw');
+    const btnStd = document.getElementById('btn-basis-std');
+
+    if (basis === 'raw') {
+        btnRaw.className = 'px-4 py-2 text-base font-bold rounded-md bg-white text-blue-600 shadow-sm transition-all';
+        btnStd.className = 'px-4 py-2 text-base font-medium rounded-md text-slate-500 hover:text-slate-700 transition-all';
+    } else {
+        btnStd.className = 'px-4 py-2 text-base font-bold rounded-md bg-white text-blue-600 shadow-sm transition-all';
+        btnRaw.className = 'px-4 py-2 text-base font-medium rounded-md text-slate-500 hover:text-slate-700 transition-all';
+    }
+
+    // 기준이 바뀌면 요약 통계도 다시 그립니다.
+    renderStats();
+
+    // 섹션 1, 2 다시 그리기 (섹션 3은 별도 지표를 따르므로 제외)
+    renderTopN();
+    renderScoreDistribution();
+}
+
 /* ───────────────────────────────────────────
    § 보고서 생성 로직
 ─────────────────────────────────────────── */
@@ -16,32 +45,64 @@ function renderReport() {
     document.getElementById('print-title').innerText = '성적 분석 보고서';
     document.getElementById('print-date').innerText = `출력일시: ${new Date().toLocaleString()}`;
 
-    // 1. 통계 렌더링
+    // 모든 섹션 렌더링
     renderStats();
-    // 2. 상위 N명 명단 렌더링 (옵션 적용)
     renderTopN();
-    // 3. 점수 급간별 분포 렌더링 (원점수 합 기준)
     renderScoreDistribution();
-    // 4. 과목별 등급 분포 차트 렌더링 (탐구 통합)
     renderCharts();
 }
 
+/* ───────────────────────────────────────────
+   § 0. 요약 통계
+─────────────────────────────────────────── */
 function renderStats() {
-    // ... (기존 renderStats 코드 유지) ...
-    // 필요에 따라 원점수/표점 등을 추가로 계산하여 stat-cards에 넣을 수 있습니다.
+    const d = ST.data;
+    const total = d.length;
+
+    // ★ 추가됨: 현재 선택된 전역 기준(raw 또는 std) 가져오기
+    const basis = globalReportBasis;
+    const basisLabel = basis === 'std' ? '표준점수' : '원점수';
+
+    const fmt = (v) => isNaN(v) ? '-' : v.toFixed(1);
+    const avgOf = (arr) => {
+        const valid = arr.filter(v => typeof v === 'number');
+        return valid.length ? valid.reduce((a, b) => a + b, 0) / valid.length : NaN;
+    };
+
+    // ★ 수정됨: s.korean?.std 대신 s.korean?.[basis] 를 사용하여 동적으로 점수 가져오기
+    const korAvg = fmt(avgOf(d.map(s => s.korean?.[basis])));
+    const mathAvg = fmt(avgOf(d.map(s => s.math?.[basis])));
+    const engGradeAvg = fmt(avgOf(d.map(s => s.english?.grade)));
+
+    document.getElementById('stat-cards').innerHTML = `
+        <div class="stat-card bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-center shadow-sm">
+            <span class="text-base text-slate-500 font-bold mb-1 uppercase tracking-wide">총 응시 인원</span>
+            <span class="text-3xl font-black text-slate-800">${total}명</span>
+        </div>
+        <div class="stat-card bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-center shadow-sm">
+            <span class="text-base text-slate-500 font-bold mb-1 uppercase tracking-wide">국어 ${basisLabel} 평균</span>
+            <span class="text-3xl font-black text-blue-600">${korAvg}점</span>
+        </div>
+        <div class="stat-card bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-center shadow-sm">
+            <span class="text-base text-slate-500 font-bold mb-1 uppercase tracking-wide">수학 ${basisLabel} 평균</span>
+            <span class="text-3xl font-black text-emerald-600">${mathAvg}점</span>
+        </div>
+        <div class="stat-card bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-center shadow-sm">
+            <span class="text-base text-slate-500 font-bold mb-1 uppercase tracking-wide">영어 등급 평균</span>
+            <span class="text-3xl font-black text-violet-600">${engGradeAvg}등급</span>
+        </div>
+    `;
 }
 
 /* ───────────────────────────────────────────
-   § 상위 N명 명단 렌더링 (기준 점수 및 인원 변경 가능)
+   § 1. 상위 N명 명단 렌더링 (전역 기준 적용)
 ─────────────────────────────────────────── */
 function renderTopN() {
     const limit = parseInt(document.getElementById('top-n-count').value, 10);
-    const basis = document.getElementById('top-n-basis').value; // 'std' or 'raw'
+    const basis = globalReportBasis;
 
-    // 기준 점수 계산 함수 (학생 객체 s를 받아 총합 반환)
     const getSum = (s, type) => {
         let sum = 0;
-        // 국, 수, 탐1, 탐2의 점수 합산 (데이터가 없으면 0)
         ['korean', 'math', 'inquiry1', 'inquiry2'].forEach(subj => {
             if (s[subj] && typeof s[subj][type] === 'number') {
                 sum += s[subj][type];
@@ -50,13 +111,11 @@ function renderTopN() {
         return sum;
     };
 
-    // 데이터 복사 후 정렬
     const sortedData = [...ST.data].sort((a, b) => getSum(b, basis) - getSum(a, basis));
     const topData = sortedData.slice(0, limit);
 
-    // 테이블 헤더 및 제목 설정
     const basisLabel = basis === 'std' ? '표준점수 합' : '원점수 합';
-    document.getElementById('top-n-title').innerText = `${basisLabel} 상위 ${limit}인`;
+    document.getElementById('top-n-title').innerText = `${basisLabel} 상위 학생`;
 
     const thead = document.getElementById('top20-thead');
     thead.innerHTML = `
@@ -73,7 +132,6 @@ function renderTopN() {
         </tr>
     `;
 
-    // 테이블 본문 렌더링
     const tbody = document.getElementById('top20-tbody');
     tbody.innerHTML = topData.map((s, i) => {
         const sumScore = getSum(s, basis);
@@ -84,230 +142,203 @@ function renderTopN() {
                 <td class="px-4 py-3 text-center">${s.number || '-'}</td>
                 <td class="px-4 py-3 text-center font-semibold text-slate-800">${s.name || '-'}</td>
                 <td class="px-4 py-3 text-center font-bold text-blue-600 bg-blue-50/20">${sumScore > 0 ? sumScore : '-'}</td>
-                <td class="px-4 py-3 text-center text-sm">${s.korean?.subject || '-'}</td>
-                <td class="px-4 py-3 text-center text-sm">${s.math?.subject || '-'}</td>
-                <td class="px-4 py-3 text-center text-sm">${s.inquiry1?.subject || '-'}</td>
-                <td class="px-4 py-3 text-center text-sm">${s.inquiry2?.subject || '-'}</td>
+                <td class="px-4 py-3 text-center text-base">${s.korean?.subject || '-'}</td>
+                <td class="px-4 py-3 text-center text-base">${s.math?.subject || '-'}</td>
+                <td class="px-4 py-3 text-center text-base">${s.inquiry1?.subject || '-'}</td>
+                <td class="px-4 py-3 text-center text-base">${s.inquiry2?.subject || '-'}</td>
             </tr>
         `;
     }).join('');
 }
 
-
 /* ───────────────────────────────────────────
-   § 과목별 등급 분포 종합 (탐구 통합)
-─────────────────────────────────────────── */
-function renderCharts() {
-    const grid = document.getElementById('chart-grid');
-    grid.innerHTML = ''; // 초기화
-
-    // 기존 차트 파괴 (메모리 누수 방지)
-    if (ST.charts) {
-        Object.values(ST.charts).forEach(c => {
-            if (c && typeof c.destroy === 'function') c.destroy();
-        });
-    }
-    ST.charts = {};
-
-    // 1. 모든 학생 데이터를 순회하며 과목별 등급 카운트 집계
-    // 데이터 구조: { "국어": [0,0,0,0,0,0,0,0,0], "수학": [...], "물리학I": [...], ... }
-    const gradeCounts = {};
-
-    const addGrade = (subjName, grade) => {
-        if (!subjName || typeof grade !== 'number' || grade < 1 || grade > 9) return;
-        if (!gradeCounts[subjName]) {
-            gradeCounts[subjName] = Array(9).fill(0);
-        }
-        gradeCounts[subjName][grade - 1]++;
-    };
-
-    ST.data.forEach(s => {
-        // 공통/필수 과목 (과목명이 없으면 기본 이름 사용)
-        if (s.korean && s.korean.grade) addGrade('국어 종합', s.korean.grade);
-        if (s.math && s.math.grade) addGrade('수학 종합', s.math.grade);
-        if (s.english && s.english.grade) addGrade('영어', s.english.grade);
-        if (s.history && s.history.grade) addGrade('한국사', s.history.grade);
-
-        // ★ 탐구 과목: 탐구1, 탐구2 구분 없이 '과목명'을 기준으로 카운트 누적
-        if (s.inquiry1 && s.inquiry1.subject && s.inquiry1.grade) {
-            addGrade(s.inquiry1.subject, s.inquiry1.grade);
-        }
-        if (s.inquiry2 && s.inquiry2.subject && s.inquiry2.grade) {
-            addGrade(s.inquiry2.subject, s.inquiry2.grade);
-        }
-        // 제2외국어
-        if (s.foreign2 && s.foreign2.subject && s.foreign2.grade) {
-            addGrade(s.foreign2.subject, s.foreign2.grade);
-        }
-    });
-
-    // 2. 집계된 데이터를 바탕으로 차트 생성
-    const glabels = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
-
-    // 차트를 그릴 때 사용할 색상 배열 (순환해서 사용)
-    const colors = [
-        { bg: 'rgba(59, 130, 246, 0.7)', border: '#2563eb' }, // Blue
-        { bg: 'rgba(16, 185, 129, 0.7)', border: '#059669' }, // Emerald
-        { bg: 'rgba(245, 158, 11, 0.7)', border: '#d97706' }, // Amber
-        { bg: 'rgba(139, 92, 246, 0.7)', border: '#7c3aed' }, // Violet
-        { bg: 'rgba(236, 72, 153, 0.7)', border: '#db2777' }  // Pink
-    ];
-
-    let colorIdx = 0;
-
-    Object.entries(gradeCounts).forEach(([subjName, counts], index) => {
-        // 모두 0명이면 그리지 않음
-        if (counts.every(c => c === 0)) return;
-
-        const id = `chart-grade-${index}`;
-        const div = document.createElement('div');
-        div.className = 'bg-white border border-slate-200 rounded-2xl p-5 shadow-sm';
-        div.innerHTML = `
-            <p class="text-base font-bold text-slate-700 mb-3 border-b border-slate-100 pb-2 flex justify-between items-center">
-                <span>${subjName}</span>
-                <span class="text-xs font-normal text-slate-500 bg-slate-100 px-2 py-1 rounded">총 ${counts.reduce((a,b)=>a+b,0)}명</span>
-            </p>
-            <div class="relative h-48 w-full"><canvas id="${id}"></canvas></div>
-        `;
-        grid.appendChild(div);
-
-        const colorTheme = colors[colorIdx % colors.length];
-        colorIdx++;
-
-        ST.charts[id] = new Chart(document.getElementById(id).getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: glabels,
-                datasets: [{
-                    label: '인원(명)',
-                    data: counts,
-                    backgroundColor: colorTheme.bg,
-                    borderColor: colorTheme.border,
-                    borderWidth: 1,
-                    borderRadius: 4,
-                    borderSkipped: false
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            title: (ctx) => `${ctx[0].label}등급`,
-                            label: (ctx) => ` ${ctx.raw}명`
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { stepSize: 1, font: { size: 11 } },
-                        grid: { color: '#f1f5f9' }
-                    },
-                    x: {
-                        grid: { display: false },
-                        ticks: { font: { size: 12, weight: 'bold' } }
-                    }
-                }
-            }
-        });
-    });
-}
-
-
-/* ───────────────────────────────────────────
-   § 점수 급간별 인원 분포 (원점수 합 기준)
+   § 2. 점수 급간별 인원 분포 (전역 기준 적용 및 가로 표 추가)
 ─────────────────────────────────────────── */
 function renderScoreDistribution() {
     const intervalSize = parseInt(document.getElementById('interval-size').value, 10);
+    const basis = globalReportBasis;
+    const basisLabel = basis === 'std' ? '표준점수' : '원점수';
 
-    // 1. 모든 학생의 원점수 합 계산
-    const rawSums = ST.data.map(s => {
+    document.getElementById('dist-title').innerText = `총점 급간별 인원 분포 (${basisLabel})`;
+
+    const sums = ST.data.map(s => {
         let sum = 0;
         ['korean', 'math', 'inquiry1', 'inquiry2'].forEach(subj => {
-            if (s[subj] && typeof s[subj].raw === 'number') {
-                sum += s[subj].raw;
-            }
+            if (s[subj] && typeof s[subj][basis] === 'number') sum += s[subj][basis];
         });
         return sum;
-    }).filter(sum => sum > 0); // 0점인 경우는 결시 등으로 간주하여 제외
+    }).filter(sum => sum > 0);
 
-    if (rawSums.length === 0) return;
+    if (sums.length === 0) return;
 
-    // 2. 급간 계산
-    const maxScore = Math.max(...rawSums);
-    // 최대 점수 기준으로 가장 가까운 상위 급간 구간을 찾음 (예: max 283 -> 290)
+    const maxScore = Math.max(...sums);
     const upperLimit = Math.ceil(maxScore / intervalSize) * intervalSize;
+    const numBins = Math.ceil(upperLimit / intervalSize);
 
-    // 구간 레이블과 카운트 배열 초기화
     const labels = [];
     const counts = [];
 
-    // 예: intervalSize 10일 때, 0~9, 10~19, ... 형태로 만들 수도 있고,
-    // 대개 고득점부터 보는 것이 편하므로 내림차순 또는 오름차순으로 생성
-    // 여기서는 직관적인 오름차순 히스토그램으로 구현
-    const numBins = Math.ceil(upperLimit / intervalSize);
-
-    for (let i = 0; i < numBins; i++) {
+    // 점수가 높은 급간부터 보여주도록 역순(내림차순)으로 생성
+    for (let i = numBins - 1; i >= 0; i--) {
         const min = i * intervalSize;
         const max = min + intervalSize - 1;
         labels.push(`${min}~${max}`);
         counts.push(0);
     }
 
-    // 3. 인원 배치
-    rawSums.forEach(score => {
-        // 점수가 upperLimit과 같거나 크면 마지막 인덱스에 넣음
+    // 인원 배치 (역순 배열에 맞춰 인덱스 계산)
+    sums.forEach(score => {
         let binIndex = Math.floor(score / intervalSize);
         if (binIndex >= numBins) binIndex = numBins - 1;
-        counts[binIndex]++;
+        // 배열이 역순이므로 실제 저장 인덱스는 (numBins - 1 - binIndex)
+        counts[(numBins - 1) - binIndex]++;
     });
 
-    // 4. 차트 그리기
+    // --- 차트 그리기 ---
     const canvasId = 'score-dist-chart';
-    if (ST.charts['scoreDist']) {
-        ST.charts['scoreDist'].destroy();
-    }
+    if (ST.charts['scoreDist']) ST.charts['scoreDist'].destroy();
 
     ST.charts['scoreDist'] = new Chart(document.getElementById(canvasId).getContext('2d'), {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
+        type: 'bar', data: {
+            labels: labels, datasets: [{
                 label: '인원(명)',
                 data: counts,
-                backgroundColor: 'rgba(99, 102, 241, 0.6)', // Indigo
-                borderColor: '#4f46e5',
+                backgroundColor: 'rgba(16, 185, 129, 0.6)', // Emerald
+                borderColor: '#059669',
                 borderWidth: 1,
-                borderRadius: { topLeft: 4, topRight: 4 },
-                categoryPercentage: 1.0, // 히스토그램처럼 막대 사이 간격을 없앰
+                borderRadius: {topLeft: 4, topRight: 4},
+                categoryPercentage: 1.0,
                 barPercentage: 0.95
             }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        title: (ctx) => `${ctx[0].label}점 구간`,
-                        label: (ctx) => ` ${ctx.raw}명`
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: { stepSize: 1, font: { size: 12 } }
-                },
-                x: {
-                    grid: { display: false },
-                    ticks: { font: { size: 11 }, maxRotation: 45, minRotation: 0 }
-                }
+        }, options: {
+            responsive: true, maintainAspectRatio: false, plugins: {
+                legend: {display: false},
+                tooltip: {callbacks: {title: (ctx) => `${ctx[0].label}점 구간`, label: (ctx) => ` ${ctx.raw}명`}}
+            }, scales: {
+                y: {beginAtZero: true, ticks: {stepSize: 1, font: {size: 14}}},
+                x: {grid: {display: false}, ticks: {font: {size: 12}, maxRotation: 45, minRotation: 0}}
             }
         }
+    });
+
+    // --- ★ 표 렌더링 (가로 방향) ---
+    const thead = document.getElementById('score-dist-thead');
+    const tbody = document.getElementById('score-dist-tbody');
+
+    // 헤더 행: '구분' + 각 급간 레이블
+    thead.innerHTML = `<tr>
+        <th class="px-4 py-3 text-center bg-slate-100 whitespace-nowrap">점수 급간</th>
+        ${labels.map(label => `<th class="px-3 py-3 text-center whitespace-nowrap">${label}</th>`).join('')}
+    </tr>`;
+
+    // 데이터 행: '인원수' + 각 급간 인원수 카운트
+    tbody.innerHTML = `<tr>
+        <td class="px-4 py-3 text-center font-bold bg-slate-50 text-slate-700 whitespace-nowrap">인원 (명)</td>
+        ${counts.map(c => `<td class="px-3 py-3 text-center text-slate-600 ${c > 0 ? 'font-bold text-emerald-600' : ''}">${c}</td>`).join('')}
+    </tr>`;
+}
+
+/* ───────────────────────────────────────────
+   § 3. 과목별 성적 분포 종합 (등급 or 백분위)
+─────────────────────────────────────────── */
+function renderCharts() {
+    const grid = document.getElementById('chart-grid');
+    grid.innerHTML = '';
+    const chartBasis = document.getElementById('chart-basis').value; // 'grade' or 'pct'
+
+    if (ST.charts) {
+        Object.keys(ST.charts).forEach(key => {
+            if (key !== 'scoreDist' && ST.charts[key]) ST.charts[key].destroy();
+        });
+    } else {
+        ST.charts = {};
+    }
+
+    const dataCounts = {};
+
+    const addData = (subjName, value) => {
+        if (!subjName || typeof value !== 'number') return;
+        if (!dataCounts[subjName]) {
+            // 등급은 9개 배열, 백분위는 10개 배열(0~9, 10~19 ... 90~100)
+            dataCounts[subjName] = chartBasis === 'grade' ? Array(9).fill(0) : Array(10).fill(0);
+        }
+
+        if (chartBasis === 'grade') {
+            if (value >= 1 && value <= 9) dataCounts[subjName][value - 1]++;
+        } else if (chartBasis === 'pct') {
+            if (value >= 0 && value <= 100) {
+                let bin = Math.floor(value / 10);
+                if (bin === 10) bin = 9; // 100점은 90~100 구간에 포함
+                dataCounts[subjName][bin]++;
+            }
+        }
+    };
+
+    ST.data.forEach(s => {
+        if (s.korean && s.korean[chartBasis]) addData('국어 종합', s.korean[chartBasis]);
+        if (s.math && s.math[chartBasis]) addData('수학 종합', s.math[chartBasis]);
+
+        // 영어, 한국사는 백분위가 없을 수 있으므로 예외 처리
+        if (chartBasis === 'grade') {
+            if (s.english?.grade) addData('영어', s.english.grade);
+            if (s.history?.grade) addData('한국사', s.history.grade);
+        }
+
+        if (s.inquiry1?.subject && s.inquiry1[chartBasis]) addData(s.inquiry1.subject, s.inquiry1[chartBasis]);
+        if (s.inquiry2?.subject && s.inquiry2[chartBasis]) addData(s.inquiry2.subject, s.inquiry2[chartBasis]);
+    });
+
+    const xLabels = chartBasis === 'grade' ? ['1', '2', '3', '4', '5', '6', '7', '8', '9'] : ['0~9', '10s', '20s', '30s', '40s', '50s', '60s', '70s', '80s', '90~100'];
+
+    const colors = [{bg: 'rgba(139, 92, 246, 0.7)', border: '#7c3aed'}, // Violet
+        {bg: 'rgba(59, 130, 246, 0.7)', border: '#2563eb'}, // Blue
+        {bg: 'rgba(236, 72, 153, 0.7)', border: '#db2777'}, // Pink
+        {bg: 'rgba(245, 158, 11, 0.7)', border: '#d97706'}  // Amber
+    ];
+
+    let colorIdx = 0;
+
+    Object.entries(dataCounts).forEach(([subjName, counts], index) => {
+        if (counts.every(c => c === 0)) return;
+
+        const id = `chart-subj-${index}`;
+        const div = document.createElement('div');
+        div.className = 'bg-white border border-slate-200 rounded-2xl p-5 shadow-sm';
+        div.innerHTML = `
+            <p class="text-base font-bold text-slate-700 mb-3 border-b border-slate-100 pb-2 flex justify-between items-center">
+                <span>${subjName}</span>
+                <span class="text-base font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded">총 ${counts.reduce((a, b) => a + b, 0)}명</span>
+            </p>
+            <div class="relative h-56 w-full"><canvas id="${id}"></canvas></div>
+        `;
+        grid.appendChild(div);
+
+        const theme = colors[colorIdx % colors.length];
+        colorIdx++;
+
+        ST.charts[id] = new Chart(document.getElementById(id).getContext('2d'), {
+            type: 'bar', data: {
+                labels: xLabels, datasets: [{
+                    label: '인원(명)',
+                    data: counts,
+                    backgroundColor: theme.bg,
+                    borderColor: theme.border,
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            }, options: {
+                responsive: true, maintainAspectRatio: false, plugins: {
+                    legend: {display: false}, tooltip: {
+                        callbacks: {
+                            title: (ctx) => chartBasis === 'grade' ? `${ctx[0].label}등급` : `${ctx[0].label}% 구간`,
+                            label: (ctx) => ` ${ctx.raw}명`
+                        }
+                    }
+                }, scales: {
+                    y: {beginAtZero: true, ticks: {stepSize: 1, font: {size: 12}}},
+                    x: {grid: {display: false}, ticks: {font: {size: 12, weight: 'bold'}}}
+                }
+            }
+        });
     });
 }
