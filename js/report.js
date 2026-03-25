@@ -366,12 +366,29 @@ function renderCharts() {
     };
 
     ST.data.forEach(s => {
-        if (s.korean && s.korean[chartBasis]) addData('국어 종합', s.korean[chartBasis]);
-        if (s.math && s.math[chartBasis]) addData('수학 종합', s.math[chartBasis]);
-        if (s.english?.grade) addData('영어', s.english.grade, 'grade');
-        if (s.hist?.grade) addData('한국사', s.hist.grade, 'grade');
-        if (s.inquiry1?.subject && s.inquiry1[chartBasis]) addData(s.inquiry1.subject, s.inquiry1[chartBasis]);
-        if (s.inquiry2?.subject && s.inquiry2[chartBasis]) addData(s.inquiry2.subject, s.inquiry2[chartBasis]);
+        // 국어
+        if (s.korean && s.korean[chartBasis] != null)
+            addData('국어 종합', s.korean[chartBasis]);
+
+        // 수학
+        if (s.math && s.math[chartBasis] != null)
+            addData('수학 종합', s.math[chartBasis]);
+
+        // 영어 (절대평가 등급)
+        if (s.english?.grade != null)
+            addData('영어', s.english.grade, 'grade');
+
+        // 한국사 (절대평가 등급)
+        if (s.hist?.grade != null)
+            addData('한국사', s.hist.grade, 'grade');
+
+        // 탐구 1 (과목명이 있고, 점수/등급이 null이 아닐 때)
+        if (s.inquiry1?.subject && s.inquiry1[chartBasis] != null)
+            addData(s.inquiry1.subject, s.inquiry1[chartBasis]);
+
+        // 탐구 2
+        if (s.inquiry2?.subject && s.inquiry2[chartBasis] != null)
+            addData(s.inquiry2.subject, s.inquiry2[chartBasis]);
     });
 
     const colors = [
