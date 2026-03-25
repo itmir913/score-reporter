@@ -376,23 +376,126 @@ function exportTo(formatId) {
 }
 
 /* ───────────────────────────────────────────
-   § 샘플 데이터 로드 (테스트용)
+   § 샘플 데이터 로드 (현실적인 랜덤 데이터 생성)
 ─────────────────────────────────────────── */
 function loadSampleData() {
     const dummy = [];
-    for (let i = 1; i <= 50; i++) {
+
+    // 무작위 이름 생성을 위한 성/이름 배열
+    const lastNames = ['김', '이', '박', '최', '정', '강', '조', '윤', '장', '임', '한', '오', '서', '신', '권', '황', '안', '송', '전', '홍'];
+    const firstNames = ['서준', '하준', '도윤', '시우', '민준', '지호', '예준', '주원', '건우', '우진', '지안', '수아', '서윤', '서연', '하윤', '지우', '하은', '민서', '윤서', '채원', '도현', '준서', '민재', '현우', '승우', '지민', '수현', '지원', '다은', '은지'];
+
+    const subjectsKor = ['화법과 작문', '언어와 매체'];
+    const subjectsMath = ['확률과 통계', '미적분', '기하'];
+    const subjectsInq = ['생활과 윤리', '윤리와 사상', '한국지리', '세계지리', '동아시아사', '세계사', '경제', '정치와 법', '사회·문화', '물리학I', '화학I', '생명과학I', '지구과학I'];
+
+    // 원점수 기반 등급 계산
+    const getGrade = (raw, max) => {
+        const r = raw / max;
+        if (r >= 0.9) return 1;
+        if (r >= 0.8) return 2;
+        if (r >= 0.7) return 3;
+        if (r >= 0.6) return 4;
+        if (r >= 0.5) return 5;
+        if (r >= 0.4) return 6;
+        if (r >= 0.3) return 7;
+        if (r >= 0.2) return 8;
+        return 9;
+    };
+
+    // 정규분포(Normal Distribution) 난수 생성 함수 (Box-Muller Transform)
+    const randn_bm = () => {
+        let u = 0, v = 0;
+        while (u === 0) u = Math.random();
+        while (v === 0) v = Math.random();
+        return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+    }
+
+    // 평균(mean)과 표준편차(stdDev)를 이용해 점수 생성
+    const generateScore = (mean, stdDev, max) => {
+        let score = Math.round(mean + randn_bm() * stdDev);
+        if (score > max) score = max;
+        if (score < 0) score = 0;
+        return score;
+    };
+
+    // 100명의 랜덤 학생 생성
+    for (let i = 1; i <= 100; i++) {
+        const name = lastNames[Math.floor(Math.random() * lastNames.length)] +
+            firstNames[Math.floor(Math.random() * firstNames.length)];
+        const cls = String(Math.floor(Math.random() * 5) + 1); // 1반 ~ 5반
+
+        // 현실적인 점수 분포 설정 (과목별 평균 및 표준편차 조정)
+        const korRaw = generateScore(65, 15, 100);
+        const mathRaw = generateScore(55, 20, 100);
+        const engRaw = generateScore(60, 18, 100);
+        const inq1Raw = generateScore(30, 10, 50);
+        const inq2Raw = generateScore(30, 10, 50);
+        const histRaw = generateScore(35, 8, 50);
+
         dummy.push({
-            grade_year: '3', class: '1', number: String(i), name: `학생${i}`,
-            korean: {std: 100 + Math.floor(Math.random() * 40), grade: Math.ceil(Math.random() * 9)},
-            math: {std: 90 + Math.floor(Math.random() * 50), grade: Math.ceil(Math.random() * 9)},
-            english: {grade: Math.ceil(Math.random() * 9)},
-            inquiry1: {std: 50 + Math.floor(Math.random() * 20)},
-            inquiry2: {std: 45 + Math.floor(Math.random() * 25)}
+            grade_year: '3',
+            class: cls,
+            number: '0', // 정렬 후 재할당
+            name: name,
+            korean: {
+                subject: subjectsKor[Math.floor(Math.random() * subjectsKor.length)],
+                raw: korRaw,
+                std: Math.floor(korRaw * 0.8 + 50),
+                pct: Math.floor((korRaw / 100) * 100),
+                grade: getGrade(korRaw, 100)
+            },
+            math: {
+                subject: subjectsMath[Math.floor(Math.random() * subjectsMath.length)],
+                raw: mathRaw,
+                std: Math.floor(mathRaw * 0.9 + 40),
+                pct: Math.floor((mathRaw / 100) * 100),
+                grade: getGrade(mathRaw, 100)
+            },
+            english: {
+                raw: engRaw,
+                grade: getGrade(engRaw, 100)
+            },
+            inquiry1: {
+                subject: subjectsInq[Math.floor(Math.random() * subjectsInq.length)],
+                raw: inq1Raw,
+                std: Math.floor(inq1Raw * 1.2 + 20),
+                pct: Math.floor((inq1Raw / 50) * 100),
+                grade: getGrade(inq1Raw, 50)
+            },
+            inquiry2: {
+                subject: subjectsInq[Math.floor(Math.random() * subjectsInq.length)],
+                raw: inq2Raw,
+                std: Math.floor(inq2Raw * 1.2 + 20),
+                pct: Math.floor((inq2Raw / 50) * 100),
+                grade: getGrade(inq2Raw, 50)
+            },
+            hist: {
+                raw: histRaw,
+                grade: getGrade(histRaw, 50)
+            }
         });
     }
+
+    // 반, 이름 순으로 정렬 후 번호 1번부터 예쁘게 재할당
+    dummy.sort((a, b) => {
+        if (a.class !== b.class) return parseInt(a.class) - parseInt(b.class);
+        return a.name.localeCompare(b.name);
+    });
+
+    let currentClass = '';
+    let numCounter = 1;
+    dummy.forEach(s => {
+        if (s.class !== currentClass) {
+            currentClass = s.class;
+            numCounter = 1;
+        }
+        s.number = String(numCounter++);
+    });
+
     ST.data = dummy;
-    showToast('샘플 데이터 50명이 로드되었습니다.');
-    document.getElementById('badge-text').innerText = '샘플 데이터 (50명)';
+    showToast('샘플 데이터 100명이 로드되었습니다.');
+    document.getElementById('badge-text').innerText = '샘플 데이터 (100명)';
     document.getElementById('data-badge').querySelector('span').className = 'w-2 h-2 rounded-full bg-blue-500';
 
     renderReport();
