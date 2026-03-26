@@ -801,5 +801,5 @@ window.addEventListener('resize', () => {
         if (reportContent && !reportContent.classList.contains('hidden')) {
             renderAll();
         }
-    }, 250); // 0.25초 대기 후 실행
+    }, 1000); // 1.0초 대기 후 실행
 });
