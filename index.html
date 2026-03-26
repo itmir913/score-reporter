@@ -14,7 +14,7 @@
 <body class="min-h-screen">
 
 <!-- ═══ 헤더 ═══ -->
-<header class="no-print bg-white border-b border-slate-200 sticky top-0 z-50">
+<header class="no-print bg-white border-b border-slate-200">
     <div class="max-w-screen-xl mx-auto px-6 py-3.5 flex items-center justify-between">
         <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shadow">
@@ -29,15 +29,18 @@
                 </p>
             </div>
         </div>
-        <div id="data-badge" class="flex items-center gap-2 px-3 py-1.5 rounded-full
-         bg-slate-100 text-slate-500 text-base font-semibold">
+        <div id="data-badge"
+             class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 text-slate-500 text-base font-semibold">
             <span class="w-2 h-2 rounded-full bg-slate-300"></span>
             <span id="badge-text">데이터 없음</span>
         </div>
     </div>
-    <nav class="max-w-screen-xl mx-auto px-6 flex border-t border-slate-100">
-        <button class="tab-btn active px-5 py-3 text-base font-semibold text-slate-500"
-                data-tab="upload" onclick="switchTab('upload')">
+</header>
+
+<nav class="bg-slate-50 border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-screen-xl mx-auto flex">
+        <button class="tab-btn active px-5 py-3 text-base font-semibold text-slate-500" data-tab="upload"
+                onclick="switchTab('upload')">
             <i class="fa-solid fa-file-arrow-up mr-1.5"></i>데이터 불러오기
         </button>
         <button class="tab-btn px-5 py-3 text-base font-semibold text-slate-500"
@@ -48,8 +51,8 @@
                 data-tab="export" onclick="switchTab('export')">
             <i class="fa-solid fa-file-export mr-1.5"></i>내보내기
         </button>
-    </nav>
-</header>
+    </div>
+</nav>
 
 <main class="max-w-screen-xl mx-auto px-6 py-7">
 
@@ -311,7 +314,7 @@
                     </div>
                 </section>
 
-                <section class="no-print">
+                <section class="no-print" id="report_basis">
                     <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-sm mt-4">
                         <div class="flex items-center gap-3">
                             <i class="fa-solid fa-sliders text-slate-400 text-lg"></i>
@@ -434,7 +437,7 @@
                     </div>
                 </section>
 
-                <section class="mt-6">
+                <section class="mt-6" id="csat_sum">
                     <div class="flex items-center gap-2">
                         <span class="w-1.5 h-6 rounded bg-blue-500 inline-block"></span>
                         <h3 class="font-bold text-slate-800 text-xl">수능 최저학력기준 충족 분석(국어+수학+영어+탐구1+탐구2)</h3>
