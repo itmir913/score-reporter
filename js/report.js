@@ -8,7 +8,6 @@ const labelMap = {'raw': '원점수', 'std': '표준점수', 'pct': '백분위'}
 function setGlobalBasis(basis) {
     globalReportBasis = basis;
 
-    // 모든 버튼의 활성화 스타일 초기화
     const buttons = {
         raw: document.getElementById('btn-basis-raw'),
         std: document.getElementById('btn-basis-std'),
@@ -42,13 +41,11 @@ function renderReport() {
 
     document.getElementById('report-subtitle').innerText = `총 ${ST.data.length}명 분석 완료`;
 
-    // ★ 추가: 새 헤더 날짜 업데이트
     const dateStr = `분석 일시: ${new Date().toLocaleString()}`;
     if (document.getElementById('print-date-top')) {
         document.getElementById('print-date-top').innerText = dateStr;
     }
 
-    // 모든 섹션 렌더링
     renderAll();
 }
 
@@ -56,25 +53,28 @@ function renderReport() {
    § 모든 렌더링 함수
 ─────────────────────────────────────────── */
 function renderAll() {
-    renderStats();
-    renderTopN();
-    renderScoreDistribution();
-    renderSubjectSelection();
-    renderCharts();
-    renderCsatMinRequirement();
+    // ★ ST.data를 단 한 번만 순회하여 공용 캐시 생성
+    const cache = computeRenderCache(ST.data, globalReportBasis);
+    ST.cache = cache;  // 필요 시 외부 참조용
+
+    renderStats(cache);
+    renderTopN(cache);
+    renderScoreDistribution(cache);
+    renderSubjectSelection(cache);
+    renderCharts();                  // chartBasis가 별도 선택값 → 캐시 미사용
+    renderCsatMinRequirement(cache);
 }
 
 /* ───────────────────────────────────────────
-   § 디바운스(Debounce)를 적용하여 리사이즈 이벤트가 너무 자주 발생하는 것을 방지합니다.
+   § 리사이즈 디바운스
 ─────────────────────────────────────────── */
 let resizeTimer;
 window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
-        // 보고서 탭이 활성화되어 있을 때만 다시 그립니다.
         const reportContent = document.getElementById('report-content');
         if (reportContent && !reportContent.classList.contains('hidden')) {
             renderAll();
         }
-    }, 1000); // 1.0초 대기 후 실행
+    }, 1000);
 });

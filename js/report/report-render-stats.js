@@ -1,18 +1,14 @@
 /* ───────────────────────────────────────────
    § 요약 통계
 ─────────────────────────────────────────── */
-function renderStats() {
-    const d = ST.data;
-    const total = d.length;
+function renderStats(cache) {
+    const total      = ST.data.length;
+    const basisLabel = labelMap[cache.basis];
 
-    // ★ 추가됨: 현재 선택된 전역 기준(raw 또는 std) 가져오기
-    const basis = globalReportBasis;
-    const basisLabel = labelMap[basis];
-
-    // ★ 수정됨: s.korean?.std 대신 s.korean?.[basis] 를 사용하여 동적으로 점수 가져오기
-    const korAvg = fmt(avgOf(d.map(s => s.korean?.[basis])));
-    const mathAvg = fmt(avgOf(d.map(s => s.math?.[basis])));
-    const engGradeAvg = fmt(avgOf(d.map(s => s.english?.grade)));
+    // ★ 캐시에서 점수 배열 직접 사용 — ST.data 재순회 없음
+    const korAvg      = fmt(avgOf(cache.korScores));
+    const mathAvg     = fmt(avgOf(cache.mathScores));
+    const engGradeAvg = fmt(avgOf(cache.engGrades));
 
     document.getElementById('stat-cards').innerHTML = `
         <div class="stat-card bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-center items-center text-center shadow-sm">
