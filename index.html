@@ -431,74 +431,80 @@
                     </div>
                 </section>
 
-                <section class="print-page">
-
+                <section class="mt-6">
                     <div class="flex items-center gap-2">
                         <span class="w-1.5 h-6 rounded bg-blue-500 inline-block"></span>
                         <h3 class="font-bold text-slate-800 text-xl">수능 최저학력기준 충족 분석</h3>
                     </div>
 
-                    <div class="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 mt-6">
-                        <div>
-                            <h4 class="text-lg font-bold mb-3 flex items-center gap-2">
-                                <span class="w-1 h-5 bg-blue-500 rounded"></span>
-                                전교 석차 기준
-                                <span class="text-base text-slate-500 font-normal">(원점수 > 표준점수 > 백분위 총점 순)</span>
-                            </h4>
-
-                            <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-                                <div class="overflow-x-auto overflow-y-auto max-h-96">
-                                    <table class="data-table w-full text-base min-w-[600px]">
-                                        <thead class="bg-slate-50 text-slate-700 font-bold border-b-2 border-slate-200 sticky top-0 z-10">
-                                        <tr>
-                                            <th class="p-3 text-center w-16">석차</th>
-                                            <th class="p-3 text-center w-16">반</th>
-                                            <th class="p-3 text-center w-16">번호</th>
-                                            <th class="p-3 text-left w-32">이름</th>
-                                            <th class="p-3 text-center bg-blue-50 text-blue-700">2합</th>
-                                            <th class="p-3 text-center bg-emerald-50 text-emerald-700">3합</th>
-                                            <th class="p-3 text-center bg-violet-50 text-violet-700">4합</th>
-                                            <th class="p-3 text-center bg-rose-50 text-rose-700">5합</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody id="csat-school-tbody" class="divide-y divide-slate-100 text-center">
-                                        </tbody>
-                                    </table>
-                                </div>
+                    <div class="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 mt-6 print-page">
+                        <h4 class="text-lg font-bold mb-3 flex items-center gap-2">
+                            <span class="w-1 h-5 bg-purple-500 rounded"></span>
+                            학년 전체 최저학력기준 충족 (누적 인원)
+                        </h4>
+                        <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                            <div class="overflow-x-auto">
+                                <table class="data-table w-full text-sm min-w-[700px] text-center">
+                                    <thead id="csat-summary-thead"
+                                           class="bg-slate-50 text-slate-700 font-bold border-b-2 border-slate-200">
+                                    </thead>
+                                    <tbody id="csat-summary-tbody" class="divide-y divide-slate-100">
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-
+                    </div>
+                    <div class="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 mt-6 no-print">
+                        <h4 class="text-lg font-bold mb-3 flex items-center gap-2">
+                            <span class="w-1 h-5 bg-blue-500 rounded"></span>
+                            전교 석차 기준
+                            <span class="text-base text-slate-500 font-normal">(원점수 > 표준점수 > 백분위 총점 순)</span>
+                        </h4>
+                        <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                            <div class="overflow-x-auto overflow-y-auto max-h-96">
+                                <table class="data-table w-full text-base min-w-[600px]">
+                                    <thead class="bg-slate-50 text-slate-700 font-bold border-b-2 border-slate-200 sticky top-0 z-10">
+                                    <tr>
+                                        <th class="p-3 text-center w-16">석차</th>
+                                        <th class="p-3 text-center w-16">반</th>
+                                        <th class="p-3 text-center w-16">번호</th>
+                                        <th class="p-3 text-left w-32">이름</th>
+                                        <th class="p-3 text-center bg-blue-50 text-blue-700">2합</th>
+                                        <th class="p-3 text-center bg-emerald-50 text-emerald-700">3합</th>
+                                        <th class="p-3 text-center bg-violet-50 text-violet-700">4합</th>
+                                        <th class="p-3 text-center bg-rose-50 text-rose-700">5합</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="csat-school-tbody" class="divide-y divide-slate-100 text-center"></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 mt-6 no-print">
-                        <div>
-                            <div class="flex justify-between items-center mb-3 flex-wrap gap-2">
-                                <h4 class="text-lg font-bold flex items-center gap-2">
-                                    <span class="w-1 h-5 bg-emerald-500 rounded"></span>
-                                    학급 기준 <span class="text-base text-slate-500 font-normal">(학번 > 이름 순)</span>
-                                </h4>
-                                <select id="class-select" onchange="renderCsatClassTable()"
-                                        class="border border-slate-300 rounded-lg p-1.5 text-base bg-slate-50 focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 outline-none">
-                                </select>
-                            </div>
-
-                            <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-                                <div class="overflow-x-auto overflow-y-auto max-h-96">
-                                    <table class="data-table w-full text-base min-w-[500px]">
-                                        <thead class="bg-slate-50 text-slate-700 font-bold border-b-2 border-slate-200 sticky top-0 z-10">
-                                        <tr>
-                                            <th class="p-3 text-center w-20">번호</th>
-                                            <th class="p-3 text-left w-32">이름</th>
-                                            <th class="p-3 text-center bg-blue-50 text-blue-700">2합</th>
-                                            <th class="p-3 text-center bg-emerald-50 text-emerald-700">3합</th>
-                                            <th class="p-3 text-center bg-violet-50 text-violet-700">4합</th>
-                                            <th class="p-3 text-center bg-rose-50 text-rose-700">5합</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody id="csat-class-tbody" class="divide-y divide-slate-100 text-center">
-                                        </tbody>
-                                    </table>
-                                </div>
+                        <div class="flex justify-between items-center mb-3 flex-wrap gap-2">
+                            <h4 class="text-lg font-bold flex items-center gap-2">
+                                <span class="w-1 h-5 bg-emerald-500 rounded"></span>
+                                학급 기준 <span class="text-base text-slate-500 font-normal">(학번 > 이름 순)</span>
+                            </h4>
+                            <select id="class-select" onchange="renderCsatClassTable()"
+                                    class="border border-slate-300 rounded-lg p-1.5 text-base bg-slate-50 focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 outline-none"></select>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                            <div class="overflow-x-auto overflow-y-auto max-h-96">
+                                <table class="data-table w-full text-base min-w-[500px]">
+                                    <thead class="bg-slate-50 text-slate-700 font-bold border-b-2 border-slate-200 sticky top-0 z-10">
+                                    <tr>
+                                        <th class="p-3 text-center w-20">번호</th>
+                                        <th class="p-3 text-left w-32">이름</th>
+                                        <th class="p-3 text-center bg-blue-50 text-blue-700">2합</th>
+                                        <th class="p-3 text-center bg-emerald-50 text-emerald-700">3합</th>
+                                        <th class="p-3 text-center bg-violet-50 text-violet-700">4합</th>
+                                        <th class="p-3 text-center bg-rose-50 text-rose-700">5합</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="csat-class-tbody" class="divide-y divide-slate-100 text-center"></tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -657,7 +663,16 @@
 <script src="js/schema.js"></script>
 <script src="js/parser.js"></script>
 <script src="js/exporter.js"></script>
+
+<script src="js/report-render-stats.js"></script>
+<script src="js/report-render-topN.js"></script>
+<script src="js/report-score-distribution.js"></script>
+<script src="js/report-subject-selection.js"></script>
+<script src="js/report-csat-sum.js"></script>
+<script src="js/report-render-chart-subjects.js"></script>
+<script src="js/report-modal.js"></script>
 <script src="js/report.js"></script>
+
 <script src="js/main.js"></script>
 
 </body>
