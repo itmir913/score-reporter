@@ -2,7 +2,9 @@
    § 상위 N명 명단 렌더링 (전역 기준 적용)
 ─────────────────────────────────────────── */
 function renderTopN(cache) {
-    const limit      = parseInt(document.getElementById('top-n-count').value, 10);
+    const topNValue = document.getElementById('top-n-count').value;
+    // 'all'이 선택되면 무한대(Infinity)를 주어 전체 배열이 잘리지 않게 합니다.
+    const limit = topNValue === 'all' ? Infinity : parseInt(topNValue, 10);
     const basisLabel = labelMap[cache.basis];
 
     // ★ 캐시의 studentWithSums 활용 — 정렬 시 getSum() 재호출 없음

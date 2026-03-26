@@ -77,7 +77,9 @@ function renderCsatMinRequirement(cache) {
 
     // --- 전교 석차 기준 (원점수 기준 정렬 — globalReportBasis와 무관) ---
     const limitElement = document.getElementById('top-n-count');
-    const limit = limitElement ? parseInt(limitElement.value, 10) : 20;
+    const limit = limitElement
+        ? (limitElement.value === 'all' ? Infinity : parseInt(limitElement.value, 10))
+        : 20;
 
     const sortedData = [...ST.data].sort((a, b) => {
         const aRaw = _getScoreSum(a, 'raw'), bRaw = _getScoreSum(b, 'raw');
