@@ -836,14 +836,17 @@ function renderCsatMinRequirement() {
     if (!ST.data || ST.data.length === 0) return;
 
     // --- [1] 전교 석차 기준 렌더링 ---
-    // 다중 조건 정렬: 원점수 > 표준점수 > 백분위 (내림차순)
+    // 1. 상위 N명 표시 개수 가져오기
+    const limit = parseInt(document.getElementById('top-n-count').value, 10);
+
+    // 2. 정렬 후 slice로 상위 limit명만 추출
     const sortedData = [...ST.data].sort((a, b) => {
         const aRaw = _getScoreSum(a, 'raw'), bRaw = _getScoreSum(b, 'raw');
         if (bRaw !== aRaw) return bRaw - aRaw;
         const aStd = _getScoreSum(a, 'std'), bStd = _getScoreSum(b, 'std');
         if (bStd !== aStd) return bStd - aStd;
         return _getScoreSum(b, 'pct') - _getScoreSum(a, 'pct');
-    });
+    }).slice(0, limit);
 
     const schoolTbody = document.getElementById('csat-school-tbody');
     if (schoolTbody) {
