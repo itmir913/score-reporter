@@ -1,22 +1,26 @@
 /* ───────────────────────────────────────────
    § 점수합 급간별 인원 분포 (전역 기준 적용 및 가로 표 추가)
 ─────────────────────────────────────────── */
-function renderScoreDistribution(cache) {
+function renderScoreDistribution() {
     const intervalSize = parseInt(document.getElementById('interval-size').value, 10);
-    const basisLabel   = labelMap[cache.basis];
+    const basis = globalReportBasis;
+    const basisLabel = labelMap[basis];
 
     document.getElementById('dist-title').innerText =
         `${basisLabel} 합(국어+수학+탐구1+탐구2) 급간별 인원 분포`;
 
-    // ★ 캐시에서 4과목 합산 값 활용 — ST.data 재순회 없음
-    const sums = cache.studentWithSums
-        .map(item => item.sum)
-        .filter(sum => sum > 0);
+    const sums = ST.data.map(s => {
+        let sum = 0;
+        ['korean', 'math', 'inquiry1', 'inquiry2'].forEach(subj => {
+            if (s[subj] && typeof s[subj][basis] === 'number') sum += s[subj][basis];
+        });
+        return sum;
+    }).filter(sum => sum > 0);
 
     if (sums.length === 0) return;
 
     const maxScore = Math.max(...sums);
-    const numBins  = Math.floor(maxScore / intervalSize) + 1;
+    const numBins = Math.floor(maxScore / intervalSize) + 1;
 
     const labels = [];
     const counts = [];
@@ -63,8 +67,8 @@ function renderScoreDistribution(cache) {
                     const label = `${this.data.labels[index]} 급간`;
 
                     const range = label.split('~').map(v => parseFloat(v.trim()));
-                    const min   = range[0];
-                    const max   = range.length > 1 ? range[1] : min;
+                    const min = range[0];
+                    const max = range.length > 1 ? range[1] : min;
 
                     const basis = globalReportBasis;
                     const studentsInBin = ST.data.filter(s => {
@@ -105,12 +109,12 @@ function renderScoreDistribution(cache) {
     thead.innerHTML = '';
 
     const chunkSize = 8;
-    let tableHtml   = '';
+    let tableHtml = '';
 
     for (let i = 0; i < labels.length; i += chunkSize) {
         const chunkLabels = labels.slice(i, i + chunkSize);
         const chunkCounts = counts.slice(i, i + chunkSize);
-        const emptyCells  = Array(chunkSize - chunkLabels.length)
+        const emptyCells = Array(chunkSize - chunkLabels.length)
             .fill('<td class="px-1 py-2"></td>').join('');
 
         tableHtml += `

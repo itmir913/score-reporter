@@ -59,7 +59,7 @@ function renderAll() {
 
     renderStats(cache);
     renderTopN(cache);
-    renderScoreDistribution(cache);
+    renderScoreDistribution();       // 캐시 미적용
     renderSubjectSelection(cache);
     renderCharts();                  // chartBasis가 별도 선택값 → 캐시 미사용
     renderCsatMinRequirement(cache);

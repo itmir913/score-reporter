@@ -76,7 +76,7 @@ function renderCsatMinRequirement(cache) {
     renderCsatSummaryTable(cache);
 
     // --- 전교 석차 기준 (원점수 기준 정렬 — globalReportBasis와 무관) ---
-    const limitElement = document.getElementById('top-n-count');
+    const limitElement = document.getElementById('csat-top-n-count');
     const limit = limitElement
         ? (limitElement.value === 'all' ? Infinity : parseInt(limitElement.value, 10))
         : 20;

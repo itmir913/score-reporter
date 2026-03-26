@@ -468,11 +468,32 @@
                     </div>
 
                     <div class="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 mt-6 no-print">
-                        <h3 class="text-lg font-bold mb-3 flex items-center gap-2">
-                            <span class="w-1 h-5 bg-blue-500 rounded"></span>
-                            전교 석차 기준
-                            <span class="text-base text-slate-500 font-normal">(원점수 > 표준점수 > 백분위 총점 순)</span>
-                        </h3>
+
+
+                        <div class="flex items-center justify-between mb-4 flex-wrap gap-4">
+                            <h3 class="text-lg font-bold mb-3 flex items-center gap-2">
+                                <span class="w-1 h-5 bg-blue-500 rounded"></span>
+                                전교 석차 기준
+                                <span class="text-base text-slate-500 font-normal">(원점수 > 표준점수 > 백분위 총점 순)</span>
+                            </h3>
+
+
+                            <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl no-print">
+                                <label for="csat-top-n-count" class="text-base font-semibold text-slate-700 pl-2">표시
+                                    인원:</label>
+                                <select id="csat-top-n-count" onchange="renderAll()"
+                                        class="rounded-lg border-none bg-white shadow-sm text-base py-1.5 pl-3 pr-8 focus:ring-2 focus:ring-blue-500">
+                                    <option value="10">10명</option>
+                                    <option value="20" selected>20명</option>
+                                    <option value="30">30명</option>
+                                    <option value="50">50명</option>
+                                    <option value="100">100명</option>
+                                    <option value="all">전체</option>
+                                </select>
+                            </div>
+                        </div>
+
+
                         <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
                             <div class="overflow-x-auto overflow-y-auto max-h-96">
                                 <table class="data-table w-full text-base min-w-[600px]">
