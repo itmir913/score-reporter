@@ -174,12 +174,14 @@ function showCsatStudents(n, targetSum) {
         tbody.innerHTML = targetStudents.map(s => {
             const raw = _getCsatRawSums(s);
             const actualSum = raw[`sum${n}`];
+            const actualSubj = raw[`sum${n}_subj`]; // 새로 추가된 과목명 데이터 가져오기
             return `
                 <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer group"
                     data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" onclick="handleRowClick(this)">
                     <td class="border border-slate-300 p-3 text-slate-700">${s.class || ''}반 ${s.number || ''}</td>
                     <td class="border border-slate-300 p-3 font-bold text-slate-800">${s.name || ''}</td>
                     <td class="border border-slate-300 p-3 text-blue-600 font-bold">${actualSum}</td>
+                    <td class="border border-slate-300 p-3 text-blue-600 font-bold">${actualSubj}</td>
                 </tr>
             `;
         }).join('');

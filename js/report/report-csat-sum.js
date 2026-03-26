@@ -3,26 +3,59 @@
 ─────────────────────────────────────────── */
 
 function _getCsatRawSums(student) {
+    // 과목명 매핑을 위한 객체
+    const subjNames = {
+        korean: '국어', math: '수학', english: '영어', inquiry1: '탐구1', inquiry2: '탐구2'
+    };
+
     const grades = [];
     ['korean', 'math', 'english', 'inquiry1', 'inquiry2'].forEach(subj => {
         const score = student[subj];
         if (score && typeof score.grade === 'number' && score.grade > 0 && score.grade <= 9) {
-            grades.push(score.grade);
+            // 점수만 넣는 대신 과목명도 함께 저장
+            grades.push({grade: score.grade, name: subjNames[subj]});
         }
     });
-    grades.sort((a, b) => a - b);
-    const sumN = (n) => grades.length < n
-        ? null
-        : grades.slice(0, n).reduce((acc, val) => acc + val, 0);
-    return {sum2: sumN(2), sum3: sumN(3), sum4: sumN(4), sum5: sumN(5)};
+
+    // 등급 기준 오름차순 정렬 (낮은 등급이 먼저 오도록)
+    grades.sort((a, b) => a.grade - b.grade);
+
+    // n개의 과목 합산 및 이름 조합 헬퍼 함수
+    const getSumData = (n) => {
+        if (grades.length < n) return {sum: null, subjects: ''};
+        const selected = grades.slice(0, n);
+        return {
+            sum: selected.reduce((acc, val) => acc + val.grade, 0),
+            subjects: selected.map(g => g.name).join('+')
+        };
+    };
+
+    const res2 = getSumData(2), res3 = getSumData(3), res4 = getSumData(4), res5 = getSumData(5);
+
+    // 기존 집계 함수들(renderCsatSummaryTable 등)이 깨지지 않게 sum2~sum5는 숫자로 유지하고,
+    // 표시를 위한 텍스트(_subj)를 추가로 반환합니다.
+    return {
+        sum2: res2.sum, sum2_subj: res2.subjects,
+        sum3: res3.sum, sum3_subj: res3.subjects,
+        sum4: res4.sum, sum4_subj: res4.subjects,
+        sum5: res5.sum, sum5_subj: res5.subjects
+    };
 }
 
 function _getCsatSums(student) {
     const raw = _getCsatRawSums(student);
-    const format = (val) => val === null
+    const format = (val, subj) => val === null
         ? '<span class="text-slate-300">-</span>'
-        : `<span class="font-extrabold text-base">${val}</span>`;
-    return {sum2: format(raw.sum2), sum3: format(raw.sum3), sum4: format(raw.sum4), sum5: format(raw.sum5)};
+        : `<div class="flex flex-col">
+               <span class="font-extrabold text-base">${val}</span>
+               <span class="text-xs text-slate-500 font-normal mt-0.5">(${subj})</span>
+           </div>`;
+    return {
+        sum2: format(raw.sum2, raw.sum2_subj),
+        sum3: format(raw.sum3, raw.sum3_subj),
+        sum4: format(raw.sum4, raw.sum4_subj),
+        sum5: format(raw.sum5, raw.sum5_subj)
+    };
 }
 
 function _getScoreSum(student, basis) {
