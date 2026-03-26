@@ -314,128 +314,133 @@
                     </div>
                 </section>
 
-                <section class="no-print" id="report_basis">
-                    <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-sm mt-4">
-                        <div class="flex items-center gap-3">
-                            <i class="fa-solid fa-sliders text-slate-400 text-lg"></i>
-                            <span class="text-base font-bold text-slate-700">전체 통계 기준</span>
-                        </div>
-                        <div class="flex bg-slate-100 p-1 rounded-lg">
-                            <button id="btn-basis-raw" onclick="setGlobalBasis('raw')"
-                                    class="px-4 py-2 text-base font-semibold rounded-md bg-white text-blue-600 shadow-sm transition-all">
-                                원점수
-                            </button>
-                            <button id="btn-basis-std" onclick="setGlobalBasis('std')"
-                                    class="px-4 py-2 text-base font-semibold rounded-md text-slate-500 hover:text-slate-700 transition-all">
-                                표준점수
-                            </button>
-                            <button id="btn-basis-pct" onclick="setGlobalBasis('pct')"
-                                    class="px-4 py-2 text-base font-semibold rounded-md text-slate-500 hover:text-slate-700 transition-all">
-                                백분위
-                            </button>
-                        </div>
-                    </div>
-                </section>
+                <div class="relative flex flex-col gap-10">
 
-                <section class="print-page">
-                    <div class="flex items-center justify-between mb-4 flex-wrap gap-4">
-                        <div class="flex items-center gap-2">
-                            <span class="w-1.5 h-6 rounded bg-blue-600 inline-block"></span>
-                            <h3 id="top-n-title" class="font-bold text-slate-800 text-xl">상위 학생 명단</h3>
-                        </div>
-                        <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl no-print">
-                            <label for="top-n-count" class="text-base font-semibold text-slate-700 pl-2">표시 인원:</label>
-                            <select id="top-n-count" onchange="renderAll()"
-                                    class="rounded-lg border-none bg-white shadow-sm text-base py-1.5 pl-3 pr-8 focus:ring-2 focus:ring-blue-500">
-                                <option value="10">10명</option>
-                                <option value="20" selected>20명</option>
-                                <option value="30">30명</option>
-                                <option value="50">50명</option>
-                                <option value="100">100명</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-                        <div class="overflow-x-auto">
-                            <table class="data-table w-full text-base">
-                                <thead id="top20-thead"
-                                       class="bg-slate-50 text-slate-700 font-bold border-b-2 border-slate-200"></thead>
-                                <tbody id="top20-tbody" class="divide-y divide-slate-100"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="print-page">
-                    <div class="flex items-center justify-between mb-4 flex-wrap gap-4">
-                        <div class="flex items-center gap-2">
-                            <span class="w-1.5 h-6 rounded bg-emerald-500 inline-block"></span>
-                            <h3 id="dist-title" class="font-bold text-slate-800 text-xl">총점 급간별 인원 분포</h3>
-                        </div>
-                        <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl no-print">
-                            <label for="interval-size" class="text-base font-semibold text-slate-700 pl-2">급간
-                                크기:</label>
-                            <select id="interval-size" onchange="renderScoreDistribution()"
-                                    class="rounded-lg border-none bg-white shadow-sm text-base py-1.5 pl-3 pr-8 focus:ring-2 focus:ring-emerald-500">
-                                <option value="5">5점</option>
-                                <option value="10" selected>10점</option>
-                                <option value="20">20점</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                        <div class="relative w-full max-w-4xl mx-auto mb-8">
-                            <canvas id="score-dist-chart"></canvas>
-                        </div>
-                        <div class="overflow-x-auto custom-scrollbar border-t border-slate-100 pt-4">
-                            <table class="w-full text-base min-w-max break-inside-avoid">
-                                <thead id="score-dist-thead"
-                                       class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200"></thead>
-                                <tbody id="score-dist-tbody" class="divide-y divide-slate-100"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="print-page">
-                    <div class="flex items-center gap-2 mb-4">
-                        <span class="w-1.5 h-6 rounded bg-orange-500 inline-block"></span>
-                        <h3 class="font-bold text-slate-800 text-xl">선택과목 비율 분석</h3>
-                    </div>
-                    <div class="flex flex-col gap-6">
-
-                        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col no-print-box">
-                            <h3 class="text-center font-bold text-slate-700 mb-6">국어 선택 비율</h3>
-                            <div class="flex flex-col md:flex-row gap-2 items-center md:items-start">
-                                <div class="relative w-full md:w-[40%] h-48 flex-shrink-0 mx-auto no-print">
-                                    <canvas id="kor-select-chart"></canvas>
-                                </div>
-                                <div id="kor-select-stats" class="w-full md:w-[60%] print:w-full"></div>
+                    <section class="no-print sticky top-20 z-40" id="report_basis">
+                        <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-sm mt-4">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-sliders text-slate-400 text-lg"></i>
+                                <span class="text-base font-bold text-slate-700">전체 통계 기준</span>
+                            </div>
+                            <div class="flex bg-slate-100 p-1 rounded-lg">
+                                <button id="btn-basis-raw" onclick="setGlobalBasis('raw')"
+                                        class="px-4 py-2 text-base font-semibold rounded-md bg-white text-blue-600 shadow-sm transition-all">
+                                    원점수
+                                </button>
+                                <button id="btn-basis-std" onclick="setGlobalBasis('std')"
+                                        class="px-4 py-2 text-base font-semibold rounded-md text-slate-500 hover:text-slate-700 transition-all">
+                                    표준점수
+                                </button>
+                                <button id="btn-basis-pct" onclick="setGlobalBasis('pct')"
+                                        class="px-4 py-2 text-base font-semibold rounded-md text-slate-500 hover:text-slate-700 transition-all">
+                                    백분위
+                                </button>
                             </div>
                         </div>
+                    </section>
 
-                        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col no-print-box">
-                            <h3 class="text-center font-bold text-slate-700 mb-6">수학 선택 비율</h3>
-                            <div class="flex flex-col md:flex-row gap-2 items-center md:items-start">
-                                <div class="relative w-full md:w-[40%] h-48 flex-shrink-0 mx-auto no-print">
-                                    <canvas id="math-select-chart"></canvas>
-                                </div>
-                                <div id="math-select-stats" class="w-full md:w-[60%] print:w-full"></div>
+                    <section class="print-page">
+                        <div class="flex items-center justify-between mb-4 flex-wrap gap-4">
+                            <div class="flex items-center gap-2">
+                                <span class="w-1.5 h-6 rounded bg-blue-600 inline-block"></span>
+                                <h3 id="top-n-title" class="font-bold text-slate-800 text-xl">상위 학생 명단</h3>
+                            </div>
+                            <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl no-print">
+                                <label for="top-n-count" class="text-base font-semibold text-slate-700 pl-2">표시
+                                    인원:</label>
+                                <select id="top-n-count" onchange="renderAll()"
+                                        class="rounded-lg border-none bg-white shadow-sm text-base py-1.5 pl-3 pr-8 focus:ring-2 focus:ring-blue-500">
+                                    <option value="10">10명</option>
+                                    <option value="20" selected>20명</option>
+                                    <option value="30">30명</option>
+                                    <option value="50">50명</option>
+                                    <option value="100">100명</option>
+                                </select>
                             </div>
                         </div>
-
-                        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col no-print-box">
-                            <h3 class="text-center font-bold text-slate-700 mb-6">탐구 선택 비율</h3>
-                            <div class="flex flex-col md:flex-row gap-2 items-center md:items-start">
-                                <div class="relative w-full md:w-[30%] h-48 flex-shrink-0 mx-auto no-print">
-                                    <canvas id="inq-select-chart"></canvas>
-                                </div>
-                                <div id="inq-select-stats" class="w-full md:w-[70%] print:w-full"></div>
+                        <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                            <div class="overflow-x-auto">
+                                <table class="data-table w-full text-base">
+                                    <thead id="top20-thead"
+                                           class="bg-slate-50 text-slate-700 font-bold border-b-2 border-slate-200"></thead>
+                                    <tbody id="top20-tbody" class="divide-y divide-slate-100"></tbody>
+                                </table>
                             </div>
                         </div>
+                    </section>
 
-                    </div>
-                </section>
+                    <section class="print-page">
+                        <div class="flex items-center justify-between mb-4 flex-wrap gap-4">
+                            <div class="flex items-center gap-2">
+                                <span class="w-1.5 h-6 rounded bg-emerald-500 inline-block"></span>
+                                <h3 id="dist-title" class="font-bold text-slate-800 text-xl">총점 급간별 인원 분포</h3>
+                            </div>
+                            <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl no-print">
+                                <label for="interval-size" class="text-base font-semibold text-slate-700 pl-2">급간
+                                    크기:</label>
+                                <select id="interval-size" onchange="renderScoreDistribution()"
+                                        class="rounded-lg border-none bg-white shadow-sm text-base py-1.5 pl-3 pr-8 focus:ring-2 focus:ring-emerald-500">
+                                    <option value="5">5점</option>
+                                    <option value="10" selected>10점</option>
+                                    <option value="20">20점</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                            <div class="relative w-full max-w-4xl mx-auto mb-8">
+                                <canvas id="score-dist-chart"></canvas>
+                            </div>
+                            <div class="overflow-x-auto custom-scrollbar border-t border-slate-100 pt-4">
+                                <table class="w-full text-base min-w-max break-inside-avoid">
+                                    <thead id="score-dist-thead"
+                                           class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200"></thead>
+                                    <tbody id="score-dist-tbody" class="divide-y divide-slate-100"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="print-page">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="w-1.5 h-6 rounded bg-orange-500 inline-block"></span>
+                            <h3 class="font-bold text-slate-800 text-xl">선택과목 비율 분석</h3>
+                        </div>
+                        <div class="flex flex-col gap-6">
+
+                            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col no-print-box">
+                                <h3 class="text-center font-bold text-slate-700 mb-6">국어 선택 비율</h3>
+                                <div class="flex flex-col md:flex-row gap-2 items-center md:items-start">
+                                    <div class="relative w-full md:w-[40%] h-48 flex-shrink-0 mx-auto no-print">
+                                        <canvas id="kor-select-chart"></canvas>
+                                    </div>
+                                    <div id="kor-select-stats" class="w-full md:w-[60%] print:w-full"></div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col no-print-box">
+                                <h3 class="text-center font-bold text-slate-700 mb-6">수학 선택 비율</h3>
+                                <div class="flex flex-col md:flex-row gap-2 items-center md:items-start">
+                                    <div class="relative w-full md:w-[40%] h-48 flex-shrink-0 mx-auto no-print">
+                                        <canvas id="math-select-chart"></canvas>
+                                    </div>
+                                    <div id="math-select-stats" class="w-full md:w-[60%] print:w-full"></div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col no-print-box">
+                                <h3 class="text-center font-bold text-slate-700 mb-6">탐구 선택 비율</h3>
+                                <div class="flex flex-col md:flex-row gap-2 items-center md:items-start">
+                                    <div class="relative w-full md:w-[30%] h-48 flex-shrink-0 mx-auto no-print">
+                                        <canvas id="inq-select-chart"></canvas>
+                                    </div>
+                                    <div id="inq-select-stats" class="w-full md:w-[70%] print:w-full"></div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </section>
+
+                </div>
 
                 <section class="mt-6" id="csat_sum">
                     <div class="flex items-center gap-2">
