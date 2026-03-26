@@ -379,12 +379,10 @@ function renderSubjectSelection() {
         const canvasEl = document.getElementById(canvasId);
         const statsContainer = document.getElementById(statsId);
 
-        // 요소가 없거나 데이터가 없으면 중단
         if (!canvasEl || !statsContainer) return;
 
         const basis = globalReportBasis;
         const basisLabel = labelMap[basis];
-
         const labels = Object.keys(statsData).sort((a, b) => statsData[b].count - statsData[a].count);
 
         if (ST.charts[chartKey]) {
@@ -414,25 +412,42 @@ function renderSubjectSelection() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                // [수정] 차트 자체의 외곽 여백 제거
+                layout: {
+                    padding: {
+                        top: 0,
+                        bottom: 0,
+                        left: 0,
+                        right: 0
+                    }
+                },
                 plugins: {
-                    legend: {position: 'bottom', labels: {boxWidth: 12, padding: 15, font: {size: 11}}}
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 8, // [수정] 범례 주변 패딩 축소 (15 -> 8)
+                            font: {size: 11}
+                        }
+                    }
                 }
             }
         });
 
         const total = counts.reduce((a, b) => a + b, 0);
+        // [수정] mt-4 제거, pt-2 제거 -> mt-1 정도로 밀착
         let html = `
-            <table class="w-full text-center mt-4 border-t border-slate-100 pt-2 text-sm">
-                <thead>
-                    <tr class="text-slate-500 font-semibold border-b border-slate-100 bg-slate-50">
-                        <th class="py-2 rounded-tl-lg">과목명</th>
-                        <th class="py-2">비율 (인원)</th>
-                        <th class="py-2">평균 ${basisLabel}</th>
-                        <th class="py-2 rounded-tr-lg">평균 등급</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-50">
-        `;
+        <table class="w-full text-center mt-1 border-t border-slate-100 pt-0 text-sm">
+            <thead>
+                <tr class="text-slate-500 font-semibold border-b border-slate-100 bg-slate-50">
+                    <th class="py-2 rounded-tl-lg">과목명</th>
+                    <th class="py-2">비율 (인원)</th>
+                    <th class="py-2">평균 ${basisLabel}</th>
+                    <th class="py-2 rounded-tr-lg">평균 등급</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+    `;
 
         labels.forEach(l => {
             const d = statsData[l];
@@ -441,14 +456,14 @@ function renderSubjectSelection() {
             const avgGrade = d.validGradeCount > 0 ? (d.sumGrade / d.validGradeCount).toFixed(1) : '-';
 
             html += `
-                <tr class="hover:bg-blue-50 transition-colors cursor-pointer group" 
-                    onclick="showSelectedSubjectStudents('${type}', '${l}')">
-                    <td class="py-2 font-medium text-slate-700 group-hover:text-blue-600">${l}</td>
-                    <td class="py-2 text-slate-600">${pct}% <span class="text-xs text-slate-400">(${d.count})</span></td>
-                    <td class="py-2 text-blue-600 font-semibold">${avgRaw}</td>
-                    <td class="py-2 text-emerald-600 font-semibold">${avgGrade}</td>
-                </tr>
-            `;
+            <tr class="hover:bg-blue-50 transition-colors cursor-pointer group" 
+                onclick="showSelectedSubjectStudents('${type}', '${l}')">
+                <td class="py-2 font-medium text-slate-700 group-hover:text-blue-600">${l}</td>
+                <td class="py-2 text-slate-600">${pct}% <span class="text-xs text-slate-400">(${d.count})</span></td>
+                <td class="py-2 text-blue-600 font-semibold">${avgRaw}</td>
+                <td class="py-2 text-emerald-600 font-semibold">${avgGrade}</td>
+            </tr>
+        `;
         });
         html += `</tbody></table>`;
         statsContainer.innerHTML = html;

@@ -247,12 +247,11 @@ canvas, img {
     /* 4. 용지 설정 및 섹션 페이지 관리 */
     @page {
         size: A4 portrait;
-        margin: 15mm 10mm; /* 상하 여백을 조금 더 주어 안정감 확보 */
     }
 
     section.print-page {
-        break-before: page;
-        margin-bottom: 50px !important;
+        break-before: auto;
+        margin-bottom: 100px !important;
         display: block !important;
     }
 
@@ -286,11 +285,12 @@ canvas, img {
         border-collapse: collapse !important;
     }
 
-    /* 7. ★ 차트 그리드: 인쇄 시 무조건 2열 고정 */
+    /* 7. ★ 차트 그리드: 인쇄 시 무조건 3열 고정 */
     #chart-grid {
         display: grid !important;
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: 15px !important;
+        /* 3열로 변경 */
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 10px !important;
         width: 100% !important;
     }
 
@@ -317,7 +317,7 @@ canvas, img {
 
     #score-dist-tbody td {
         padding: 4px 1px !important; /* 패딩을 극한으로 줄임 */
-        font-size: 9px !important; /* 인쇄 시 글자 크기 대폭 축소 */
+        font-size: 10px !important; /* 인쇄 시 글자 크기 대폭 축소 */
         letter-spacing: -0.05em !important; /* 글자 간격 축소 */
     }
 
@@ -349,41 +349,48 @@ canvas, img {
         width: 30px !important;
     }
 
-    /* [추가] 선택과목 분석 섹션 인쇄 최적화 */
+    /* [수정] 선택과목 분석 섹션 인쇄 최적화 */
     /* 1. 국어, 수학 차트 그리드 정렬 */
     .grid-cols-1.md\:grid-cols-2 {
         display: grid !important;
-        grid-template-columns: repeat(2, 1fr) !important; /* 무조건 2열 */
+        grid-template-columns: repeat(2, 1fr) !important;
         gap: 20px !important;
     }
 
-    /* 2. 각 차트 컨테이너 중앙 정렬 */
+    /* 2. 각 차트 컨테이너 높이 및 마진 최적화 */
     .relative.w-full.h-56,
-    .relative.w-full.h-64 {
+    .relative.w-full.h-48 {
+        height: 180px !important; /* 인쇄 시 차트 높이를 고정하여 공백 제거 */
+        margin-bottom: 5px !important; /* 표와의 간격 최소화 */
         margin-left: auto !important;
         margin-right: auto !important;
         display: block !important;
     }
 
-    /* 3. 탐구 영역 (가로 배치 강제) */
+    /* 3. 탐구 영역 (가로 배치 강제 및 간격 조정) */
     .md\:col-span-2 {
-        grid-column: span 2 / span 2 !important; /* 2칸 다 쓰기 */
+        grid-column: span 2 / span 2 !important;
     }
 
     .flex.flex-col.md\:flex-row {
         display: flex !important;
-        flex-direction: row !important; /* 인쇄 시 가로로 배치 */
+        flex-direction: row !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 30px !important;
+        gap: 20px !important; /* 탐구 차트와 표 사이 간격 축소 */
     }
 
-    /* 탐구 차트와 표 너비 고정 */
+    /* 탐구 차트 영역 높이 조절 */
+    .relative.w-full.h-64 {
+        height: 220px !important;
+        margin-bottom: 0 !important;
+    }
+
     .flex.flex-col.md\:flex-row > .relative {
-        width: 50% !important; /* 차트 영역 */
+        width: 40% !important; /* 차트 비중 살짝 축소 */
     }
 
     .flex.flex-col.md\:flex-row > div:last-child {
-        width: 50% !important; /* 표 영역 */
+        width: 60% !important; /* 표 비중 확대 */
     }
 }
