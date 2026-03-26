@@ -151,11 +151,19 @@ function showCsatStudents(n, targetSum) {
         return actualSum !== null && actualSum <= targetSum;
     });
 
-    // 2. 학번(number) > 이름(name) 순으로 정렬
+    // 2. 반(class) > 학번(number) > 이름(name) 순으로 정렬
     targetStudents.sort((a, b) => {
+        // 1순위: 반(class) 비교
+        const classA = parseInt(a.class) || 9999;
+        const classB = parseInt(b.class) || 9999;
+        if (classA !== classB) return classA - classB;
+
+        // 2순위: 번호(number) 비교 (반이 같을 때만 실행됨)
         const numA = parseInt(a.number) || 9999;
         const numB = parseInt(b.number) || 9999;
         if (numA !== numB) return numA - numB;
+
+        // 3순위: 이름(name) 사전순 비교 (반과 번호가 모두 같을 때만 실행됨)
         return (a.name || '').localeCompare(b.name || '');
     });
 
