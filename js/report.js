@@ -62,6 +62,7 @@ function renderAll() {
     renderScoreDistribution();
     renderSubjectSelection();
     renderCharts();
+    renderCsatMinRequirement();
 }
 
 /* ───────────────────────────────────────────
@@ -789,6 +790,128 @@ function showStudentDetail(name, cls, num) {
     }).join('');
 
     openModal('student-modal');
+}
+
+/* ───────────────────────────────────────────
+   § 수능 최저학력기준 분석 로직
+─────────────────────────────────────────── */
+
+// [헬퍼] 학생의 등급 합(2합, 3합, 4합, 5합)을 계산
+function _getCsatSums(student) {
+    const grades = [];
+    const subjects = ['korean', 'math', 'english', 'inquiry1', 'inquiry2'];
+
+    subjects.forEach(subj => {
+        const score = student[subj];
+        if (score && typeof score.grade === 'number' && score.grade > 0 && score.grade <= 9) {
+            grades.push(score.grade);
+        }
+    });
+
+    // 오름차순 정렬 (좋은 등급 우선)
+    grades.sort((a, b) => a - b);
+
+    const sumN = (n) => {
+        if (grades.length < n) return '<span class="text-slate-300">-</span>';
+        const sum = grades.slice(0, n).reduce((acc, val) => acc + val, 0);
+        return `<span class="font-extrabold text-base">${sum}</span>`;
+    };
+
+    return {sum2: sumN(2), sum3: sumN(3), sum4: sumN(4), sum5: sumN(5)};
+}
+
+// [헬퍼] 특정 기준 점수 합산
+function _getScoreSum(student, basis) {
+    let sum = 0;
+    ['korean', 'math', 'inquiry1', 'inquiry2'].forEach(subj => {
+        if (student[subj] && typeof student[subj][basis] === 'number') {
+            sum += student[subj][basis];
+        }
+    });
+    return sum;
+}
+
+// 전교 석차 및 학급 드롭다운 초기화
+function renderCsatMinRequirement() {
+    if (!ST.data || ST.data.length === 0) return;
+
+    // --- [1] 전교 석차 기준 렌더링 ---
+    // 다중 조건 정렬: 원점수 > 표준점수 > 백분위 (내림차순)
+    const sortedData = [...ST.data].sort((a, b) => {
+        const aRaw = _getScoreSum(a, 'raw'), bRaw = _getScoreSum(b, 'raw');
+        if (bRaw !== aRaw) return bRaw - aRaw;
+        const aStd = _getScoreSum(a, 'std'), bStd = _getScoreSum(b, 'std');
+        if (bStd !== aStd) return bStd - aStd;
+        return _getScoreSum(b, 'pct') - _getScoreSum(a, 'pct');
+    });
+
+    const schoolTbody = document.getElementById('csat-school-tbody');
+    if (schoolTbody) {
+        schoolTbody.innerHTML = sortedData.map((s, idx) => {
+            const csat = _getCsatSums(s);
+            return `
+                <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer group"
+                data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" onclick="handleRowClick(this)">
+                    <td class="p-3 text-slate-500 font-medium">${idx + 1}</td>
+                    <td class="p-3 text-slate-700">${s.class || ''}</td>
+                    <td class="p-3 text-slate-700">${s.number || ''}</td>
+                    <td class="p-3 text-left font-semibold text-slate-800">${s.name || ''}</td>
+                    <td class="p-3 bg-blue-50/50 text-blue-700 border-x border-slate-100">${csat.sum2}</td>
+                    <td class="p-3 bg-emerald-50/50 text-emerald-700 border-r border-slate-100">${csat.sum3}</td>
+                    <td class="p-3 bg-violet-50/50 text-violet-700 border-r border-slate-100">${csat.sum4}</td>
+                    <td class="p-3 bg-rose-50/50 text-rose-700">${csat.sum5}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // --- [2] 학급 드롭다운 설정 ---
+    const classSelect = document.getElementById('class-select');
+    if (classSelect) {
+        // 학급 추출, 중복제거, 숫자 오름차순 정렬
+        const classes = [...new Set(ST.data.map(s => s.class).filter(c => c))]
+            .sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
+
+        classSelect.innerHTML = classes.map(c => `<option value="${c}">${c}반 보기</option>`).join('');
+
+        // 초기 학급 렌더링
+        if (classes.length > 0) renderCsatClassTable();
+    }
+}
+
+// 선택된 학급 테이블 렌더링
+function renderCsatClassTable() {
+    if (!ST.data || ST.data.length === 0) return;
+    const classSelect = document.getElementById('class-select');
+    if (!classSelect) return;
+
+    const selectedClass = classSelect.value;
+
+    // 필터링 및 정렬 (학번 > 이름)
+    const filteredData = ST.data.filter(s => s.class === selectedClass).sort((a, b) => {
+        const numA = parseInt(a.number) || 999;
+        const numB = parseInt(b.number) || 999;
+        if (numA !== numB) return numA - numB;
+        return (a.name || '').localeCompare(b.name || '');
+    });
+
+    const classTbody = document.getElementById('csat-class-tbody');
+    if (classTbody) {
+        classTbody.innerHTML = filteredData.map(s => {
+            const csat = _getCsatSums(s);
+            return `
+                <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer group"
+                data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" onclick="handleRowClick(this)">
+                    <td class="p-3 text-slate-700">${s.number || ''}</td>
+                    <td class="p-3 text-left font-semibold text-slate-800">${s.name || ''}</td>
+                    <td class="p-3 bg-blue-50/50 text-blue-700 border-x border-slate-100">${csat.sum2}</td>
+                    <td class="p-3 bg-emerald-50/50 text-emerald-700 border-r border-slate-100">${csat.sum3}</td>
+                    <td class="p-3 bg-violet-50/50 text-violet-700 border-r border-slate-100">${csat.sum4}</td>
+                    <td class="p-3 bg-rose-50/50 text-rose-700">${csat.sum5}</td>
+                </tr>
+            `;
+        }).join('');
+    }
 }
 
 // 디바운스(Debounce)를 적용하여 리사이즈 이벤트가 너무 자주 발생하는 것을 방지합니다.
