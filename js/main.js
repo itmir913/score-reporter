@@ -9,50 +9,50 @@ const ST = {
     charts: {}
 };
 
+// ExcelJS 워크시트를 2차원 배열(SheetJS의 sheet_to_json({header:1}) 형태)로 변환하는 헬퍼 함수
+function exceljsTo2DArray(ws) {
+    if (!ws) return [];
+    const result = [];
+    ws.eachRow({includeEmpty: true}, function (row, rowNumber) {
+        const rowData = [];
+        row.eachCell({includeEmpty: true}, function (cell, colNumber) {
+            let val = cell.value;
+            if (val !== null && val !== undefined) {
+                if (val.result !== undefined) val = val.result; // 수식 셀인 경우 계산된 값
+                else if (val.error !== undefined) val = '';     // 에러 셀인 경우 빈칸
+                else if (val instanceof Date) val = val.toISOString().split('T')[0]; // 날짜 형식
+            } else {
+                val = '';
+            }
+            rowData[colNumber - 1] = val;
+        });
+
+        // 빈 셀을 ''로 채우기
+        for (let i = 0; i < rowData.length; i++) {
+            if (rowData[i] === undefined) rowData[i] = '';
+        }
+        result[rowNumber - 1] = rowData;
+    });
+
+    // 중간에 비어있는 행 배열 초기화
+    for (let i = 0; i < result.length; i++) {
+        if (!result[i]) result[i] = [];
+    }
+    return result;
+}
 
 // 영문 변수명을 한글 라벨로 변환해주는 매핑 사전
 const FIELD_LABELS = {
-    grade_year: '학년',
-    class: '반',
-    number: '번호',
-    name: '이름',
-    kor_subject: '국어_선택과목명',
-    kor_common_raw: '국어_공통원점수',
-    kor_select_raw: '국어_선택원점수',
-    kor_raw: '국어_원점수',
-    kor_std: '국어_표준점수',
-    kor_pct: '국어_백분위',
-    kor_grade: '국어_등급',
-    math_subject: '수학_선택과목명',
-    math_common_raw: '수학_공통원점수',
-    math_select_raw: '수학_선택원점수',
-    math_raw: '수학_원점수',
-    math_std: '수학_표준점수',
-    math_pct: '수학_백분위',
-    math_grade: '수학_등급',
-    eng_raw: '영어_원점수',
-    eng_std: '영어_표준점수',
-    eng_pct: '영어_백분위',
-    eng_grade: '영어_등급',
-    inq1_subject: '탐구1_과목명',
-    inq1_raw: '탐구1_원점수',
-    inq1_std: '탐구1_표준점수',
-    inq1_pct: '탐구1_백분위',
-    inq1_grade: '탐구1_등급',
-    inq2_subject: '탐구2_과목명',
-    inq2_raw: '탐구2_원점수',
-    inq2_std: '탐구2_표준점수',
-    inq2_pct: '탐구2_백분위',
-    inq2_grade: '탐구2_등급',
-    hist_raw: '한국사_원점수',
-    hist_std: '한국사_표준점수',
-    hist_pct: '한국사_백분위',
-    hist_grade: '한국사_등급',
-    fl2_subject: '제2외국어_과목명',
-    fl2_raw: '제2외국어_원점수',
-    fl2_std: '제2외국어_표준점수',
-    fl2_pct: '제2외국어_백분위',
-    fl2_grade: '제2외국어_등급'
+    grade_year: '학년', class: '반', number: '번호', name: '이름',
+    kor_subject: '국어_선택과목명', kor_common_raw: '국어_공통원점수', kor_select_raw: '국어_선택원점수',
+    kor_raw: '국어_원점수', kor_std: '국어_표준점수', kor_pct: '국어_백분위', kor_grade: '국어_등급',
+    math_subject: '수학_선택과목명', math_common_raw: '수학_공통원점수', math_select_raw: '수학_선택원점수',
+    math_raw: '수학_원점수', math_std: '수학_표준점수', math_pct: '수학_백분위', math_grade: '수학_등급',
+    eng_raw: '영어_원점수', eng_std: '영어_표준점수', eng_pct: '영어_백분위', eng_grade: '영어_등급',
+    inq1_subject: '탐구1_과목명', inq1_raw: '탐구1_원점수', inq1_std: '탐구1_표준점수', inq1_pct: '탐구1_백분위', inq1_grade: '탐구1_등급',
+    inq2_subject: '탐구2_과목명', inq2_raw: '탐구2_원점수', inq2_std: '탐구2_표준점수', inq2_pct: '탐구2_백분위', inq2_grade: '탐구2_등급',
+    hist_raw: '한국사_원점수', hist_std: '한국사_표준점수', hist_pct: '한국사_백분위', hist_grade: '한국사_등급',
+    fl2_subject: '제2외국어_과목명', fl2_raw: '제2외국어_원점수', fl2_std: '제2외국어_표준점수', fl2_pct: '제2외국어_백분위', fl2_grade: '제2외국어_등급'
 };
 
 // 탭 전환 로직
@@ -66,7 +66,7 @@ function switchTab(tabId) {
 }
 
 // 토스트 알림
-let toastTimeout; // 여러 번 클릭해도 타이머가 꼬이지 않도록 변수 선언
+let toastTimeout;
 
 function showToast(msg, isErr = false) {
     const toast = document.getElementById('toast');
@@ -75,10 +75,8 @@ function showToast(msg, isErr = false) {
     const icon = document.getElementById('toast-icon');
     const msgEl = document.getElementById('toast-msg');
 
-    // 메시지 입력
     msgEl.innerText = msg;
 
-    // 상태에 따른 디자인 변경 (성공 vs 에러)
     if (isErr) {
         iconBg.className = 'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-red-500/20';
         icon.className = 'fa-solid fa-triangle-exclamation text-red-400';
@@ -89,13 +87,8 @@ function showToast(msg, isErr = false) {
         inner.classList.remove('border', 'border-red-500/30');
     }
 
-    // 애니메이션 실행 (나타나기)
     toast.classList.remove('opacity-0', 'translate-y-12');
-
-    // 기존 타이머 초기화 (연속 클릭 방지)
     if (toastTimeout) clearTimeout(toastTimeout);
-
-    // 3초 뒤에 사라지기
     toastTimeout = setTimeout(() => {
         toast.classList.add('opacity-0', 'translate-y-12');
     }, 3000);
@@ -114,7 +107,6 @@ function clearFile() {
     document.getElementById('sheet-area').classList.add('hidden');
     document.getElementById('parse-btn').classList.add('hidden');
     document.getElementById('preview-section').classList.add('hidden');
-
     document.getElementById('badge-text').innerText = '데이터 없음';
     document.getElementById('data-badge').querySelector('span').className = 'w-2 h-2 rounded-full bg-slate-300';
 }
@@ -139,30 +131,68 @@ function handleFileSelect(e) {
     if (e.target.files.length > 0) processFile(e.target.files[0]);
 }
 
-function processFile(file) {
+// ★ 변경: 비동기(async) 방식으로 ExcelJS 적용 및 비밀번호 프롬프트 추가
+async function processFile(file) {
     clearFile();
-    const reader = new FileReader();
-    reader.onload = function (e) {
+    try {
+        const arrayBuffer = await file.arrayBuffer();
+
+        // ★ 핵심 해결책: esm.sh CDN을 통해 안전하게 Buffer 객체만 쏙 빼옵니다.
+        // (HTML에 script 태그를 넣을 필요가 없습니다!)
+        const {Buffer} = await import('https://esm.sh/buffer');
+
+        // 가져온 Buffer를 이용해 데이터 변환
+        const fileBuffer = Buffer.from(arrayBuffer);
+
+        const wb = new ExcelJS.Workbook();
+
         try {
-            const data = new Uint8Array(e.target.result);
-            ST.wb = XLSX.read(data, {type: 'array'});
-            ST.file = file;
-
-            document.getElementById('dropzone').classList.add('hidden');
-            document.getElementById('file-info').classList.remove('hidden');
-            document.getElementById('file-name').innerText = file.name;
-            document.getElementById('file-meta').innerText = `크기: ${(file.size / 1024).toFixed(1)} KB | 시트 수: ${ST.wb.SheetNames.length}`;
-
-            const sel = document.getElementById('sheet-select');
-            sel.innerHTML = ST.wb.SheetNames.map(s => `<option value="${s}">${s}</option>`).join('');
-
-            renderFormatCards();
-            document.getElementById('format-area').classList.remove('hidden');
+            // 1. 일반 로드 시도
+            await wb.xlsx.load(fileBuffer);
         } catch (err) {
-            showToast('엑셀 파일을 읽는 데 실패했습니다.', true);
+            // 2. 에러 발생 시: 암호 입력 프롬프트 띄우기
+            const pwd = prompt("암호가 걸려있는 엑셀 파일입니다.\n비밀번호를 입력해주세요.");
+            if (pwd === null) {
+                showToast("파일 읽기가 취소되었습니다.", true);
+                return;
+            }
+
+            try {
+                // 3. 사용자가 입력한 비밀번호로 재시도
+                await wb.xlsx.load(fileBuffer, {password: pwd});
+                showToast("암호가 성공적으로 해제되었습니다.");
+            } catch (pwdErr) {
+                console.error("복호화 에러:", pwdErr);
+                showToast("비밀번호가 틀렸거나 손상된 파일입니다.", true);
+                return;
+            }
         }
-    };
-    reader.readAsArrayBuffer(file);
+
+        ST.wb = wb;
+        ST.file = file;
+
+        // 시트 이름 배열 추출
+        const sheetNames = [];
+        wb.eachSheet(function (worksheet) {
+            sheetNames.push(worksheet.name);
+        });
+
+        /* ... 이후 UI 처리 로직은 기존과 동일 ... */
+        document.getElementById('dropzone').classList.add('hidden');
+        document.getElementById('file-info').classList.remove('hidden');
+        document.getElementById('file-name').innerText = file.name;
+        document.getElementById('file-meta').innerText = `크기: ${(file.size / 1024).toFixed(1)} KB | 시트 수: ${sheetNames.length}`;
+
+        const sel = document.getElementById('sheet-select');
+        sel.innerHTML = sheetNames.map(s => `<option value="${s}">${s}</option>`).join('');
+
+        renderFormatCards();
+        document.getElementById('format-area').classList.remove('hidden');
+
+    } catch (err) {
+        console.error("파일 처리 에러:", err);
+        showToast('엑셀 파일을 읽는 데 실패했습니다.', true);
+    }
 }
 
 // 양식 선택 UI
@@ -189,8 +219,6 @@ function renderFormatCards() {
 
 function selectFormat(id) {
     ST.fmtId = id;
-
-    // 1. 선택된 카드 디자인 활성화
     document.querySelectorAll('.format-card').forEach(el => {
         el.classList.remove('selected', 'border-blue-500', 'bg-blue-50', 'ring-2', 'ring-blue-200');
         el.classList.add('border-slate-200');
@@ -210,23 +238,20 @@ function selectFormat(id) {
     document.getElementById('parse-btn').classList.remove('hidden');
 
     const s = SCHEMAS[id];
-
-    // 2. 우측 "양식 지원 필드" 렌더링 (★ FIELD_LABELS 기준으로 순서 고정!)
     document.getElementById('format-detail').innerHTML = Object.entries(FIELD_LABELS).map(([k, korName]) => {
-        // 현재 선택된 양식(schema)에서 해당 키(k)가 지원되는지(값이 있는지) 확인
         const isSupported = s.fields[k] && s.fields[k].trim() !== '';
-
         return `<span class="ftag ${isSupported ? 'ftag-on' : 'ftag-off'}">${korName}</span>`;
     }).join('');
 
     renderRawPreview();
 }
 
-// 원본 데이터 미리보기
+// 원본 데이터 미리보기 (ExcelJS 로직 적용)
 function renderRawPreview() {
     if (!ST.wb || !ST.fmtId) return;
-    const sheet = document.getElementById('sheet-select').value;
-    const rows = XLSX.utils.sheet_to_json(ST.wb.Sheets[sheet], {header: 1, defval: ''});
+    const sheetName = document.getElementById('sheet-select').value;
+    const ws = ST.wb.getWorksheet(sheetName);
+    const rows = exceljsTo2DArray(ws); // ExcelJS 시트를 2차원 배열로 변환
 
     const thead = document.getElementById('preview-thead');
     const tbody = document.getElementById('preview-tbody');
@@ -237,14 +262,10 @@ function renderRawPreview() {
         return;
     }
 
-    // ★ 미리보기로 표시할 행의 개수를 상수로 정의
     const PREVIEW_ROW_COUNT = 7;
-
-    // 정의한 상수만큼만 잘라서(slice) 최대 컬럼 수를 계산합니다.
     const maxCol = Math.max(0, ...rows.slice(0, PREVIEW_ROW_COUNT).map(r => r.length));
     const schema = SCHEMAS[ST.fmtId];
 
-    // 1. 선택된 양식의 매핑 데이터를 가져와 '컬럼 인덱스'를 기준으로 역매핑
     const idxToKey = {};
     if (schema && schema._idx) {
         for (const [key, idx] of Object.entries(schema._idx)) {
@@ -254,37 +275,30 @@ function renderRawPreview() {
         }
     }
 
-    // 2. ★ 테이블 헤더(Thead) 렌더링 - 강조 스타일 적용
     thead.innerHTML = `<tr>${Array(maxCol).fill(0).map((_, i) => {
         const mappedKey = idxToKey[i];
         const korLabel = mappedKey ? FIELD_LABELS[mappedKey] : '';
-
         if (korLabel) {
-            // 매핑된 열: 굵고 더 큰 파란색 텍스트(text-base), 배경색 약간 어둡게(bg-slate-100)
             return `<th class="px-4 py-4 border-b-2 border-slate-200 whitespace-nowrap text-left align-middle bg-slate-100 z-10">
                 <span class="text-base font-extrabold text-blue-700 tracking-tight">${korLabel}</span>
             </th>`;
         } else {
-            // 매핑되지 않은 열: 연한 회색으로 Col 번호만 출력 (크기는 text-base 유지)
             return `<th class="px-4 py-4 border-b-2 border-slate-200 whitespace-nowrap text-left align-middle bg-slate-100 z-10">
                 <span class="text-base font-medium text-slate-400">Col ${i}</span>
             </th>`;
         }
     }).join('')}</tr>`;
 
-    // 텍스트를 지정한 길이(15자)만큼만 자르는 헬퍼 함수
     const truncateText = (text, maxLength = 15) => {
         if (text === undefined || text === null || text === '') return '';
         const str = String(text);
         return str.length > maxLength ? str.substring(0, maxLength) + '...' : str;
     };
 
-    // 3. ★ 테이블 본문(Tbody) 렌더링 (상수 적용)
     tbody.innerHTML = rows.slice(0, Math.min(rows.length, PREVIEW_ROW_COUNT)).map((r, i) => `
             <tr class="${i < schema.headerRows ? 'bg-amber-100 text-amber-950 font-semibold' : 'hover:bg-slate-50 transition-colors'}">
                 ${Array(maxCol).fill(0).map((_, ci) => {
         const originalText = r[ci] !== undefined ? r[ci] : '';
-        // td 태그의 title 속성에 원본 텍스트를 넣어 마우스 호버 시 툴팁으로 보이게 함 (XSS 방지 escapeAttr 적용)
         return `<td class="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-base text-slate-700 cursor-default" title="${escapeAttr(originalText)}">
                         ${escapeAttr(truncateText(originalText, 15))}
                     </td>`;
@@ -293,8 +307,6 @@ function renderRawPreview() {
         `).join('');
 
     document.getElementById('preview-section').classList.remove('hidden');
-
-    // 안내 문구도 상수를 활용해 동적으로 표시되도록 수정
     const showingCount = Math.min(rows.length, PREVIEW_ROW_COUNT);
     document.getElementById('preview-count').innerText = `총 ${rows.length}행 중 ${showingCount}행`;
 }
@@ -303,25 +315,18 @@ function renderRawPreview() {
 function parseData() {
     if (!ST.wb || !ST.fmtId) return;
     try {
-        const sheet = document.getElementById('sheet-select').value;
+        const sheetName = document.getElementById('sheet-select').value;
         const parser = new GradeDataParser(SCHEMAS[ST.fmtId]);
-        ST.data = parser.parse(ST.wb, sheet);
+        ST.data = parser.parse(ST.wb, sheetName);
 
         showToast(`${ST.data.length}명의 데이터를 파싱했습니다.`);
-
-        // 배지 업데이트
         document.getElementById('badge-text').innerText = `${ST.data.length}명 로드됨`;
         document.getElementById('data-badge').querySelector('span').className = 'w-2 h-2 rounded-full bg-green-500';
 
         renderReport();
         renderExportCards();
         switchTab('report');
-
-        // 보고서 탭으로 전환 후 최상단으로 부드럽게 스크롤
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
+        window.scrollTo({top: 0, behavior: 'smooth'});
     } catch (err) {
         console.error(err);
         showToast('데이터 파싱 중 오류가 발생했습니다.', true);
@@ -364,7 +369,8 @@ function renderExportCards() {
         `).join('');
 }
 
-function exportTo(formatId) {
+// ★ 변경: 내보내기가 비동기 버퍼 쓰기를 요구하므로 async 추가
+async function exportTo(formatId) {
     if (!ST.data) {
         showToast('파싱된 데이터가 없습니다.', true);
         return;
@@ -372,7 +378,7 @@ function exportTo(formatId) {
     try {
         const target = SCHEMAS[formatId];
         const fileName = `성적데이터_${target.label}변환_${new Date().getTime()}.xlsx`;
-        GradeExporter.toXlsx(ST.data, target, fileName);
+        await GradeExporter.toXlsx(ST.data, target, fileName);
         showToast(`${target.label} 양식으로 내보냈습니다.`);
     } catch (err) {
         console.error(err);

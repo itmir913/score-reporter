@@ -6,8 +6,11 @@ class GradeDataParser {
         this.s = schema;
     }
 
-    parse(wb, sheet) {
-        const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheet], {header: 1, defval: ''}).slice(this.s.headerRows);
+    parse(wb, sheetName) {
+        // ExcelJS에서 시트를 가져온 후 main.js에 선언해둔 exceljsTo2DArray를 통해 변환
+        const ws = wb.getWorksheet(sheetName);
+        const rows = exceljsTo2DArray(ws).slice(this.s.headerRows);
+
         return rows.filter(row => this.s.str(row, 'name')).map(row => this._row(row));
     }
 
