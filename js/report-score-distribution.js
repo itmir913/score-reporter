@@ -127,8 +127,8 @@ function renderScoreDistribution() {
         // 1. 점수 급간 행 (px-2 -> px-1, text-base 제거)
         tableHtml += `
         <tr class="bg-slate-100 text-slate-700 font-bold border-t-2 border-slate-200">
-            <td class="px-1 py-3 text-center border-r border-slate-200 w-[14%] text-xs md:text-sm">점수 급간</td>
-            ${chunkLabels.map(label => `<td class="px-1 py-3 text-center text-[10px] sm:text-xs md:text-sm tracking-tighter">${label}</td>`).join('')}
+            <td class="px-1 py-3 text-center border-r border-slate-200 w-[14%] text-base md:text-base">점수 급간</td>
+            ${chunkLabels.map(label => `<td class="px-1 py-3 text-center text-[10px] sm:text-base md:text-base tracking-tighter">${label}</td>`).join('')}
             ${emptyCells}
         </tr>
     `;
@@ -136,8 +136,8 @@ function renderScoreDistribution() {
         // 2. 인원수 행
         tableHtml += `
         <tr class="bg-white border-b border-slate-200">
-            <td class="px-1 py-3 text-center font-bold text-slate-700 border-r border-slate-200 text-xs md:text-sm">인원 (명)</td>
-            ${chunkCounts.map(c => `<td class="px-1 py-3 text-center text-xs md:text-sm text-slate-600 ${c > 0 ? 'font-black text-emerald-600' : ''}">${c}</td>`).join('')}
+            <td class="px-1 py-3 text-center font-bold text-slate-700 border-r border-slate-200 text-base md:text-base">인원 (명)</td>
+            ${chunkCounts.map(c => `<td class="px-1 py-3 text-center text-base md:text-base text-slate-600 ${c > 0 ? 'font-black text-emerald-600' : ''}">${c}</td>`).join('')}
             ${emptyCells}
         </tr>
     `;

@@ -120,27 +120,34 @@ function renderCsatSummaryTable() {
     theadHtml += `</tr>`;
     thead.innerHTML = theadHtml;
 
-    // 2. 행 생성 헬퍼
-    const buildRow = (label, colorClass, dataArr, startIdx) => {
+    // 2. 행 생성 헬퍼 (인자 nSum 추가, onclick 이벤트 추가)
+    const buildRow = (label, colorClass, dataArr, startIdx, nSum) => {
         let row = `<tr><td class="p-3 font-bold border-r border-slate-200 ${colorClass}">${label}</td>`;
         for (let i = 2; i <= maxSum; i++) {
             if (i < startIdx) {
                 row += `<td class="p-3 text-slate-300 bg-slate-50">-</td>`;
             } else {
                 const val = dataArr[i];
-                row += `<td class="p-3 ${val > 0 ? 'font-bold text-slate-800' : 'text-slate-300'}">${val > 0 ? val + '명' : '-'}</td>`;
+                if (val > 0) {
+                    // ▼ 인원이 1명 이상일 때 클릭 가능한 UI와 이벤트(showCsatStudents) 추가 ▼
+                    row += `<td class="p-3 font-bold text-slate-800 cursor-pointer hover:bg-slate-100 transition-colors" onclick="showCsatStudents(${nSum}, ${i})">
+                                <span class="underline underline-offset-2 decoration-slate-300 hover:decoration-slate-500">${val}명</span>
+                            </td>`;
+                } else {
+                    row += `<td class="p-3 text-slate-300">-</td>`;
+                }
             }
         }
         row += `</tr>`;
         return row;
     };
 
-    // 3. 본문 생성 (+ 기호와 sums5, 노란색 계열 클래스 반영)
+    // 3. 본문 생성 (맨 끝에 nSum 인자 2, 3, 4, 5 추가)
     tbody.innerHTML =
-        buildRow('2합', 'bg-blue-50 text-blue-700', sums2, 2) +
-        buildRow('3합', 'bg-emerald-50 text-emerald-700', sums3, 3) +
-        buildRow('4합', 'bg-violet-50 text-violet-700', sums4, 4) +
-        buildRow('5합', 'bg-amber-50 text-amber-700', sums5, 5); // <-- 3. amber(노란/주황빛) 적용 및 sums5 사용
+        buildRow('2합', 'bg-blue-50 text-blue-700', sums2, 2, 2) +
+        buildRow('3합', 'bg-emerald-50 text-emerald-700', sums3, 3, 3) +
+        buildRow('4합', 'bg-violet-50 text-violet-700', sums4, 4, 4) +
+        buildRow('5합', 'bg-amber-50 text-amber-700', sums5, 5, 5);
 }
 
 // 선택된 학급 테이블 렌더링

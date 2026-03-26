@@ -60,12 +60,3 @@ function renderTopN() {
     }).join('');
 }
 
-// 행 클릭 시 데이터를 읽어와 상세 모달을 띄우는 핸들러
-function handleRowClick(el) {
-    const name = el.dataset.name;
-    const cls = el.dataset.class;
-    const num = el.dataset.num;
-
-    // 기존에 사용하던 상세 보기 함수 호출
-    showStudentDetail(name, cls, num);
-}

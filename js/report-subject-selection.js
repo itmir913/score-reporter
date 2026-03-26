@@ -69,7 +69,7 @@ function renderSubjectSelection() {
         }
 
         if (labels.length === 0) {
-            statsContainer.innerHTML = '<p class="text-center text-slate-400 mt-4 text-sm font-medium">데이터가 없습니다.</p>';
+            statsContainer.innerHTML = '<p class="text-center text-slate-400 mt-4 text-base font-medium">데이터가 없습니다.</p>';
             return;
         }
 
@@ -115,7 +115,7 @@ function renderSubjectSelection() {
         const total = counts.reduce((a, b) => a + b, 0);
         // [수정] mt-4 제거, pt-2 제거 -> mt-1 정도로 밀착
         let html = `
-        <table class="w-full text-center mt-1 border-t border-slate-100 pt-0 text-sm">
+        <table class="w-full text-center mt-1 border-t border-slate-100 pt-0 text-base">
             <thead>
                 <tr class="text-slate-500 font-semibold border-b border-slate-100 bg-slate-50">
                     <th class="py-2 rounded-tl-lg">과목명</th>
@@ -137,7 +137,7 @@ function renderSubjectSelection() {
             <tr class="hover:bg-blue-50 transition-colors cursor-pointer group" 
                 onclick="showSelectedSubjectStudents('${type}', '${l}')">
                 <td class="py-2 font-medium text-slate-700 group-hover:text-blue-600">${l}</td>
-                <td class="py-2 text-slate-600">${pct}% <span class="text-xs text-slate-400">(${d.count})</span></td>
+                <td class="py-2 text-slate-600">${pct}% <span class="text-base text-slate-400">(${d.count})</span></td>
                 <td class="py-2 text-blue-600 font-semibold">${avgRaw}</td>
                 <td class="py-2 text-emerald-600 font-semibold">${avgGrade}</td>
             </tr>
