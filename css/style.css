@@ -231,6 +231,13 @@ canvas, img {
     /* 2. 불필요한 UI 숨김 */
     .no-print, #tab-upload, #tab-export, .no-print * {
         display: none !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        max-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        border: none !important;
     }
 
     /* 3. 보고서 영역 활성화 및 기본 배경 설정 */
@@ -357,16 +364,6 @@ canvas, img {
         gap: 20px !important;
     }
 
-    /* 2. 각 차트 컨테이너 높이 및 마진 최적화 */
-    .relative.w-full.h-56,
-    .relative.w-full.h-48 {
-        height: 180px !important; /* 인쇄 시 차트 높이를 고정하여 공백 제거 */
-        margin-bottom: 5px !important; /* 표와의 간격 최소화 */
-        margin-left: auto !important;
-        margin-right: auto !important;
-        display: block !important;
-    }
-
     /* 3. 탐구 영역 (가로 배치 강제 및 간격 조정) */
     .md\:col-span-2 {
         grid-column: span 2 / span 2 !important;
@@ -384,14 +381,6 @@ canvas, img {
     .relative.w-full.h-64 {
         height: 220px !important;
         margin-bottom: 0 !important;
-    }
-
-    .flex.flex-col.md\:flex-row > .relative {
-        width: 40% !important; /* 차트 비중 살짝 축소 */
-    }
-
-    .flex.flex-col.md\:flex-row > div:last-child {
-        width: 60% !important; /* 표 비중 확대 */
     }
 
     /* 9. ★ 수능 최저학력기준 누적 인원 표 인쇄 최적화 (기존 CSS 맨 아래 추가) */
