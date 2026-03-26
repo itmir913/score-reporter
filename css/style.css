@@ -258,7 +258,7 @@ canvas, img {
 
     section.print-page {
         break-before: auto;
-        margin-bottom: 100px !important;
+        margin-bottom: 50px !important;
         display: block !important;
     }
 
@@ -354,19 +354,6 @@ canvas, img {
     /* 순위, 반, 번호 등 짧은 텍스트 컬럼 너비 최적화 */
     .w-16 {
         width: 30px !important;
-    }
-
-    /* [수정] 선택과목 분석 섹션 인쇄 최적화 */
-    /* 1. 국어, 수학 차트 그리드 정렬 */
-    .grid-cols-1.md\:grid-cols-2 {
-        display: grid !important;
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 20px !important;
-    }
-
-    /* 3. 탐구 영역 (가로 배치 강제 및 간격 조정) */
-    .md\:col-span-2 {
-        grid-column: span 2 / span 2 !important;
     }
 
     .flex.flex-col.md\:flex-row {
