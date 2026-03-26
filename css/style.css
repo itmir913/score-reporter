@@ -258,7 +258,7 @@ canvas, img {
 
     section.print-page {
         break-before: auto;
-        margin-bottom: 50px !important;
+        margin-bottom: 80px !important;
         display: block !important;
     }
 
