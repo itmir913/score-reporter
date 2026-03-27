@@ -178,7 +178,7 @@ function showCsatStudents(n, targetSum) {
             return `
                 <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer group"
                     data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" onclick="handleRowClick(this)">
-                    <td class="border border-slate-300 p-3 text-slate-700">${s.class || ''}반 ${s.number || ''}</td>
+                    <td class="border border-slate-300 p-3 text-slate-700">${s.class || ''}반 ${s.number || ''}번</td>
                     <td class="border border-slate-300 p-3 font-bold text-slate-800">${s.name || ''}</td>
                     <td class="border border-slate-300 p-3 text-blue-600 font-bold">${actualSum}</td>
                     <td class="border border-slate-300 p-3 text-blue-600 font-bold">${actualSubj}</td>
