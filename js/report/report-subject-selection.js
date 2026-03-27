@@ -18,6 +18,8 @@ function renderSubjectSelection(cache) {
         // ★ globalReportBasis 대신 cache.basis 사용
         const basisLabel = labelMap[cache.basis];
         const labels = Object.keys(statsData)
+            // [핵심 수정] 빈 문자열, null, undefined, '미응시' 등 결측 데이터 라벨을 완전히 제외
+            .filter(key => key && key.trim() !== '' && key !== 'null' && key !== 'undefined' && key !== '미응시')
             .sort((a, b) => statsData[b].count - statsData[a].count);
 
         if (ST.charts[chartKey]) {
