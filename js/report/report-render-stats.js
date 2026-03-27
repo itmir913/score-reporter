@@ -9,16 +9,26 @@ function renderStats(cache) {
     const basisLabel = labelMap[basis]; // '원점수', '표준점수', '백분위'
     const unit = basis === 'pct' ? '%' : '점';
 
-    // 1. 국어/수학 상위 20% 평균 계산
-    const top20Count = Math.max(1, Math.ceil(total * 0.2));
-    const korTop20Avg = (([...cache.korScores].sort((a, b) => b - a).slice(0, top20Count).reduce((a, b) => a + b, 0)) / top20Count).toFixed(1);
-    const mathTop20Avg = (([...cache.mathScores].sort((a, b) => b - a).slice(0, top20Count).reduce((a, b) => a + b, 0)) / top20Count).toFixed(1);
+    // Helper: 상위 20% 평균 계산 함수 (응시 인원 기준)
+    const getTop20Avg = (scores, isLowerBetter = false) => {
+        const count = scores.length;
+        if (count === 0) return "0.0"; // 응시자 없을 경우 대비
 
-    // 2. 영어 상위 20% 평균 등급 계산
-    const engTop20 = [...cache.engGrades].sort((a, b) => a - b).slice(0, top20Count);
-    const engTop20Avg = (engTop20.reduce((a, b) => a + b, 0) / top20Count).toFixed(1);
+        const topCount = Math.max(1, Math.ceil(count * 0.2));
 
-    // 3. HTML 렌더링
+        // 점수는 내림차순(b-a), 등급은 오름차순(a-b)
+        const sorted = [...scores].sort((a, b) => isLowerBetter ? a - b : b - a);
+        const topSlice = sorted.slice(0, topCount);
+        const sum = topSlice.reduce((a, b) => a + b, 0);
+
+        return (sum / topCount).toFixed(1);
+    };
+
+    // 각 과목별 실제 응시자 수 기준 상위 20% 계산
+    const korTop20Avg = getTop20Avg(cache.korScores);
+    const mathTop20Avg = getTop20Avg(cache.mathScores);
+    const engTop20Avg = getTop20Avg(cache.engGrades, true); // 등급은 낮을수록 상위권
+
     document.getElementById('stat-cards').innerHTML = `
         <div class="stat-card bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-center items-center text-center shadow-sm">
             <span class="text-base text-slate-500 font-bold mb-1 uppercase tracking-tight">총 응시 인원</span>
