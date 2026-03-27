@@ -22,7 +22,7 @@
             </div>
             <div class="hidden md:block">
                 <h1 class="text-lg font-extrabold text-slate-900 tracking-tight leading-none">
-                    성적 리포트 시스템
+                    모의고사 성적 분석 시스템
                 </h1>
             </div>
         </div>
@@ -62,8 +62,8 @@
 
             <div class="lg:col-span-8 space-y-8">
                 <div>
-                    <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">데이터 업로드</h2>
-                    <p class="text-base text-slate-500 mt-2">모의고사 성적 데이터(.xlsx)를 업로드하고 양식을 선택해 주세요.</p>
+                    <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">데이터 불러오기</h2>
+                    <p class="text-base text-slate-500 mt-2">모의고사 성적 데이터를 불러온 후 프로그램 종류를 선택해 주세요.</p>
                 </div>
 
                 <div id="dropzone"
@@ -107,7 +107,7 @@
                         <div class="w-7 h-7 rounded-full bg-slate-900 text-white flex items-center justify-center text-base font-bold">
                             1
                         </div>
-                        <h3 class="text-lg font-bold text-slate-800">입력 양식 선택</h3>
+                        <h3 class="text-lg font-bold text-slate-800">데이터 양식 선택</h3>
                     </div>
                     <div class="grid grid-cols-2 gap-4" id="format-cards"></div>
                 </div>
@@ -154,9 +154,17 @@
                             <div class="text-base text-amber-900 w-full leading-relaxed">
                                 <p class="font-bold mb-1">분석 전 필수 확인사항</p>
                                 <ul class="list-disc list-outside ml-4 space-y-1 text-amber-800/80">
-                                    <li class="pl-1">상단 파란색 글씨가 각 열의 데이터와 <b>정확히 매칭</b>되었는지 확인하세요.</li>
-                                    <li class="pl-1"><span class="bg-amber-200/50 px-1 rounded font-bold">노란색 배경</span>은
-                                        <b>제목 행</b>입니다. 데이터가 노란색이라면 양식을 변경하세요.
+                                    <li class="pl-1">
+                                        상단 <span class="text-indigo-600 font-bold">청색 항목명</span>과 데이터가 서로 일치하는지 확인하십시오.
+                                    </li>
+                                    <li class="pl-1 mt-2">
+                                        프로그램별로 데이터 열의 순서가 다르므로 이를 매칭시켜야 합니다. 일치하지 않을 경우 <b>[데이터 양식]</b>을 변경해 주십시오.
+                                    </li>
+
+                                    <li class="pl-1 mt-2">
+                                        <span class="bg-amber-100 px-1.5 py-0.5 rounded text-amber-700 font-bold border border-amber-200">황색 배경</span>은
+                                        데이터에서 제외되는 <span class="bg-amber-100 px-1.5 py-0.5 rounded text-amber-700 font-bold border border-amber-200">제목(Header) 행</span>입니다. 실제 <b>학생 성적</b>이 황색으로
+                                        표시된다면, 양식을 잘못 선택한 것입니다.
                                     </li>
                                 </ul>
                             </div>
@@ -189,26 +197,31 @@
                 </div>
 
                 <div class="flex flex-col gap-4">
-                    <div class="bg-slate-900 rounded-3xl p-6 text-white relative overflow-hidden group shadow-[0_8px_30px_rgb(15,23,42,0.2)]">
-                        <div class="absolute -right-6 -top-6 w-32 h-32 bg-indigo-500/20 rounded-full blur-2xl z-0 pointer-events-none group-hover:bg-indigo-500/30 transition-colors"></div>
+                    <div class="bg-slate-50 border border-slate-200/80 rounded-3xl p-6 relative overflow-hidden group shadow-sm hover:shadow-md transition-all">
+
+                        <div class="absolute -right-6 -top-6 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl z-0 pointer-events-none group-hover:bg-indigo-500/20 transition-colors"></div>
+
                         <div class="relative z-10 flex flex-col gap-3">
                             <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-lock text-indigo-400 text-xl"></i>
-                                <h3 class="text-base font-bold tracking-tight">안전한 로컬 보안</h3>
+                                <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                                    <i class="fa-solid fa-lock text-sm"></i>
+                                </div>
+                                <h3 class="text-slate-800 text-base font-bold tracking-tight">안전한 로컬 보안</h3>
                             </div>
-                            <p class="text-base font-medium text-slate-300/80 leading-relaxed break-keep">
-                                모든 학생 데이터는 외부로 전송되지 않고 브라우저에서만 처리됩니다. 오프라인 PC 버전도 지원합니다.
+
+                            <p class="text-sm font-medium text-slate-600 leading-relaxed break-keep">
+                                모든 데이터는 외부로 전송되지 않고 브라우저에서만 처리됩니다. 오프라인 PC 버전도 지원합니다. 아래 버튼을 눌러 최신 버전 파일을 다운로드하세요.
                             </p>
+
                             <a href="https://github.com/itmir913/teacher-utility-kit/releases/download/latest/score-reporter.zip"
-                               class="mt-2 w-full bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl py-3 text-base transition-all flex items-center justify-center gap-2 backdrop-blur-sm">
+                               class="mt-2 w-full bg-white border border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 font-bold rounded-xl py-3 text-sm transition-all flex items-center justify-center gap-2 shadow-sm">
                                 <i class="fa-solid fa-download"></i> PC 버전 다운로드
                             </a>
                         </div>
                     </div>
 
                     <button onclick="loadSampleData()"
-                            class="w-full bg-white border border-slate-200/80 text-slate-600 hover:border-indigo-200 hover:text-indigo-600 hover:bg-indigo-50/50
-                               font-bold rounded-2xl py-4 text-base transition-all shadow-sm flex items-center justify-center gap-2">
+                            class="w-full bg-white border border-slate-200/80 text-slate-600 hover:border-indigo-200 hover:text-indigo-600 hover:bg-indigo-50/50 font-bold rounded-2xl py-4 text-base transition-all shadow-sm flex items-center justify-center gap-2">
                         <i class="fa-solid fa-flask text-indigo-400"></i> 샘플 데이터로 기능 체험하기
                     </button>
                 </div>
@@ -346,7 +359,8 @@
                                     인원 분포</h3>
                             </div>
                             <div class="flex items-center gap-2 bg-white border border-slate-200 p-1.5 rounded-xl no-print shadow-sm">
-                                <label for="interval-size" class="text-base font-bold text-slate-600 pl-3">급간 크기:</label>
+                                <label for="interval-size" class="text-base font-bold text-slate-600 pl-3">급간
+                                    크기:</label>
                                 <select id="interval-size" onchange="renderScoreDistribution()"
                                         class="rounded-lg border-none bg-slate-50 text-base py-1.5 pl-3 pr-8 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
                                     <option value="5">5점</option>
@@ -582,6 +596,25 @@
     </div>
 
 </main>
+
+<!-- Footer -->
+<footer class="bg-slate-900 py-4 px-6 border-t border-slate-800 no-print">
+    <div class="max-w-screen-xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-base">
+
+        <div class="text-slate-400 text-center md:text-left">
+            <span class="text-slate-200 font-bold">모의고사 성적 분석 시스템</span>
+            <span class="hidden md:inline text-slate-600 mx-2">|</span>
+            <span class="block md:inline mt-1 md:mt-0">&copy; CSAT Reporter by Jonghwan913. Hosted on GitHub Pages.</span>
+        </div>
+
+        <a href="https://github.com/itmir913/teacher-utility-kit/tree/master/score-reporter"
+           rel="noopener noreferrer" target="_blank" title="GitHub Repository"
+           class="text-slate-400 hover:text-white hover:scale-110 transition-all duration-300">
+            <i class="fa-brands fa-github text-2xl"></i>
+        </a>
+
+    </div>
+</footer>
 
 <!-- 토스트 -->
 <div id="toast"
