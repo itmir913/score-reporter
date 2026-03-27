@@ -9,7 +9,20 @@ function renderTopN(cache) {
 
     // ★ 캐시의 studentWithSums 활용 — 정렬 시 getSum() 재호출 없음
     const topData = [...cache.studentWithSums]
-        .sort((a, b) => b.sum - a.sum)
+        .sort((a, b) => {
+            // 1차 기준: 총점(sum) 내림차순
+            if (b.sum !== a.sum) {
+                return b.sum - a.sum;
+            }
+
+            // 2차 기준: 반(class) 오름차순
+            if (a.class !== b.class) {
+                return a.class - b.class;
+            }
+
+            // 3차 기준: 번호(number) 오름차순
+            return a.number - b.number;
+        })
         .slice(0, limit);
 
     document.getElementById('top-n-title').innerText =
