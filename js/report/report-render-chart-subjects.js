@@ -1,7 +1,7 @@
 /* ───────────────────────────────────────────
    § 과목별 성적 분포 종합 (등급 or 백분위)
 ─────────────────────────────────────────── */
-function renderCharts() {
+function renderSubjectsCharts() {
     const MAX_GRADE = 9;
     const grid = document.getElementById('chart-grid');
     grid.innerHTML = '';
