@@ -6,28 +6,29 @@ html {
 }
 
 body {
-    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
-    system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo",
-    "Noto Sans KR", "Malgun Gothic", sans-serif;
+    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
     background-color: #f8fafc;
+    color: #0f172a;
+    -webkit-font-smoothing: antialiased;
 }
 
+/* ─── 탭 버튼 (세련된 언더라인 애니메이션) ─── */
 .tab-btn {
     position: relative;
-    transition: color 0.2s;
+    transition: color 0.3s ease;
 }
 
 .tab-btn::after {
     content: '';
     position: absolute;
-    bottom: -2px;
+    bottom: -1px;
     left: 50%;
     transform: translateX(-50%) scaleX(0);
-    width: 60%;
-    height: 2px;
-    background: #2563eb;
-    border-radius: 2px;
-    transition: transform .25s ease;
+    width: 40%;
+    height: 3px;
+    background: #4f46e5; /* Indigo-600 */
+    border-radius: 3px 3px 0 0;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .tab-btn.active::after {
@@ -35,167 +36,189 @@ body {
 }
 
 .tab-btn.active {
-    color: #2563eb;
+    color: #1e1b4b; /* Indigo-950 */
+    font-weight: 700;
+}
+
+/* ─── 드롭존 호버 효과 ─── */
+#dropzone {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #dropzone.drag-over {
-    border-color: #2563eb;
-    background-color: #eff6ff;
+    border-color: #6366f1;
+    background-color: #e0e7ff;
+    transform: scale(1.01);
 }
 
+/* ─── 카드 & 데이터 테이블 호버 (우아한 그림자) ─── */
 .stat-card {
-    transition: box-shadow .2s, transform .2s;
+    transition: all 0.3s ease;
 }
 
 .stat-card:hover {
-    box-shadow: 0 8px 24px rgba(37, 99, 235, .12);
-    transform: translateY(-2px);
+    box-shadow: 0 20px 40px -10px rgba(79, 70, 229, 0.08);
+    transform: translateY(-4px);
+}
+
+.data-table tbody tr {
+    transition: background-color 0.2s ease;
 }
 
 .data-table tbody tr:hover {
-    background-color: #eff6ff;
+    background-color: #f8fafc; /* 매우 연한 호버 */
 }
 
-/* 등급 배지 */
+/* ─── 등급 배지 (파스텔 톤으로 고급스럽게) ─── */
 .gb {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 1px 7px;
-    border-radius: 9999px;
-    font-size: .68rem;
-    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px; /* 둥근 캡슐에서 모던한 라운드 스퀘어로 변경 */
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
 }
 
 .gb-1 {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: #e0e7ff;
+    color: #3730a3;
+    border: 1px solid #c7d2fe;
 }
 
 .gb-2 {
-    background: #e0e7ff;
-    color: #4338ca;
+    background: #f3e8ff;
+    color: #6b21a8;
+    border: 1px solid #e9d5ff;
 }
 
 .gb-3 {
-    background: #ede9fe;
-    color: #6d28d9;
+    background: #fae8ff;
+    color: #86198f;
+    border: 1px solid #f5d0fe;
 }
 
 .gb-4 {
-    background: #fce7f3;
-    color: #9d174d;
+    background: #ffe4e6;
+    color: #9f1239;
+    border: 1px solid #fecdd3;
 }
 
 .gb-5 {
-    background: #fef3c7;
-    color: #92400e;
+    background: #ffedd5;
+    color: #9a3412;
+    border: 1px solid #fed7aa;
 }
 
 .gb-6 {
-    background: #ffedd5;
-    color: #9a3412;
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
 }
 
 .gb-7 {
-    background: #fee2e2;
-    color: #991b1b;
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
 }
 
 .gb-8 {
-    background: #f1f5f9;
-    color: #475569;
+    background: #e2e8f0;
+    color: #334155;
+    border: 1px solid #cbd5e1;
 }
 
 .gb-9 {
-    background: #e2e8f0;
-    color: #64748b;
+    background: #cbd5e1;
+    color: #1e293b;
+    border: 1px solid #94a3b8;
 }
 
-/* 양식 카드 */
+/* ─── 양식 카드 ─── */
 .format-card {
     cursor: pointer;
-    transition: all .2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .format-card:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(37, 99, 235, .1);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.08);
 }
 
 .format-card.selected {
-    border-color: #2563eb !important;
+    border-color: #4f46e5 !important; /* Indigo */
+    background-color: #e0e7ff !important;
 }
 
 .format-card.selected .fmt-check {
     display: flex !important;
 }
 
+/* ─── 스크롤바 및 태그 (기존 유지, 세련되게) ─── */
 ::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
     background: #cbd5e1;
-    border-radius: 3px;
+    border-radius: 10px;
 }
 
-/* 세련된 알약 모양 태그 (자바스크립트에서 이 클래스를 사용하도록 설정하세요) */
-.ftag {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    transition: all 0.2s ease-in-out;
-    border: 1px solid transparent; /* 기본 테두리 공간 차지 */
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 
-/* 지원되는 필드 */
-.ftag-on {
-    background-color: #eff6ff; /* bg-blue-50 */
-    color: #2563eb; /* text-blue-600 */
-    border-color: #bfdbfe; /* border-blue-200 */
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-}
-
-/* 지원되지 않는 필드 (취소선) */
-.ftag-off {
-    background-color: #f8fafc; /* bg-slate-50 */
-    color: #94a3b8; /* text-slate-400 */
-    border-color: #e2e8f0; /* border-slate-200 */
-    text-decoration: line-through;
-    text-decoration-color: #cbd5e1; /* 취소선 색상 조금 진하게 */
-    opacity: 0.6;
-}
-
-/* 얇고 예쁜 커스텀 스크롤바 (테이블 미리보기 등에 적용) */
 .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
     height: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 4px;
+    background: #f8fafc;
+    border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
     background: #cbd5e1;
-    border-radius: 4px;
+    border-radius: 10px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+.ftag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
 }
 
-/* 부드러운 등장 애니메이션 */
+.ftag-on {
+    background-color: #e0e7ff;
+    color: #4338ca;
+    border-color: #c7d2fe;
+}
+
+.ftag-off {
+    background-color: #f8fafc;
+    color: #94a3b8;
+    border-color: #e2e8f0;
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
+/* ─── 애니메이션 & 기타 ─── */
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(15px);
     }
     to {
         opacity: 1;
@@ -204,13 +227,14 @@ body {
 }
 
 .animate-fade-in {
-    animation: fadeIn 0.4s ease-out forwards;
+    animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* CSS 파일이나 <style> 태그에 추가 */
 [contenteditable="true"]:focus {
-    outline: 2px solid #3b82f6;
-    background: white;
+    outline: none;
+    box-shadow: 0 0 0 2px #c7d2fe;
+    background: #f8fafc;
+    border-radius: 8px;
 }
 
 canvas, img {
@@ -219,16 +243,14 @@ canvas, img {
 }
 
 /* ───────────────────────────────────────────
-   § 인쇄(PDF) 최적화 통합 스타일
+   § 인쇄(PDF) 최적화 통합 스타일 (기존 코드 완벽 보존)
 ─────────────────────────────────────────── */
 @media print {
-    /* 1. 배경색 및 차트 색상 강제 출력 (브라우저 설정 무시) */
     * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
 
-    /* 2. 불필요한 UI 숨김 */
     .no-print, #tab-upload, #tab-export, .no-print * {
         display: none !important;
         height: 0 !important;
@@ -240,7 +262,6 @@ canvas, img {
         border: none !important;
     }
 
-    /* 3. 보고서 영역 활성화 및 기본 배경 설정 */
     #tab-report {
         display: block !important;
     }
@@ -251,7 +272,6 @@ canvas, img {
         padding: 0;
     }
 
-    /* 4. 용지 설정 및 섹션 페이지 관리 */
     @page {
         size: A4 portrait;
     }
@@ -266,15 +286,13 @@ canvas, img {
         break-before: auto;
     }
 
-    /* 5. 콘텐츠 잘림 방지 (중요) */
     tr, .stat-card, #chart-grid > div {
         page-break-inside: avoid !important;
         break-inside: avoid !important;
     }
 
-    /* 6. ★ 표 잘림 해결: 테이블을 감싸는 박스의 제약 해제 */
-    /* 부모 div의 overflow-hidden과 rounded-2xl이 인쇄 시 표를 자르는 주범입니다. */
-    .bg-white.border.rounded-2xl.overflow-hidden.shadow-sm {
+    .bg-white.border.rounded-2xl.overflow-hidden.shadow-sm,
+    .bg-white.border.rounded-3xl.shadow-sm { /* 라운드 크기 변경에 따른 인쇄 대응 */
         border: none !important;
         overflow: visible !important;
         display: block !important;
@@ -292,16 +310,13 @@ canvas, img {
         border-collapse: collapse !important;
     }
 
-    /* 7. ★ 차트 그리드: 인쇄 시 무조건 3열 고정 */
     #chart-grid {
         display: grid !important;
-        /* 3열로 변경 */
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
         gap: 10px !important;
         width: 100% !important;
     }
 
-    /* 8. 편집 가능 영역 스타일 정리 (인쇄 시 텍스트만 깔끔하게) */
     [contenteditable="true"] {
         border: none !important;
         background: transparent !important;
@@ -310,40 +325,34 @@ canvas, img {
         outline: none !important;
     }
 
-    /* 점수 급간 표가 부모 div를 절대 벗어나지 못하도록 강제 */
     #score-dist-tbody {
         display: table-row-group !important;
     }
 
-    #score-dist-tbody table,
-    .data-table {
-        table-layout: fixed !important; /* 칸 너비를 일정하게 강제 배분 */
+    #score-dist-tbody table, .data-table {
+        table-layout: fixed !important;
         width: 100% !important;
         word-break: break-all !important;
     }
 
     #score-dist-tbody td {
-        padding: 4px 1px !important; /* 패딩을 극한으로 줄임 */
-        font-size: 10px !important; /* 인쇄 시 글자 크기 대폭 축소 */
-        letter-spacing: -0.05em !important; /* 글자 간격 축소 */
+        padding: 4px 1px !important;
+        font-size: 10px !important;
+        letter-spacing: -0.05em !important;
     }
 
-    /* 표를 감싸는 div의 여백 제거하여 공간 확보 */
     .overflow-x-auto {
         padding: 0 !important;
         margin: 0 !important;
     }
 
-    /* 상위 N명 테이블 인쇄 최적화 */
-    #top20-thead th,
-    #top20-tbody td {
-        font-size: 10px !important; /* 폰트 크기 축소 */
-        padding: 4px 2px !important; /* 상하좌우 여백 최소화 */
+    #top20-thead th, #top20-tbody td {
+        font-size: 10px !important;
+        padding: 4px 2px !important;
         line-height: 1.2 !important;
-        letter-spacing: -0.05em !important; /* 글자 간격 축소 */
+        letter-spacing: -0.05em !important;
     }
 
-    /* 선택과목 컬럼이 너무 길어지지 않도록 너비 제한 */
     #top20-tbody td:nth-child(n+6) {
         max-width: 60px !important;
         overflow: hidden;
@@ -351,7 +360,6 @@ canvas, img {
         white-space: nowrap;
     }
 
-    /* 순위, 반, 번호 등 짧은 텍스트 컬럼 너비 최적화 */
     .w-16 {
         width: 30px !important;
     }
@@ -361,43 +369,34 @@ canvas, img {
         flex-direction: row !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 20px !important; /* 탐구 차트와 표 사이 간격 축소 */
+        gap: 20px !important;
     }
 
-    /* 탐구 차트 영역 높이 조절 */
     .relative.w-full.h-64 {
         height: 220px !important;
         margin-bottom: 0 !important;
     }
 
-    /* 9. ★ 수능 최저학력기준 누적 인원 표 인쇄 최적화 (기존 CSS 맨 아래 추가) */
-    /* 표의 강제 최소 너비(min-w-[700px]) 해제 및 용지 너비에 맞춤 */
-    table.data-table,
-    .min-w-\[700px\] {
+    table.data-table, .min-w-\[700px\], .min-w-\[600px\], .min-w-\[500px\] {
         min-width: 0 !important;
         width: 100% !important;
-        table-layout: auto !important; /* 글자 길이에 맞춰 너비 자동 분배 */
+        table-layout: auto !important;
     }
 
-    /* 부모 컨테이너(p-6)의 좌우 패딩을 없애서 인쇄 가로 공간 최대 확보 */
     .print-page {
         padding-left: 0 !important;
         padding-right: 0 !important;
     }
 
-    /* 표 내부 셀(th, td) 여백 및 폰트 크기 극한 축소 */
-    #csat-summary-thead th,
-    #csat-summary-tbody td {
-        font-size: 10px !important; /* 15개 열을 넣기 위해 폰트 대폭 축소 */
-        padding: 3px 1px !important; /* 상하 3px, 좌우 1px로 여백 최소화 */
+    #csat-summary-thead th, #csat-summary-tbody td {
+        font-size: 10px !important;
+        padding: 3px 1px !important;
         word-break: keep-all !important;
-        white-space: nowrap !important; /* 줄바꿈 방지 */
+        white-space: nowrap !important;
         letter-spacing: -0.05em !important;
     }
 
-    /* 첫 번째 열('조건 이내') 너비 고정 */
-    #csat-summary-thead th:first-child,
-    #csat-summary-tbody td:first-child {
+    #csat-summary-thead th:first-child, #csat-summary-tbody td:first-child {
         width: 50px !important;
         white-space: normal !important;
     }

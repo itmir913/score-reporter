@@ -88,11 +88,9 @@ function showToast(msg, isErr = false) {
     if (isErr) {
         iconBg.className = 'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-red-500/20';
         icon.className = 'fa-solid fa-triangle-exclamation text-red-400';
-        inner.classList.add('border', 'border-red-500/30');
     } else {
         iconBg.className = 'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-green-500/20';
         icon.className = 'fa-solid fa-check text-green-400';
-        inner.classList.remove('border', 'border-red-500/30');
     }
 
     toast.classList.remove('opacity-0', 'translate-y-12');
