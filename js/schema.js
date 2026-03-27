@@ -1,8 +1,54 @@
+// 영문 변수명을 한글 라벨로 변환해주는 매핑 사전
+const FIELD_LABELS = {
+    grade_year: '학년',
+    class: '반',
+    number: '번호',
+    name: '이름',
+    kor_subject: '국어_선택과목명',
+    kor_common_raw: '국어_공통원점수',
+    kor_select_raw: '국어_선택원점수',
+    kor_raw: '국어_원점수',
+    kor_std: '국어_표준점수',
+    kor_pct: '국어_백분위',
+    kor_grade: '국어_등급',
+    math_subject: '수학_선택과목명',
+    math_common_raw: '수학_공통원점수',
+    math_select_raw: '수학_선택원점수',
+    math_raw: '수학_원점수',
+    math_std: '수학_표준점수',
+    math_pct: '수학_백분위',
+    math_grade: '수학_등급',
+    eng_raw: '영어_원점수',
+    eng_std: '영어_표준점수',
+    eng_pct: '영어_백분위',
+    eng_grade: '영어_등급',
+    inq_domain: '탐구영역',
+    inq1_subject: '탐구1_과목명',
+    inq1_raw: '탐구1_원점수',
+    inq1_std: '탐구1_표준점수',
+    inq1_pct: '탐구1_백분위',
+    inq1_grade: '탐구1_등급',
+    inq2_subject: '탐구2_과목명',
+    inq2_raw: '탐구2_원점수',
+    inq2_std: '탐구2_표준점수',
+    inq2_pct: '탐구2_백분위',
+    inq2_grade: '탐구2_등급',
+    hist_raw: '한국사_원점수',
+    hist_std: '한국사_표준점수',
+    hist_pct: '한국사_백분위',
+    hist_grade: '한국사_등급',
+    fl2_subject: '제2외국어_과목명',
+    fl2_raw: '제2외국어_원점수',
+    fl2_std: '제2외국어_표준점수',
+    fl2_pct: '제2외국어_백분위',
+    fl2_grade: '제2외국어_등급'
+};
+
 /* ───────────────────────────────────────────
        § FormatSchema 클래스
     ─────────────────────────────────────────── */
 class FormatSchema {
-    constructor({id, label, color, icon, headerRows, fields, exportHeaders}) {
+    constructor({id, label, color, icon, headerRows, fields, exportHeaders, customGetters}) {
         this.id = id;
         this.label = label;
         this.color = color;
@@ -10,6 +56,7 @@ class FormatSchema {
         this.headerRows = headerRows;
         this.fields = fields;
         this.exportHeaders = exportHeaders || [];
+        this.customGetters = customGetters || {};
 
         this._idx = {};
         for (const [k, col] of Object.entries(fields)) {
@@ -250,6 +297,7 @@ const SCHEMAS = {
             hist_grade: 'R',
             hist_std: '',
             hist_pct: '',
+            inq_domain: 'S',
             inq1_subject: 'T',
             inq1_raw: 'U',
             inq1_std: 'V',
@@ -265,6 +313,30 @@ const SCHEMAS = {
             fl2_std: '',
             fl2_pct: '',
             fl2_grade: 'AF',
+        },
+        customGetters: {
+            // 케이스 A: 아예 새로운 파생 데이터를 만들어야 하는 경우 (inq_domain)
+            inq_domain: (s, baseValue) => {
+                const sub1 = s.inquiry1?.subject || '';
+                const sub2 = s.inquiry2?.subject || '';
+                if (!sub1 && !sub2) return '';
+
+                const sciKeywords = ['물리', '화학', '생명', '지구'];
+                const isSci1 = sciKeywords.some(kw => sub1.includes(kw));
+                const isSci2 = sciKeywords.some(kw => sub2.includes(kw));
+
+                if (isSci1 && isSci2) return '과학탐구';
+                if (isSci1 || isSci2) return '사회과학탐구';
+                return '사회탐구';
+            },
+            // 케이스 B: 일반 로직이 만들어준 값을 살짝 가공만 하는 경우 (강력함!)
+            // math_grade: (s, baseValue) => {
+            //     // 일반 로직이 이미 수학 등급(baseValue)을 구해왔으므로, 복잡한 계산 없이 조건문만 추가!
+            //     if (parseInt(baseValue) >= 5) {
+            //         return `${baseValue}등급 (주의)`;
+            //     }
+            //     return baseValue;
+            // }
         },
     })
 };

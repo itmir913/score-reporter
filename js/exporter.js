@@ -7,6 +7,9 @@ class GradeExporter {
         const maxCol = Math.max(0, ...Object.values(target._idx).filter(i => i !== null && i !== undefined));
 
         const getVal = (s, key) => {
+            // ───────────────────────────────────────────
+            // 1. 일반적인 글로벌 공통 로직을 먼저 실행
+            // ───────────────────────────────────────────
             const MAP = {
                 grade_year: 'grade_year', class: 'class', number: 'number', name: 'name',
                 kor_subject: s => s.korean.subject, kor_common_raw: s => s.korean.common_raw,
@@ -26,10 +29,24 @@ class GradeExporter {
                 fl2_subject: s => s.fl2.subject, fl2_raw: s => s.fl2.raw,
                 fl2_std: s => s.fl2.std, fl2_pct: s => s.fl2.pct, fl2_grade: s => s.fl2.grade,
             };
+
+            let baseValue = '';
             const fn = MAP[key];
-            if (!fn) return '';
-            if (typeof fn === 'function') return fn(s) ?? '';
-            return s[fn] ?? '';
+            if (fn) {
+                baseValue = typeof fn === 'function' ? fn(s) ?? '' : s[fn] ?? '';
+            }
+
+            // ───────────────────────────────────────────
+            // 2. 특수 로직(customGetters) 실행 (선생님 아이디어 적용!)
+            // ───────────────────────────────────────────
+            // 특수 로직 함수에 두 번째 인자로 baseValue를 넘겨줍니다.
+            // 필요하면 baseValue를 가공하고, 아니면 완전히 새로운 값을 계산합니다.
+            if (target.customGetters && typeof target.customGetters[key] === 'function') {
+                return target.customGetters[key](s, baseValue);
+            }
+
+            // 3. 특수 로직이 없으면 일반 로직의 결과를 그대로 반환
+            return baseValue;
         };
 
         const headerRows = target.exportHeaders || [];
