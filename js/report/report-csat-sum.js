@@ -103,7 +103,7 @@ function renderCsatMinRequirement(cache) {
                     <td class="p-3 text-left font-semibold text-slate-800">${s.name || ''}</td>
                     <td class="p-3 bg-blue-50/50 text-blue-700 border-x border-slate-100">${csat.sum2}</td>
                     <td class="p-3 bg-emerald-50/50 text-emerald-700 border-r border-slate-100">${csat.sum3}</td>
-                    <td class="p-3 bg-violet-50/50 text-violet-700 border-r border-slate-100">${csat.sum4}</td>
+                    <td class="p-3 bg-amber-50/50 text-amber-700 border-r border-slate-100">${csat.sum4}</td>
                     <td class="p-3 bg-rose-50/50 text-rose-700">${csat.sum5}</td>
                 </tr>
             `;
@@ -173,8 +173,8 @@ function renderCsatSummaryTable(cache) {
     tbody.innerHTML =
         buildRow('2합', 'bg-blue-50 text-blue-700', sums2, 2, 2) +
         buildRow('3합', 'bg-emerald-50 text-emerald-700', sums3, 3, 3) +
-        buildRow('4합', 'bg-violet-50 text-violet-700', sums4, 4, 4) +
-        buildRow('5합', 'bg-amber-50 text-amber-700', sums5, 5, 5);
+        buildRow('4합', 'bg-amber-50 text-amber-700', sums4, 4, 4) +
+        buildRow('5합', 'bg-rose-50 text-rose-700', sums5, 5, 5);
 }
 
 /* ── 학급 테이블 ── */
@@ -205,7 +205,7 @@ function renderCsatClassTable() {
                     <td class="p-3 text-left font-semibold text-slate-800">${s.name || ''}</td>
                     <td class="p-3 bg-blue-50/50 text-blue-700 border-x border-slate-100">${csat.sum2}</td>
                     <td class="p-3 bg-emerald-50/50 text-emerald-700 border-r border-slate-100">${csat.sum3}</td>
-                    <td class="p-3 bg-violet-50/50 text-violet-700 border-r border-slate-100">${csat.sum4}</td>
+                    <td class="p-3 bg-amber-50/50 text-amber-700 border-r border-slate-100">${csat.sum4}</td>
                     <td class="p-3 bg-rose-50/50 text-rose-700">${csat.sum5}</td>
                 </tr>
             `;
