@@ -174,6 +174,8 @@ async function processFile(file) {
                         newWs.addRow(row);
                     });
                 });
+
+                showToast("데이터를 성공적으로 불러왔습니다.");
             } catch (xlsErr) {
                 console.error("SheetJS 파싱 에러:", xlsErr);
                 showToast(".xls 파일을 읽는 데 실패했습니다.", true);
@@ -189,6 +191,7 @@ async function processFile(file) {
             try {
                 // 1. 일반 로드 시도
                 await wb.xlsx.load(fileBuffer);
+                showToast("데이터를 성공적으로 불러왔습니다.");
             } catch (err) {
                 // 2. 에러 발생 시: 암호 입력 프롬프트 띄우기
                 const pwd = prompt("암호가 걸려있는 엑셀 파일입니다.\n비밀번호를 입력해주세요.");
@@ -204,7 +207,7 @@ async function processFile(file) {
                 try {
                     // 3. 사용자가 입력한 비밀번호로 재시도
                     await wb.xlsx.load(fileBuffer, {password: pwd});
-                    showToast("암호가 성공적으로 해제되었습니다.");
+                    showToast("암호를 해제하여 데이터를 성공적으로 불러왔습니다.");
                 } catch (pwdErr) {
                     console.error("복호화 에러:", pwdErr);
                     showToast("비밀번호가 틀렸거나 손상된 파일입니다.", true);
@@ -238,6 +241,8 @@ async function processFile(file) {
                         newWs.addRow(row);
                     });
                 });
+
+                showToast("데이터를 성공적으로 불러왔습니다.");
 
             } catch (csvErr) {
                 console.error("CSV 파싱 에러:", csvErr);
