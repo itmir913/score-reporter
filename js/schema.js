@@ -149,6 +149,11 @@ const SCHEMAS = {
             fl2_pct: '',
             fl2_grade: 'AF',
         },
+        customGetters: {
+            inq1_subject: convertRomanToNumber,
+            inq2_subject: convertRomanToNumber,
+            fl2_subject: convertRomanToNumber,
+        },
     }),
 
     /**
@@ -203,6 +208,11 @@ const SCHEMAS = {
             fl2_std: 'AO',
             fl2_pct: 'AP',
             fl2_grade: 'AQ',
+        },
+        customGetters: {
+            inq1_subject: convertRomanToNumber,
+            inq2_subject: convertRomanToNumber,
+            fl2_subject: convertRomanToNumber,
         },
     }),
 
@@ -341,7 +351,8 @@ const SCHEMAS = {
                 if (isSci1 || isSci2) return '사회과학탐구';
 
                 return '사회탐구';
-            }, // 케이스 B: 일반 로직이 만들어준 값을 살짝 가공만 하는 경우 (강력함!)
+            },
+            // 케이스 B: 일반 로직이 만들어준 값을 살짝 가공만 하는 경우 (강력함!)
             inq1_subject: convertNumberToRoman,
             inq2_subject: convertNumberToRoman,
             fl2_subject: convertNumberToRoman,
@@ -349,8 +360,16 @@ const SCHEMAS = {
     })
 };
 
+// 숫자를 로마자로 변환 (1 -> Ⅰ)
 function convertNumberToRoman(s, baseValue) {
     if (!baseValue) return '';
     let val = baseValue.replace(/\s+/g, '');
     return val.replace(/1$/, 'Ⅰ').replace(/2$/, 'Ⅱ');
+}
+
+// 로마자를 숫자로 변환 (Ⅰ -> 1)
+function convertRomanToNumber(s, baseValue) {
+    if (!baseValue) return '';
+    let val = baseValue.replace(/\s+/g, '');
+    return val.replace(/Ⅰ$/, '1').replace(/Ⅱ$/, '2');
 }
