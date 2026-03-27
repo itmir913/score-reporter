@@ -149,8 +149,10 @@ async function processFile(file) {
 
     try {
         const arrayBuffer = await file.arrayBuffer();
+        const fileExt = file.name.split('.').pop().toLowerCase();
 
         // ★ 개선 3: 미리 로드해둔 Buffer 객체 사용 (네트워크 지연 제거)
+        // (xlsx 파싱을 위해 ExcelJS가 요구하는 Buffer 규격 충족)
         if (!GlobalBuffer) {
             const {Buffer} = await import('https://esm.sh/buffer');
             GlobalBuffer = Buffer;
@@ -159,34 +161,78 @@ async function processFile(file) {
         // 가져온 Buffer를 이용해 데이터 변환
         const fileBuffer = GlobalBuffer.from(arrayBuffer);
 
-        const wb = new ExcelJS.Workbook();
+        let wb; // 분기 후 공통으로 사용할 ExcelJS 워크북 객체
 
-        try {
-            // 1. 일반 로드 시도
-            await wb.xlsx.load(fileBuffer);
-        } catch (err) {
-            // 2. 에러 발생 시: 암호 입력 프롬프트 띄우기
-            const pwd = prompt("암호가 걸려있는 엑셀 파일입니다.\n비밀번호를 입력해주세요.");
-            if (pwd === null) {
-                showToast("파일 읽기가 취소되었습니다.", true);
+        if (fileExt === 'xls') {
+            // ─────────────────────────────────────────
+            // [분기 1] .xls 파일: SheetJS로 읽고 ExcelJS 객체로 변환
+            // ─────────────────────────────────────────
+            if (typeof XLSX === 'undefined') {
+                showToast("구형 엑셀 파싱 라이브러리(SheetJS)가 필요합니다.", true);
                 return;
             }
-
-            // 복호화 시작 전 다시 한번 로딩 상태를 확실히 안내
-            showToast("암호를 해제하고 데이터를 읽는 중입니다. 파일 크기에 따라 수십 초 이상 걸릴 수 있습니다...", false);
-            await new Promise(resolve => setTimeout(resolve, 50)); // UI 렌더링 시간 확보
 
             try {
-                // 3. 사용자가 입력한 비밀번호로 재시도
-                await wb.xlsx.load(fileBuffer, {password: pwd});
-                showToast("암호가 성공적으로 해제되었습니다.");
-            } catch (pwdErr) {
-                console.error("복호화 에러:", pwdErr);
-                showToast("비밀번호가 틀렸거나 손상된 파일입니다.", true);
+                // SheetJS로 arrayBuffer 직접 읽기
+                const xlsWorkbook = XLSX.read(arrayBuffer, {type: 'array'});
+
+                // 기존 호환성을 위해 ExcelJS 워크북 생성
+                wb = new ExcelJS.Workbook();
+
+                xlsWorkbook.SheetNames.forEach(sheetName => {
+                    const newWs = wb.addWorksheet(sheetName);
+                    const xlsWs = xlsWorkbook.Sheets[sheetName];
+                    const sheetData = XLSX.utils.sheet_to_json(xlsWs, {header: 1, defval: null});
+
+                    sheetData.forEach(row => {
+                        newWs.addRow(row);
+                    });
+                });
+            } catch (xlsErr) {
+                console.error("SheetJS 파싱 에러:", xlsErr);
+                showToast(".xls 파일을 읽는 데 실패했습니다.", true);
                 return;
             }
+
+        } else if (fileExt === 'xlsx') {
+            // ─────────────────────────────────────────
+            // [분기 2] .xlsx 파일: 기존 Buffer 적용 및 암호 처리 로직
+            // ─────────────────────────────────────────
+            wb = new ExcelJS.Workbook();
+
+            try {
+                // 1. 일반 로드 시도
+                await wb.xlsx.load(fileBuffer);
+            } catch (err) {
+                // 2. 에러 발생 시: 암호 입력 프롬프트 띄우기
+                const pwd = prompt("암호가 걸려있는 엑셀 파일입니다.\n비밀번호를 입력해주세요.");
+                if (pwd === null) {
+                    showToast("파일 읽기가 취소되었습니다.", true);
+                    return;
+                }
+
+                // 복호화 시작 전 다시 한번 로딩 상태를 확실히 안내
+                showToast("암호를 해제하고 데이터를 읽는 중입니다. 파일 크기에 따라 수십 초 이상 걸릴 수 있습니다...", false);
+                await new Promise(resolve => setTimeout(resolve, 50)); // UI 렌더링 시간 확보
+
+                try {
+                    // 3. 사용자가 입력한 비밀번호로 재시도
+                    await wb.xlsx.load(fileBuffer, {password: pwd});
+                    showToast("암호가 성공적으로 해제되었습니다.");
+                } catch (pwdErr) {
+                    console.error("복호화 에러:", pwdErr);
+                    showToast("비밀번호가 틀렸거나 손상된 파일입니다.", true);
+                    return;
+                }
+            }
+        } else {
+            showToast("지원하지 않는 파일 형식입니다. (.xls 또는 .xlsx 파일만 가능)", true);
+            return;
         }
 
+        // ─────────────────────────────────────────
+        // [공통 처리 영역] 이후 로직은 기존과 완전히 동일 (wb가 세팅됨)
+        // ─────────────────────────────────────────
         ST.wb = wb;
         ST.file = file;
 
