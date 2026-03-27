@@ -9,7 +9,7 @@ function renderStats(cache) {
     const basisLabel = labelMap[basis]; // '원점수', '표준점수', '백분위'
     const unit = basis === 'pct' ? '%' : '점';
 
-    // Helper: 상위 20% 평균 계산 함수 (응시 인원 기준)
+    // Helper: 상위 20% 평균 계산 함수 (응시 인원 기준, 동점자 처리 포함)
     const getTop20Avg = (scores, isLowerBetter = false) => {
         // [핵심 수정] 1. 연산 전 NaN 등 비정상적인 값을 모두 제거한 순수 숫자 배열 생성
         const validScores = scores.filter(Number.isFinite);
@@ -18,14 +18,21 @@ function renderStats(cache) {
         const count = validScores.length;
         if (count === 0) return "0.0"; // 유효한 응시자가 없을 경우
 
+        // 2. 상위 20% 기준 인원 산출
         const topCount = Math.max(1, Math.ceil(count * 0.2));
-
-        // 유효한 점수들로만 정렬 진행
         const sorted = [...validScores].sort((a, b) => isLowerBetter ? a - b : b - a);
-        const topSlice = sorted.slice(0, topCount);
-        const sum = topSlice.reduce((a, b) => a + b, 0);
 
-        return (sum / topCount).toFixed(1);
+        // [핵심 수정] 3. 컷오프 경계값(Boundary Score) 확인
+        const boundaryValue = sorted[topCount - 1];
+
+        // [핵심 수정] 4. 동점자 구제 로직: 경계값과 같거나 더 좋은 성적을 가진 모든 데이터 추출
+        const topSlice = sorted.filter(score =>
+            isLowerBetter ? score <= boundaryValue : score >= boundaryValue
+        );
+
+        // 5. 최종 산출: 동점자가 포함된 실제 집단의 크기로 평균 계산
+        const sum = topSlice.reduce((a, b) => a + b, 0);
+        return (sum / topSlice.length).toFixed(1); // topCount가 아닌 동점자가 포함된 topSlice.length로 나눔
     };
 
     // 각 과목별 실제 응시자 수 기준 상위 20% 계산
