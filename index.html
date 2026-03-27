@@ -80,9 +80,9 @@
                         <p class="text-xl font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">
                             클릭하거나 파일을 이곳에 드래그하세요
                         </p>
-                        <p class="text-sm text-slate-400 mt-2 font-medium">지원 형식: .xlsx, .xls 파일</p>
+                        <p class="text-sm text-slate-400 mt-2 font-medium">지원 형식: .xlsx, .xls, .csv 파일</p>
                     </div>
-                    <input type="file" id="fileInput" accept=".xlsx,.xls" class="hidden"
+                    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden"
                            onchange="handleFileSelect(event)"/>
                 </div>
 
@@ -606,6 +606,7 @@
                         <li>미지원 컬럼은 빈 셀로 내보냅니다.</li>
                         <li>대상 양식의 헤더 행이 자동 생성됩니다.</li>
                         <li>내보내기 전 데이터 분석이 완료되어야 합니다.</li>
+                        <li>내보내기 파일 확장자는 XLSX 형태로만 가능합니다. CSV를 사용하는 프로그램의 경우 다른 이름으로 저장하여 별도로 변환해주시기 바랍니다.</li>
                     </ul>
                 </div>
             </div>

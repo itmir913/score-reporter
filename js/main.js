@@ -154,7 +154,7 @@ async function processFile(file) {
             // [분기 1] .xls 파일: SheetJS로 읽고 ExcelJS 객체로 변환
             // ─────────────────────────────────────────
             if (typeof XLSX === 'undefined') {
-                showToast("구형 엑셀 파싱 라이브러리(SheetJS)가 필요합니다.", true);
+                showToast("구형 엑셀 파싱 라이브러리(SheetJS)가 필요합니다. 인터넷 연결을 확인하고 웹브라우저를 새로고침하세요.", true);
                 return;
             }
 
@@ -211,8 +211,41 @@ async function processFile(file) {
                     return;
                 }
             }
+        } else if (fileExt === 'csv') {
+            // ─────────────────────────────────────────
+            // [분기 3] .csv 파일: 인코딩 자동 감지 후 ExcelJS로 로드
+            // ─────────────────────────────────────────
+            try {
+                let csvText = '';
+                try {
+                    // 1. 먼저 UTF-8로 엄격하게 디코딩 시도 (규칙에 안 맞으면 에러 발생)
+                    const utf8Decoder = new TextDecoder('utf-8', {fatal: true});
+                    csvText = utf8Decoder.decode(arrayBuffer);
+                } catch (encodeErr) {
+                    const euckrDecoder = new TextDecoder('euc-kr');
+                    csvText = euckrDecoder.decode(arrayBuffer);
+                }
+
+                const csvWorkbook = XLSX.read(csvText, {type: 'string'});
+
+                wb = new ExcelJS.Workbook();
+                csvWorkbook.SheetNames.forEach(sheetName => {
+                    const newWs = wb.addWorksheet(sheetName);
+                    const csvWs = csvWorkbook.Sheets[sheetName];
+                    const sheetData = XLSX.utils.sheet_to_json(csvWs, {header: 1, defval: null});
+
+                    sheetData.forEach(row => {
+                        newWs.addRow(row);
+                    });
+                });
+
+            } catch (csvErr) {
+                console.error("CSV 파싱 에러:", csvErr);
+                showToast("CSV 파일을 읽는 데 실패했습니다.", true);
+                return;
+            }
         } else {
-            showToast("지원하지 않는 파일 형식입니다. (.xls 또는 .xlsx 파일만 가능)", true);
+            showToast("지원하지 않는 파일 형식입니다. (.xls, .xlsx, .csv 파일만 가능)", true);
             return;
         }
 
@@ -407,8 +440,7 @@ function renderExportCards() {
                         <i class="fa-solid ${s.icon} text-${s.color}-600 text-lg"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-slate-800">${s.label} 양식으로 내보내기</h3>
-                        <p class="text-base text-slate-500 mt-0.5">선택 시 .xlsx 파일이 다운로드됩니다.</p>
+                        <h2 class="font-bold text-slate-800">${s.label} 양식으로 내보내기</h2>
                     </div>
                 </div>
                 <button onclick="exportTo('${s.id}')"
