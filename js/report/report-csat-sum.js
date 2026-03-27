@@ -115,7 +115,7 @@ function renderCsatMinRequirement(cache) {
         const classes = [...new Set(ST.data.map(s => s.class).filter(c => c))]
             .sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
         classSelect.innerHTML = classes.map(c => `<option value="${c}">${c}반 보기</option>`).join('');
-        if (classes.length > 0) renderCsatClassTable();
+        if (classes.length > 0) renderCsatClassTable(cache);
     }
 }
 
@@ -178,37 +178,61 @@ function renderCsatSummaryTable(cache) {
 }
 
 /* ── 학급 테이블 ── */
-function renderCsatClassTable() {
-    if (!ST.data || ST.data.length === 0) return;
+function handleClassChange() {
+    // ST.cache가 있는지 확인 (renderAll에서 ST.cache = cache; 를 해줘야 함)
+    if (ST.cache) {
+        renderCsatClassTable(ST.cache);
+    } else {
+        // 캐시가 없으면 전체를 다시 그려서 캐시를 생성하게 함
+        if (typeof renderAll === 'function') renderAll();
+    }
+}
+
+/**
+ * 학급별 수능 최저 학력 기준 충족 현황 렌더링
+ * @param {Object} cache - renderAll에서 생성된 캐시 데이터
+ */
+function renderCsatClassTable(cache) {
+    if (!ST.data || ST.data.length === 0 || !cache || !cache.csatSums) {
+        console.error("캐시 데이터가 준비되지 않았습니다.");
+        return;
+    }
+
     const classSelect = document.getElementById('class-select');
     if (!classSelect) return;
 
     const selectedClass = classSelect.value;
-    const filteredData = ST.data
-        .filter(s => s.class === selectedClass)
+
+    // 1. ST.data와 cache.csatSums를 인덱스로 매핑하여 데이터 준비
+    // filter 이전에 미리 매핑된 객체 배열을 만들어 인덱스 유실 방지
+    const mappedData = ST.data
+        .map((s, index) => ({
+            s,
+            csat: cache.csatSums[index]
+        }))
+        .filter(item => String(item.s.class) === String(selectedClass)) // 타입 불일치 방지용 String 변환
         .sort((a, b) => {
-            const numA = parseInt(a.number) || 999;
-            const numB = parseInt(b.number) || 999;
-            if (numA !== numB) return numA - numB;
-            return (a.name || '').localeCompare(b.name || '');
+            const numA = parseInt(a.s.number) || 999;
+            const numB = parseInt(b.s.number) || 999;
+            return numA - numB;
         });
 
     const classTbody = document.getElementById('csat-class-tbody');
     if (classTbody) {
-        classTbody.innerHTML = filteredData.map(s => {
-            const csat = _getCsatSums(s);
-            return `
-                <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer group"
-                    data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}"
-                    onclick="handleRowClick(this)">
-                    <td class="p-3 text-slate-700">${s.number || ''}</td>
-                    <td class="p-3 text-left font-semibold text-slate-800">${s.name || ''}</td>
-                    <td class="p-3 bg-blue-50/50 text-blue-700 border-x border-slate-100">${csat.sum2}</td>
-                    <td class="p-3 bg-emerald-50/50 text-emerald-700 border-r border-slate-100">${csat.sum3}</td>
-                    <td class="p-3 bg-amber-50/50 text-amber-700 border-r border-slate-100">${csat.sum4}</td>
-                    <td class="p-3 bg-rose-50/50 text-rose-700">${csat.sum5}</td>
-                </tr>
-            `;
-        }).join('');
+        if (mappedData.length === 0) {
+            classTbody.innerHTML = `<tr><td colspan="6" class="p-8 text-slate-400 text-center">해당 반의 데이터가 없습니다.</td></tr>`;
+            return;
+        }
+
+        classTbody.innerHTML = mappedData.map(({s, csat}) => `
+            <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer group" data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" onclick="handleRowClick(this)">
+                <td class="p-3 text-slate-700">${s.number || ''}</td>
+                <td class="p-3 text-left font-semibold text-slate-800">${s.name || ''}</td>
+                <td class="p-3 bg-blue-50/50 text-blue-700 border-x border-slate-100">${csat.sum2 || '-'}</td>
+                <td class="p-3 bg-emerald-50/50 text-emerald-700 border-r border-slate-100">${csat.sum3 || '-'}</td>
+                <td class="p-3 bg-amber-50/50 text-amber-700 border-r border-slate-100">${csat.sum4 || '-'}</td>
+                <td class="p-3 bg-rose-50/50 text-rose-700">${csat.sum5 || '-'}</td>
+            </tr>
+        `).join('');
     }
 }
