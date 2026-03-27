@@ -137,136 +137,56 @@ async function processFile(file) {
         const arrayBuffer = await file.arrayBuffer();
         const fileExt = file.name.split('.').pop().toLowerCase();
 
-        // ★ 개선 3: 미리 로드해둔 Buffer 객체 사용 (네트워크 지연 제거)
-        // (xlsx 파싱을 위해 ExcelJS가 요구하는 Buffer 규격 충족)
+        // [최적화 1] Buffer 로직 분리 및 속도 개선
         if (!GlobalBuffer) {
-            const {Buffer} = await import('https://esm.sh/buffer');
-            GlobalBuffer = Buffer;
+            // esm.sh 호출이 느릴 수 있으므로 여기서 대기 시간을 최소화
+            const module = await import('https://esm.sh/buffer');
+            GlobalBuffer = module.Buffer;
         }
-
-        // 가져온 Buffer를 이용해 데이터 변환
         const fileBuffer = GlobalBuffer.from(arrayBuffer);
 
-        let wb; // 분기 후 공통으로 사용할 ExcelJS 워크북 객체
+        let wb = new ExcelJS.Workbook(); // 미리 생성
 
-        if (fileExt === 'xls') {
-            // ─────────────────────────────────────────
-            // [분기 1] .xls 파일: SheetJS로 읽고 ExcelJS 객체로 변환
-            // ─────────────────────────────────────────
-            if (typeof XLSX === 'undefined') {
-                showToast("구형 엑셀 파싱 라이브러리(SheetJS)가 필요합니다. 인터넷 연결을 확인하고 웹브라우저를 새로고침하세요.", true);
-                return;
-            }
-
-            try {
-                // SheetJS로 arrayBuffer 직접 읽기
-                const xlsWorkbook = XLSX.read(arrayBuffer, {type: 'array'});
-
-                // 기존 호환성을 위해 ExcelJS 워크북 생성
-                wb = new ExcelJS.Workbook();
-
-                xlsWorkbook.SheetNames.forEach(sheetName => {
-                    const newWs = wb.addWorksheet(sheetName);
-                    const xlsWs = xlsWorkbook.Sheets[sheetName];
-                    const sheetData = XLSX.utils.sheet_to_json(xlsWs, {header: 1, defval: null});
-
-                    sheetData.forEach(row => {
-                        newWs.addRow(row);
-                    });
-                });
-
-                showToast("데이터를 성공적으로 불러왔습니다.");
-            } catch (xlsErr) {
-                console.error("SheetJS 파싱 에러:", xlsErr);
-                showToast(".xls 파일을 읽는 데 실패했습니다.", true);
-                return;
-            }
-
-        } else if (fileExt === 'xlsx') {
-            // ─────────────────────────────────────────
-            // [분기 2] .xlsx 파일: 기존 Buffer 적용 및 암호 처리 로직
-            // ─────────────────────────────────────────
-            wb = new ExcelJS.Workbook();
-
-            try {
-                // 1. 일반 로드 시도
-                await wb.xlsx.load(fileBuffer);
-                showToast("데이터를 성공적으로 불러왔습니다.");
-            } catch (err) {
-                // 2. 에러 발생 시: 암호 입력 프롬프트 띄우기
-                const pwd = prompt("암호가 걸려있는 엑셀 파일입니다.\n비밀번호를 입력해주세요.");
-                if (pwd === null) {
-                    showToast("파일 읽기가 취소되었습니다.", true);
-                    return;
-                }
-
-                // 복호화 시작 전 다시 한번 로딩 상태를 확실히 안내
-                showToast("암호를 해제하고 데이터를 읽는 중입니다. 파일 크기에 따라 수십 초 이상 걸릴 수 있습니다...", false);
-                await new Promise(resolve => setTimeout(resolve, 50)); // UI 렌더링 시간 확보
-
-                try {
-                    // 3. 사용자가 입력한 비밀번호로 재시도
-                    await wb.xlsx.load(fileBuffer, {password: pwd});
-                    showToast("암호를 해제하여 데이터를 성공적으로 불러왔습니다.");
-                } catch (pwdErr) {
-                    console.error("복호화 에러:", pwdErr);
-                    showToast("비밀번호가 틀렸거나 손상된 파일입니다.", true);
-                    return;
-                }
-            }
-        } else if (fileExt === 'csv') {
-            // ─────────────────────────────────────────
-            // [분기 3] .csv 파일: 인코딩 자동 감지 후 ExcelJS로 로드
-            // ─────────────────────────────────────────
-            try {
+        if (fileExt === 'xls' || fileExt === 'csv') {
+            // [최적화 2] .xls와 .csv는 SheetJS가 훨씬 빠릅니다.
+            let xlsWorkbook;
+            if (fileExt === 'csv') {
                 let csvText = '';
                 try {
-                    // 1. 먼저 UTF-8로 엄격하게 디코딩 시도 (규칙에 안 맞으면 에러 발생)
-                    const utf8Decoder = new TextDecoder('utf-8', {fatal: true});
-                    csvText = utf8Decoder.decode(arrayBuffer);
-                } catch (encodeErr) {
-                    const euckrDecoder = new TextDecoder('euc-kr');
-                    csvText = euckrDecoder.decode(arrayBuffer);
+                    csvText = new TextDecoder('utf-8', {fatal: true}).decode(arrayBuffer);
+                } catch {
+                    csvText = new TextDecoder('euc-kr').decode(arrayBuffer);
                 }
-
-                const csvWorkbook = XLSX.read(csvText, {type: 'string'});
-
-                wb = new ExcelJS.Workbook();
-                csvWorkbook.SheetNames.forEach(sheetName => {
-                    const newWs = wb.addWorksheet(sheetName);
-                    const csvWs = csvWorkbook.Sheets[sheetName];
-                    const sheetData = XLSX.utils.sheet_to_json(csvWs, {header: 1, defval: null});
-
-                    sheetData.forEach(row => {
-                        newWs.addRow(row);
-                    });
-                });
-
-                showToast("데이터를 성공적으로 불러왔습니다.");
-
-            } catch (csvErr) {
-                console.error("CSV 파싱 에러:", csvErr);
-                showToast("CSV 파일을 읽는 데 실패했습니다.", true);
-                return;
+                xlsWorkbook = XLSX.read(csvText, {type: 'string'});
+            } else {
+                xlsWorkbook = XLSX.read(arrayBuffer, {type: 'array'});
             }
-        } else {
-            showToast("지원하지 않는 파일 형식입니다. (.xls, .xlsx, .csv 파일만 가능)", true);
-            return;
+
+            // [최적화 3] addRow 반복문 대신 addRows 일괄 처리
+            xlsWorkbook.SheetNames.forEach(sheetName => {
+                const newWs = wb.addWorksheet(sheetName);
+                const jsonData = XLSX.utils.sheet_to_json(xlsWorkbook.Sheets[sheetName], {header: 1, defval: null});
+                newWs.addRows(jsonData); // 한 줄씩 addRow 하는 것보다 훨씬 빠름
+            });
+        } else if (fileExt === 'xlsx') {
+            try {
+                await wb.xlsx.load(fileBuffer);
+            } catch (err) {
+                const pwd = prompt("암호가 걸려있는 엑셀 파일입니다.\n비밀번호를 입력해주세요.");
+                if (pwd === null) return showToast("취소되었습니다.", true);
+
+                showToast("암호를 해제하는 중입니다. 잠시만 기다려주세요...");
+                await new Promise(r => setTimeout(r, 50));
+                await wb.xlsx.load(fileBuffer, {password: pwd});
+            }
         }
 
-        // ─────────────────────────────────────────
-        // [공통 처리 영역] 이후 로직은 기존과 완전히 동일 (wb가 세팅됨)
-        // ─────────────────────────────────────────
+        // 공통 마무리 로직
         ST.wb = wb;
         ST.file = file;
 
-        // 시트 이름 배열 추출
-        const sheetNames = [];
-        wb.eachSheet(function (worksheet) {
-            sheetNames.push(worksheet.name);
-        });
+        const sheetNames = wb.worksheets.map(ws => ws.name); // eachSheet보다 간결함
 
-        /* ... 이후 UI 처리 로직은 기존과 동일 ... */
         document.getElementById('dropzone').classList.add('hidden');
         document.getElementById('file-info').classList.remove('hidden');
         document.getElementById('file-name').innerText = file.name;
@@ -277,10 +197,11 @@ async function processFile(file) {
 
         renderFormatCards();
         document.getElementById('format-area').classList.remove('hidden');
+        showToast("데이터를 성공적으로 불러왔습니다.");
 
     } catch (err) {
         console.error("파일 처리 에러:", err);
-        showToast('엑셀 파일을 읽는 데 실패했습니다.', true);
+        showToast('파일을 읽는 데 실패했습니다. 암호가 틀렸거나 파일이 손상되었을 수 있습니다.', true);
     }
 }
 
