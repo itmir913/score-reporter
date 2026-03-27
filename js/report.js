@@ -53,16 +53,39 @@ function renderReport() {
    § 모든 렌더링 함수
 ─────────────────────────────────────────── */
 function renderAll() {
-    // ★ ST.data를 단 한 번만 순회하여 공용 캐시 생성
-    const cache = computeRenderCache(ST.data, globalReportBasis);
-    ST.cache = cache;  // 필요 시 외부 참조용
+    // 1. ST.data가 유효한 배열인지 최우선 확인
+    if (!ST.data || !Array.isArray(ST.data) || ST.data.length === 0) {
+        console.warn("표시할 데이터가 없거나 로딩 중입니다.");
+        // 데이터가 없을 때 화면을 비우거나 초기화하는 로직이 필요하다면 여기에 추가
+        return;
+    }
 
-    renderStats(cache);
-    renderTopN(cache);
-    renderScoreDistribution();       // 캐시 미적용
-    renderSubjectSelection(cache);
-    renderSubjectsCharts();                  // chartBasis가 별도 선택값 → 캐시 미사용
-    renderCsatMinRequirement(cache);
+    try {
+        // 2. 캐시 생성 시도
+        const cache = computeRenderCache(ST.data, globalReportBasis);
+
+        // 3. 캐시 결과가 정상인지 확인 (computeRenderCache가 null을 반환할 경우 대비)
+        if (!cache) {
+            console.error("캐시 생성에 실패했습니다.");
+            return;
+        }
+
+        ST.cache = cache;
+
+        // 4. 하위 렌더링 함수 실행
+        // 각 함수 내부에서도 에러가 날 수 있으므로 순차적으로 실행
+        renderStats(cache);
+        renderTopN(cache);
+
+        // 캐시를 사용하지 않는 함수들도 데이터 존재 여부 확인 후 실행되므로 안전함
+        renderScoreDistribution();
+        renderSubjectSelection(cache);
+        renderSubjectsCharts();
+        renderCsatMinRequirement(cache);
+
+    } catch (error) {
+        console.error("렌더링 도중 오류가 발생했습니다:", error);
+    }
 }
 
 /* ───────────────────────────────────────────
