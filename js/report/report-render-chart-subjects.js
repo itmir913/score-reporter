@@ -35,10 +35,25 @@ function renderSubjectsCharts() {
 
         if (finalBasis === 'grade') {
             if (value >= 1 && value <= MAX_GRADE) dataCounts[subjName].counts[value - 1]++;
-        } else {
+        } else if (finalBasis === 'pct') {
+            // 백분위(pct) 처리 로직: 기존 유지 (0 ~ 100)
             if (value >= 0 && value <= 100) {
                 let bin = Math.floor(value / 10);
                 if (bin === 10) bin = 9;
+                dataCounts[subjName].counts[bin]++;
+            }
+        } else if (finalBasis === 'std') {
+            // 표준점수(std) 처리 로직: 상한선 해제 및 배열 인덱스 초과 방지
+            // 과목별 성적 분포는 등급과 백분위만 취급하므로 사실 필요 없긴 하다.
+            if (value >= 0) {
+                let bin = Math.floor(value / 10);
+
+                // 중요: counts 배열이 준비된 최대 길이를 넘어가지 않도록 안전장치 추가
+                const maxBinIndex = dataCounts[subjName].counts.length - 1;
+                if (bin > maxBinIndex) {
+                    bin = maxBinIndex; // 범위를 초과하는 최상위 극단값은 가장 마지막 구간에 합산
+                }
+
                 dataCounts[subjName].counts[bin]++;
             }
         }
