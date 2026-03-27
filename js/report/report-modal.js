@@ -40,16 +40,24 @@ function showBinStudentsModal(label, students) {
 
     // 1. 반, 번호, 이름 순으로 정렬
     students.sort((a, b) => {
-        // 1. 반(class) 비교 (오름차순)
-        if (Number(a.class) !== Number(b.class)) {
-            return Number(a.class) - Number(b.class);
+        // 1. 반(class) 비교 (안전한 문자/숫자 혼합 오름차순)
+        const classA = String(a.class || "");
+        const classB = String(b.class || "");
+        if (classA !== classB) {
+            return classA.localeCompare(classB, undefined, {numeric: true});
         }
-        // 2. 번호(number) 비교 (오름차순)
-        if (Number(a.number) !== Number(b.number)) {
-            return Number(a.number) - Number(b.number);
+
+        // 2. 번호(number) 비교 (안전한 문자/숫자 혼합 오름차순)
+        const numA = String(a.number || "");
+        const numB = String(b.number || "");
+        if (numA !== numB) {
+            return numA.localeCompare(numB, undefined, {numeric: true});
         }
-        // 3. 이름(name) 비교 (가나다순)
-        return a.name.localeCompare(b.name);
+
+        // 3. 이름(name) 비교 (가나다순, null/undefined 에러 방어)
+        const nameA = String(a.name || "");
+        const nameB = String(b.name || "");
+        return nameA.localeCompare(nameB);
     });
 
     // 2. 타이틀 세팅
@@ -161,18 +169,24 @@ function showCsatStudents(n, targetSum) {
 
     // 2. 반(class) > 학번(number) > 이름(name) 순으로 정렬
     targetStudents.sort((a, b) => {
-        // 1순위: 반(class) 비교
-        const classA = parseInt(a.class) || 9999;
-        const classB = parseInt(b.class) || 9999;
-        if (classA !== classB) return classA - classB;
+        // 1순위: 반(class) 비교 (안전한 문자/숫자 혼합 오름차순)
+        const classA = String(a.class || "");
+        const classB = String(b.class || "");
+        if (classA !== classB) {
+            return classA.localeCompare(classB, undefined, {numeric: true});
+        }
 
         // 2순위: 번호(number) 비교 (반이 같을 때만 실행됨)
-        const numA = parseInt(a.number) || 9999;
-        const numB = parseInt(b.number) || 9999;
-        if (numA !== numB) return numA - numB;
+        const numA = String(a.number || "");
+        const numB = String(b.number || "");
+        if (numA !== numB) {
+            return numA.localeCompare(numB, undefined, {numeric: true});
+        }
 
         // 3순위: 이름(name) 사전순 비교 (반과 번호가 모두 같을 때만 실행됨)
-        return (a.name || '').localeCompare(b.name || '');
+        const nameA = String(a.name || "");
+        const nameB = String(b.name || "");
+        return nameA.localeCompare(nameB);
     });
 
     // 3. 모달 테이블 내용 렌더링

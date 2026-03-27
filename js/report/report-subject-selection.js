@@ -18,9 +18,14 @@ function renderSubjectSelection(cache) {
         // ★ globalReportBasis 대신 cache.basis 사용
         const basisLabel = labelMap[cache.basis];
         const labels = Object.keys(statsData)
-            // [핵심 수정] 빈 문자열, null, undefined, '미응시' 등 결측 데이터 라벨을 완전히 제외
+            // 1. 빈 문자열, null, undefined, '미응시' 등 쓰레기 라벨을 완전히 제외
             .filter(key => key && key.trim() !== '' && key !== 'null' && key !== 'undefined' && key !== '미응시')
-            .sort((a, b) => statsData[b].count - statsData[a].count);
+            // 2. count 값이 누락되거나 비정상적이어도 NaN이 발생하지 않도록 방어
+            .sort((a, b) => {
+                const countA = Number(statsData[a].count) || 0;
+                const countB = Number(statsData[b].count) || 0;
+                return countB - countA;
+            });
 
         if (ST.charts[chartKey]) {
             ST.charts[chartKey].destroy();

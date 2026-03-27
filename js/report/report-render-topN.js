@@ -10,18 +10,23 @@ function renderTopN(cache) {
     // ★ 캐시의 studentWithSums 활용 — 정렬 시 getSum() 재호출 없음
     const topData = [...cache.studentWithSums]
         .sort((a, b) => {
-            // 1차 기준: 총점(sum) 내림차순
+            // 1차 기준: 총점(sum) 내림차순 (총점은 숫자로 보장되어 있다고 가정)
             if (b.sum !== a.sum) {
                 return b.sum - a.sum;
             }
 
-            // 2차 기준: 반(class) 오름차순
-            if (a.class !== b.class) {
-                return a.class - b.class;
+            // [핵심 수정] 2차 기준: 반(class) 오름차순 (안전한 문자/숫자 혼합 정렬)
+            const classA = String(a.class || "");
+            const classB = String(b.class || "");
+            if (classA !== classB) {
+                // numeric: true 옵션으로 "2반" < "10반" 처럼 상식적인 숫자 정렬 지원
+                return classA.localeCompare(classB, undefined, {numeric: true});
             }
 
-            // 3차 기준: 번호(number) 오름차순
-            return a.number - b.number;
+            // [핵심 수정] 3차 기준: 번호(number) 오름차순 (동일한 방어 로직 적용)
+            const numA = String(a.number || "");
+            const numB = String(b.number || "");
+            return numA.localeCompare(numB, undefined, {numeric: true});
         })
         .slice(0, limit);
 

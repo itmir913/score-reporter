@@ -499,8 +499,17 @@ function loadSampleData() {
 
     // 반, 이름 순으로 정렬 후 번호 1번부터 예쁘게 재할당
     dummy.sort((a, b) => {
-        if (a.class !== b.class) return parseInt(a.class) - parseInt(b.class);
-        return a.name.localeCompare(b.name);
+        // 1. 반(class) 비교: parseInt의 한계를 벗어난 안전한 문자/숫자 혼합 정렬
+        const classA = String(a.class || "");
+        const classB = String(b.class || "");
+        if (classA !== classB) {
+            return classA.localeCompare(classB, undefined, {numeric: true});
+        }
+
+        // 2. 이름(name) 비교: null/undefined로 인한 TypeError 완벽 방어
+        const nameA = String(a.name || "");
+        const nameB = String(b.name || "");
+        return nameA.localeCompare(nameB);
     });
 
     let currentClass = '';

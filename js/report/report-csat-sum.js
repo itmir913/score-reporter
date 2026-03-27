@@ -18,7 +18,13 @@ function _getCsatRawSums(student) {
     });
 
     // 등급 기준 오름차순 정렬 (낮은 등급이 먼저 오도록)
-    grades.sort((a, b) => a.grade - b.grade);
+    grades.sort((a, b) => {
+        // [핵심 수정] 등급(grade) 결측치나 문자열 예외 상황 완벽 방어
+        const gradeA = String(a.grade || "");
+        const gradeB = String(b.grade || "");
+
+        return gradeA.localeCompare(gradeB, undefined, {numeric: true});
+    });
 
     // n개의 과목 합산 및 이름 조합 헬퍼 함수
     const getSumData = (n) => {
@@ -82,11 +88,19 @@ function renderCsatMinRequirement(cache) {
         : 20;
 
     const sortedData = [...ST.data].sort((a, b) => {
-        const aRaw = _getScoreSum(a, 'raw'), bRaw = _getScoreSum(b, 'raw');
+        // [핵심 수정] Number() 캐스팅과 || 0 을 통해 NaN, null, undefined를 0점으로 안전하게 치환
+        const aRaw = Number(_getScoreSum(a, 'raw')) || 0;
+        const bRaw = Number(_getScoreSum(b, 'raw')) || 0;
         if (bRaw !== aRaw) return bRaw - aRaw;
-        const aStd = _getScoreSum(a, 'std'), bStd = _getScoreSum(b, 'std');
+
+        const aStd = Number(_getScoreSum(a, 'std')) || 0;
+        const bStd = Number(_getScoreSum(b, 'std')) || 0;
         if (bStd !== aStd) return bStd - aStd;
-        return _getScoreSum(b, 'pct') - _getScoreSum(a, 'pct');
+
+        const aPct = Number(_getScoreSum(a, 'pct')) || 0;
+        const bPct = Number(_getScoreSum(b, 'pct')) || 0;
+
+        return bPct - aPct;
     }).slice(0, limit);
 
     const schoolTbody = document.getElementById('csat-school-tbody');
@@ -210,11 +224,13 @@ function renderCsatClassTable(cache) {
             s,
             csat: cache.csatSums[index]
         }))
-        .filter(item => String(item.s.class) === String(selectedClass)) // 타입 불일치 방지용 String 변환
+        .filter(item => String(item.s.class) === String(selectedClass)) // 타입 불일치 방지용 String 변환 유지
         .sort((a, b) => {
-            const numA = parseInt(a.s.number) || 999;
-            const numB = parseInt(b.s.number) || 999;
-            return numA - numB;
+            // [핵심 수정] parseInt의 한계를 벗어나 문자/숫자 혼합 데이터를 자연스럽게 정렬
+            const numA = String(a.s.number || "");
+            const numB = String(b.s.number || "");
+
+            return numA.localeCompare(numB, undefined, {numeric: true});
         });
 
     const classTbody = document.getElementById('csat-class-tbody');
