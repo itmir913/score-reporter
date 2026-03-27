@@ -9,6 +9,14 @@ const ST = {
     charts: {}
 };
 
+// 1. (추가) 스크립트 상단 쯤에 Buffer를 백그라운드에서 미리 로드해둡니다.
+let GlobalBuffer = null;
+import('https://esm.sh/buffer')
+    .then(module => {
+        GlobalBuffer = module.Buffer;
+    })
+    .catch(err => console.error("Buffer 프리로드 실패:", err));
+
 // ExcelJS 워크시트를 2차원 배열(SheetJS의 sheet_to_json({header:1}) 형태)로 변환하는 헬퍼 함수
 function exceljsTo2DArray(ws) {
     if (!ws) return [];
@@ -134,15 +142,24 @@ function handleFileSelect(e) {
 // ★ 변경: 비동기(async) 방식으로 ExcelJS 적용 및 비밀번호 프롬프트 추가
 async function processFile(file) {
     clearFile();
+
+    // ★ 개선 1: 파일 처리를 시작하기 전에 로딩 안내 띄우기
+    showToast("파일을 분석하는 중입니다. 잠시만 기다려주세요...");
+
+    // ★ 개선 2: UI가 그려질(Toast가 뜰) 시간을 주기 위해 메인 스레드를 잠깐 쉬게 함 (매우 중요)
+    await new Promise(resolve => setTimeout(resolve, 50));
+
     try {
         const arrayBuffer = await file.arrayBuffer();
 
-        // ★ 핵심 해결책: esm.sh CDN을 통해 안전하게 Buffer 객체만 쏙 빼옵니다.
-        // (HTML에 script 태그를 넣을 필요가 없습니다!)
-        const {Buffer} = await import('https://esm.sh/buffer');
+        // ★ 개선 3: 미리 로드해둔 Buffer 객체 사용 (네트워크 지연 제거)
+        if (!GlobalBuffer) {
+            const {Buffer} = await import('https://esm.sh/buffer');
+            GlobalBuffer = Buffer;
+        }
 
         // 가져온 Buffer를 이용해 데이터 변환
-        const fileBuffer = Buffer.from(arrayBuffer);
+        const fileBuffer = GlobalBuffer.from(arrayBuffer);
 
         const wb = new ExcelJS.Workbook();
 
@@ -156,6 +173,10 @@ async function processFile(file) {
                 showToast("파일 읽기가 취소되었습니다.", true);
                 return;
             }
+
+            // 복호화 시작 전 다시 한번 로딩 상태를 확실히 안내
+            showToast("암호를 해제하고 데이터를 읽는 중입니다. 파일 크기에 따라 수십 초 이상 걸릴 수 있습니다...", false);
+            await new Promise(resolve => setTimeout(resolve, 50)); // UI 렌더링 시간 확보
 
             try {
                 // 3. 사용자가 입력한 비밀번호로 재시도
