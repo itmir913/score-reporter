@@ -11,13 +11,17 @@ function renderStats(cache) {
 
     // Helper: 상위 20% 평균 계산 함수 (응시 인원 기준)
     const getTop20Avg = (scores, isLowerBetter = false) => {
-        const count = scores.length;
-        if (count === 0) return "0.0"; // 응시자 없을 경우 대비
+        // [핵심 수정] 1. 연산 전 NaN 등 비정상적인 값을 모두 제거한 순수 숫자 배열 생성
+        const validScores = scores.filter(Number.isFinite);
+
+        // [핵심 수정] 2. 카운트 기준을 '오염된 전체 배열'이 아닌 '유효한 점수 배열'로 변경
+        const count = validScores.length;
+        if (count === 0) return "0.0"; // 유효한 응시자가 없을 경우
 
         const topCount = Math.max(1, Math.ceil(count * 0.2));
 
-        // 점수는 내림차순(b-a), 등급은 오름차순(a-b)
-        const sorted = [...scores].sort((a, b) => isLowerBetter ? a - b : b - a);
+        // 유효한 점수들로만 정렬 진행
+        const sorted = [...validScores].sort((a, b) => isLowerBetter ? a - b : b - a);
         const topSlice = sorted.slice(0, topCount);
         const sum = topSlice.reduce((a, b) => a + b, 0);
 

@@ -53,9 +53,9 @@ function computeRenderCache(data, basis) {
         const korVal = s.korean?.[basis];
         const mathVal = s.math?.[basis];
         const engGrade = s.english?.grade;
-        if (korVal != null) korScores.push(korVal);
-        if (mathVal != null) mathScores.push(mathVal);
-        if (engGrade != null) engGrades.push(engGrade);
+        if (Number.isFinite(korVal)) korScores.push(korVal);
+        if (Number.isFinite(mathVal)) mathScores.push(mathVal);
+        if (Number.isFinite(engGrade)) engGrades.push(engGrade);
 
         /* 2. 4과목 합산 (상위N · 분포 공용) */
         let sum = 0;
