@@ -59,9 +59,17 @@ function computeRenderCache(data, basis) {
 
         /* 2. 4과목 합산 (상위N · 분포 공용) */
         let sum = 0;
-        ['korean', 'math', 'inquiry1', 'inquiry2'].forEach(subj => {
-            if (s[subj]?.[basis] != null) sum += s[subj][basis];
+        const subjects = ['korean', 'math', 'inquiry1', 'inquiry2'];
+
+        subjects.forEach(subj => {
+            const val = s[subj]?.[basis];
+
+            // 수정된 조건: 타입이 숫자이고, NaN이 아닐 때만 합산
+            if (typeof val === 'number' && !Number.isNaN(val)) {
+                sum += val;
+            }
         });
+
         studentWithSums.push({s, sum});
 
         /* 3. 선택과목별 집계 */
