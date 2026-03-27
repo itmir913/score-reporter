@@ -175,7 +175,7 @@ async function processFile(file) {
                 const pwd = prompt("암호가 걸려있는 엑셀 파일입니다.\n비밀번호를 입력해주세요.");
                 if (pwd === null) return showToast("취소되었습니다.", true);
 
-                showToast("암호를 해제하는 중입니다. 잠시만 기다려주세요...");
+                showToast("암호를 해제하는 중입니다. PC 성능에 따라 수십초가 소요될 수 있으니 잠시만 기다려주세요...");
                 await new Promise(r => setTimeout(r, 50));
                 await wb.xlsx.load(fileBuffer, {password: pwd});
             }

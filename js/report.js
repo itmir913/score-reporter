@@ -41,7 +41,7 @@ function renderReport() {
 
     document.getElementById('report-subtitle').innerText = `총 ${ST.data.length}명 분석 완료`;
 
-    const dateStr = `분석 일시: ${new Date().toLocaleString()}`;
+    const dateStr = `분석 일시: ${new Date().toLocaleDateString()}`;
     if (document.getElementById('print-date-top')) {
         document.getElementById('print-date-top').innerText = dateStr;
     }
