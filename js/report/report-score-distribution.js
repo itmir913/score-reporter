@@ -15,7 +15,7 @@ function renderScoreDistribution() {
             if (s[subj] && typeof s[subj][basis] === 'number') sum += s[subj][basis];
         });
         return sum;
-    }).filter(sum => sum > 0);
+    }).filter(sum => sum >= 0);
 
     if (sums.length === 0) return;
 
