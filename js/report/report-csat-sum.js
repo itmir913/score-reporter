@@ -48,7 +48,7 @@ function _getCsatSums(student) {
         ? '<span class="text-slate-300">-</span>'
         : `<div class="flex flex-col">
                <span class="font-extrabold text-base">${val}</span>
-               <span class="text-xs text-slate-500 font-normal mt-0.5">(${subj})</span>
+               <span class="text-base text-slate-500 font-normal mt-0.5">(${subj})</span>
            </div>`;
     return {
         sum2: format(raw.sum2, raw.sum2_subj),
