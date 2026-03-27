@@ -38,10 +38,18 @@ function handleRowClick(el) {
 function showBinStudentsModal(label, students) {
     const basis = globalReportBasis;
 
-    // 1. 점수 높은 순 정렬
+    // 1. 반, 번호, 이름 순으로 정렬
     students.sort((a, b) => {
-        const getSum = (s) => ['korean', 'math', 'inquiry1', 'inquiry2'].reduce((acc, cur) => acc + (s[cur]?.[basis] || 0), 0);
-        return getSum(b) - getSum(a);
+        // 1. 반(class) 비교 (오름차순)
+        if (Number(a.class) !== Number(b.class)) {
+            return Number(a.class) - Number(b.class);
+        }
+        // 2. 번호(number) 비교 (오름차순)
+        if (Number(a.number) !== Number(b.number)) {
+            return Number(a.number) - Number(b.number);
+        }
+        // 3. 이름(name) 비교 (가나다순)
+        return a.name.localeCompare(b.name);
     });
 
     // 2. 타이틀 세팅
