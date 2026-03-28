@@ -1,5 +1,6 @@
 // 영문 변수명을 한글 라벨로 변환해주는 매핑 사전
 const FIELD_LABELS = {
+    student_id: '학번',
     grade_year: '학년',
     class: '반',
     number: '번호',
@@ -227,6 +228,7 @@ const SCHEMAS = {
         headerRows: 1,
         exportHeaders: [['아이디', '이름', '학년', '시험일자', '출제기관', '한국사(원점수)', '한국사(등급)', '국어선택과목', '국어(공통)', '국어(선택)', '국어(원점수)', '국어(표준점수)', '국어(백분위)', '국어(등급)', '수학선택과목', '수학(공통)', '수학(선택)', '수학(원점수)', '수학(표준점수)', '수학(백분위)', '수학(등급)', '영어(원점수)', '영어(등급)', '탐1과목명', '탐1(원점수)', '탐1(표준점수)', '탐1(백분위)', '탐1(등급)', '탐2과목명', '탐2(원점수)', '탐2(표준점수)', '탐2(백분위)', '탐2(등급)', '제2외국어과목명', '제2외(원점수)', '제2외(등급)', '잠금상태']],
         fields: {
+            student_id: 'A',
             grade_year: 'C',
             class: '',
             number: '',
@@ -269,6 +271,20 @@ const SCHEMAS = {
             fl2_pct: '',
             fl2_grade: 'AJ',
         },
+        customGetters: {
+            student_id: (s, baseValue) => {
+                const toSafeInt = (v, fallback = 0) => {
+                    const n = Number(v);
+                    return Number.isInteger(n) && n >= 0 ? n : fallback;
+                };
+
+                const grade = String(toSafeInt(s.grade_year));
+                const klass = String(toSafeInt(s.class)).padStart(2, '0');
+                const number = String(toSafeInt(s.number)).padStart(3, '0');
+
+                return grade + klass + number;
+            },
+        }
     }),
 
     /**
