@@ -9,14 +9,6 @@ const ST = {
     charts: {}
 };
 
-// 1. (추가) 스크립트 상단 쯤에 Buffer를 백그라운드에서 미리 로드해둡니다.
-let GlobalBuffer = null;
-import('https://esm.sh/buffer')
-    .then(module => {
-        GlobalBuffer = module.Buffer;
-    })
-    .catch(err => console.error("Buffer 프리로드 실패:", err));
-
 // ExcelJS 워크시트를 2차원 배열(SheetJS의 sheet_to_json({header:1}) 형태)로 변환하는 헬퍼 함수
 function exceljsTo2DArray(ws) {
     if (!ws) return [];
@@ -137,14 +129,6 @@ async function processFile(file) {
         const arrayBuffer = await file.arrayBuffer();
         const fileExt = file.name.split('.').pop().toLowerCase();
 
-        // [최적화 1] Buffer 로직 분리 및 속도 개선
-        if (!GlobalBuffer) {
-            // esm.sh 호출이 느릴 수 있으므로 여기서 대기 시간을 최소화
-            const module = await import('https://esm.sh/buffer');
-            GlobalBuffer = module.Buffer;
-        }
-        const fileBuffer = GlobalBuffer.from(arrayBuffer);
-
         let wb = new ExcelJS.Workbook(); // 미리 생성
 
         if (fileExt === 'xls' || fileExt === 'csv') {
@@ -170,13 +154,18 @@ async function processFile(file) {
             });
         } else if (fileExt === 'xlsx') {
             try {
-                await wb.xlsx.load(fileBuffer);
+                await wb.xlsx.load(arrayBuffer);
             } catch (err) {
                 const pwd = prompt("암호가 걸려있는 엑셀 파일입니다.\n비밀번호를 입력해주세요.");
                 if (pwd === null) return showToast("취소되었습니다.", true);
 
                 showToast("암호를 해제하는 중입니다. PC 성능에 따라 수십초가 소요될 수 있으니 잠시만 기다려주세요...");
                 await new Promise(r => setTimeout(r, 50));
+
+                const module = await import('https://esm.sh/buffer');
+                let GlobalBuffer = module.Buffer;
+                const fileBuffer = GlobalBuffer.from(arrayBuffer);
+
                 await wb.xlsx.load(fileBuffer, {password: pwd});
             }
         }
@@ -201,7 +190,7 @@ async function processFile(file) {
 
     } catch (err) {
         console.error("파일 처리 에러:", err);
-        showToast('파일을 읽는 데 실패했습니다. 암호가 틀렸거나 파일이 손상되었을 수 있습니다.', true);
+        showToast('파일을 읽는 데 실패했습니다. 암호가 틀렸거나 파일이 손상되었을 수 있습니다. 현재 기술의 한계로 암호가 걸린 엑셀 파일을 읽기 위해서 외부 라이브러리가 필요합니다. 인터넷 연결을 확인해주세요. 추후 개선할 예정입니다.', true);
     }
 }
 
