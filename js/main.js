@@ -162,10 +162,8 @@ async function processFile(file) {
                 showToast("암호를 해제하는 중입니다. PC 성능에 따라 수십초가 소요될 수 있으니 잠시만 기다려주세요...");
                 await new Promise(r => setTimeout(r, 50));
 
-                const module = await import('https://esm.sh/buffer');
-                let GlobalBuffer = module.Buffer;
-                const fileBuffer = GlobalBuffer.from(arrayBuffer);
-
+                // ★ 수정: 동적 import 제거 → index.html에서 미리 로드한 전역 Buffer 사용
+                const fileBuffer = Buffer.from(arrayBuffer);
                 await wb.xlsx.load(fileBuffer, {password: pwd});
             }
         }
@@ -190,7 +188,7 @@ async function processFile(file) {
 
     } catch (err) {
         console.error("파일 처리 에러:", err);
-        showToast('파일을 읽는 데 실패했습니다. 암호가 틀렸거나 파일이 손상되었을 수 있습니다. 현재 기술의 한계로 암호가 걸린 엑셀 파일을 읽기 위해서 외부 라이브러리가 필요합니다. 인터넷 연결을 확인해주세요. 추후 개선할 예정입니다.', true);
+        showToast('파일을 읽는 데 실패했습니다. 암호가 틀렸거나 파일이 손상되었을 수 있습니다.', true);
     }
 }
 
