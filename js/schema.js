@@ -321,6 +321,12 @@ const SCHEMAS = {
 
                 return grade + klass + number;
             },
+            // 김영일은 과목명에 공백을 허용하지 않으므로 공백 일괄 제거
+            kor_subject: removeSpaces,
+            math_subject: removeSpaces,
+            inq1_subject: removeSpaces,
+            inq2_subject: removeSpaces,
+            fl2_subject: removeSpaces,
         }
     }),
 
@@ -425,4 +431,10 @@ function convertRomanToNumber(s, baseValue) {
     if (!baseValue) return '';
     let val = baseValue.replace(/\s+/g, '');
     return val.replace(/Ⅰ$/, '1').replace(/Ⅱ$/, '2');
+}
+
+// 공백 삭제
+function removeSpaces(s, baseValue) {
+    if (!baseValue) return '';
+    return baseValue.replace(/\s+/g, '');
 }
