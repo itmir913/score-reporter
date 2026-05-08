@@ -68,11 +68,11 @@ function showBinStudentsModal(label, students) {
     tbody.innerHTML = students.map(s => {
         const sum = ['korean', 'math', 'inquiry1', 'inquiry2'].reduce((acc, cur) => acc + (s[cur]?.[basis] || 0), 0);
         return `
-            <tr class="hover:bg-blue-50 cursor-pointer transition-colors group" 
+            <tr class="hover:bg-blue-50 cursor-pointer transition-colors group"
                 data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" onclick="handleRowClick(this)">
-                <td class="border-b border-slate-200 p-3 text-slate-600">${s.class}반</td>
-                <td class="border-b border-slate-200 p-3 text-slate-600">${s.number}번</td>
-                <td class="border-b border-slate-200 p-3 font-bold text-slate-800">${s.name}</td>
+                <td class="border-b border-slate-200 p-3 text-slate-600">${escapeAttr(s.class)}반</td>
+                <td class="border-b border-slate-200 p-3 text-slate-600">${escapeAttr(s.number)}번</td>
+                <td class="border-b border-slate-200 p-3 font-bold text-slate-800">${escapeAttr(s.name)}</td>
                 <td class="border-b border-slate-200 p-3 text-blue-600 font-bold">
                     ${sum.toFixed(basis === 'pct' ? 1 : 0)}
                 </td>
@@ -125,10 +125,11 @@ function showStudentDetail(name, cls, num) {
         return `
             <tr class="hover:bg-slate-50">
                 <td class="border border-slate-300 p-2 bg-emerald-50 font-bold">${r.label}</td>
-                <td class="border border-slate-300 p-2">${d.subject || '-'}</td>
-                <td class="border border-slate-300 p-2 font-bold">${totalRaw}</td> <td class="border border-slate-300 p-2">${isAbs ? '-' : (d.std || '-')}</td>
-                <td class="border border-slate-300 p-2">${isAbs ? '-' : (d.pct || '-')}</td>
-                <td class="border border-slate-300 p-2 font-bold text-blue-600">${d.grade || '-'}</td>
+                <td class="border border-slate-300 p-2">${escapeAttr(d.subject) || '-'}</td>
+                <td class="border border-slate-300 p-2 font-bold">${totalRaw}</td>
+                <td class="border border-slate-300 p-2">${isAbs ? '-' : escapeAttr(d.std ?? '-')}</td>
+                <td class="border border-slate-300 p-2">${isAbs ? '-' : escapeAttr(d.pct ?? '-')}</td>
+                <td class="border border-slate-300 p-2 font-bold text-blue-600">${escapeAttr(d.grade ?? '-')}</td>
             </tr>
         `;
     }).join('');
