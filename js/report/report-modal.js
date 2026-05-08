@@ -403,3 +403,13 @@ function printStudentDetail() {
     pw.document.write(html);
     pw.document.close();
 }
+
+/* ───────────────────────────────────────────
+   § ESC 키로 모달 닫기
+─────────────────────────────────────────── */
+document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    const order = ['student-modal', 'bin-students-modal', 'csat-list-modal'];
+    const top = order.find(id => !document.getElementById(id).classList.contains('hidden'));
+    if (top) closeModal(top);
+});
