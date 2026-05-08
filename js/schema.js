@@ -59,6 +59,17 @@ class FormatSchema {
         this.exportHeaders = exportHeaders || [];
         this.customGetters = customGetters || {};
 
+        // 숫자 필드에 대해 자동으로 ensureNumericOrZero 적용
+        const numericSuffixes = ['_raw', '_std', '_pct', '_grade'];
+        for (const key of Object.keys(fields)) {
+            // 숫자 필드이고 customGetters에 아직 정의되지 않은 경우
+            if (numericSuffixes.some(suffix => key.endsWith(suffix))) {
+                if (!this.customGetters[key]) {
+                    this.customGetters[key] = ensureNumericOrZero;
+                }
+            }
+        }
+
         this._idx = {};
         for (const [k, col] of Object.entries(fields)) {
             this._idx[k] = colToIdx(col);
@@ -437,4 +448,11 @@ function convertRomanToNumber(s, baseValue) {
 function removeSpaces(s, baseValue) {
     if (!baseValue) return '';
     return baseValue.replace(/\s+/g, '');
+}
+
+// 숫자 점수 데이터를 0으로 변환 (비어있을 경우)
+function ensureNumericOrZero(s, baseValue) {
+    if (baseValue === null || baseValue === undefined || baseValue === '') return 0;
+    const n = parseFloat(baseValue);
+    return isNaN(n) ? 0 : n;
 }
