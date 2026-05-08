@@ -16,9 +16,12 @@ function openModal(modalId) {
 
 function closeModal(modalId) {
     document.getElementById(modalId).classList.add('hidden');
-    // body와 html 모두 스크롤 제한 해제
-    document.body.style.overflow = '';
-    document.documentElement.style.overflow = '';
+    const anyOpen = ['bin-students-modal', 'student-modal', 'csat-list-modal']
+        .some(id => !document.getElementById(id).classList.contains('hidden'));
+    if (!anyOpen) {
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+    }
 }
 
 /**
