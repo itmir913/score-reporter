@@ -11,7 +11,7 @@ class GradeExporter {
             // 1. 일반적인 글로벌 공통 로직을 먼저 실행
             // ───────────────────────────────────────────
             const MAP = {
-                grade_year: 'grade_year', class: 'class', number: 'number', name: 'name',
+                grade_year: 'grade_year', class: 'class', number: 'number', name: 'name', exam_year: 'exam_year',
                 kor_subject: s => s.korean.subject, kor_common_raw: s => s.korean.common_raw,
                 kor_select_raw: s => s.korean.select_raw, kor_raw: s => s.korean.raw,
                 kor_std: s => s.korean.std, kor_pct: s => s.korean.pct, kor_grade: s => s.korean.grade,
