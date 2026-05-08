@@ -119,6 +119,7 @@ const SCHEMAS = {
         headerRows: 2,
         exportHeaders: [['학년도', '학년', '반', '번호', '이름', '한국사', '', '국어', '', '', '', '', '수학', '', '', '', '', '영어', '', '탐구영역1', '', '', '', '', '탐구영역2', '', '', '', '', '제2외국어', '', ''], ['', '', '', '', '', '원점수', '등급', '선택', '원점수', '표준점수', '백분위', '등급', '선택', '원점수', '표준점수', '백분위', '등급', '원점수', '등급', '선택', '원점수', '표준점수', '백분위', '등급', '선택', '원점수', '표준점수', '백분위', '등급', '과목명', '원점수', '등급']],
         fields: {
+            exam_year: 'A',
             grade_year: 'B',
             class: 'C',
             number: 'D',
@@ -162,6 +163,11 @@ const SCHEMAS = {
             fl2_grade: 'AF',
         },
         customGetters: {
+            exam_year: (s, baseValue) => {
+                if (baseValue) return baseValue;
+                const now = new Date();
+                return now.getFullYear() + 1;
+            },
             inq1_subject: convertRomanToNumber,
             inq2_subject: convertRomanToNumber,
             fl2_subject: convertRomanToNumber,
@@ -179,6 +185,7 @@ const SCHEMAS = {
             ['', '', '', '', '', '원점수', '영역', '공통\n원점수', '선택\n원점수', '영역', '공통\n원점수', '선택\n원점수',
                 '원점수', '과목명', '원점수', '과목명', '원점수', '과목명', '원점수']],
         fields: {
+            exam_year: 'A',
             grade_year: 'B',
             class: 'C',
             number: 'D',
@@ -199,6 +206,11 @@ const SCHEMAS = {
             fl2_raw: 'S',
         },
         customGetters: {
+            exam_year: (s, baseValue) => {
+                if (baseValue) return baseValue;
+                const now = new Date();
+                return now.getFullYear() + 1;
+            },
             inq1_subject: convertRomanToNumber,
             inq2_subject: convertRomanToNumber,
             fl2_subject: convertRomanToNumber,
