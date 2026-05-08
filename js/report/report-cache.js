@@ -23,7 +23,11 @@ function computeRenderCache(data, basis) {
         if (!subjectName || typeof subjectName !== 'string' || !subjectName.trim()) return;
         if (!statsObj[subjectName]) {
             statsObj[subjectName] = {
-                count: 0, sumRaw: 0, validRawCount: 0, sumGrade: 0, validGradeCount: 0
+                count: 0,
+                sumRaw: 0, validRawCount: 0,
+                sumStd: 0, validStdCount: 0,
+                sumPct: 0, validPctCount: 0,
+                sumGrade: 0, validGradeCount: 0
             };
         }
         const d = statsObj[subjectName];
@@ -41,6 +45,14 @@ function computeRenderCache(data, basis) {
         if (hasRaw) {
             d.sumRaw += rawScore;
             d.validRawCount++;
+        }
+        if (typeof scoreObj.std === 'number' && !Number.isNaN(scoreObj.std)) {
+            d.sumStd += scoreObj.std;
+            d.validStdCount++;
+        }
+        if (typeof scoreObj.pct === 'number' && !Number.isNaN(scoreObj.pct)) {
+            d.sumPct += scoreObj.pct;
+            d.validPctCount++;
         }
         if (typeof scoreObj.grade === 'number') {
             d.sumGrade += scoreObj.grade;

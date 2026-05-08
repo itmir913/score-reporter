@@ -69,6 +69,18 @@ function renderSubjectSelection(cache) {
         });
 
         const total = counts.reduce((a, b) => a + b, 0);
+
+        // basis에 따라 평균 컬럼 계산 방식 결정
+        const getAvgScore = (d) => {
+            if (cache.basis === 'std') {
+                return d.validStdCount > 0 ? (d.sumStd / d.validStdCount).toFixed(1) : '-';
+            } else if (cache.basis === 'pct') {
+                return d.validPctCount > 0 ? (d.sumPct / d.validPctCount).toFixed(1) : '-';
+            } else {
+                return d.validRawCount > 0 ? (d.sumRaw / d.validRawCount).toFixed(1) : '-';
+            }
+        };
+
         let html = `
         <table class="w-full text-center mt-1 border-t border-slate-100 pt-0 text-base">
             <thead>
@@ -85,14 +97,14 @@ function renderSubjectSelection(cache) {
         labels.forEach(l => {
             const d = statsData[l];
             const pct = ((d.count / total) * 100).toFixed(1);
-            const avgRaw = d.validRawCount > 0 ? (d.sumRaw / d.validRawCount).toFixed(1) : '-';
+            const avgScore = getAvgScore(d);
             const avgGrade = d.validGradeCount > 0 ? (d.sumGrade / d.validGradeCount).toFixed(1) : '-';
             html += `
             <tr class="hover:bg-blue-50 transition-colors cursor-pointer group"
                 onclick="showSelectedSubjectStudents('${type}', '${l}')">
                 <td class="py-2 font-medium text-slate-700 group-hover:text-blue-600">${l}</td>
                 <td class="py-2 text-slate-600">${pct}% <span class="text-base text-slate-400">(${d.count})</span></td>
-                <td class="py-2 text-blue-600 font-semibold">${avgRaw}</td>
+                <td class="py-2 text-blue-600 font-semibold">${avgScore}</td>
                 <td class="py-2 text-emerald-600 font-semibold">${avgGrade}</td>
             </tr>
             `;
