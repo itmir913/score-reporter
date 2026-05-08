@@ -15,17 +15,16 @@ function renderTopN(cache) {
                 return b.sum - a.sum;
             }
 
-            // [핵심 수정] 2차 기준: 반(class) 오름차순 (안전한 문자/숫자 혼합 정렬)
-            const classA = String(a.class || "");
-            const classB = String(b.class || "");
+            // 2차 기준: 반(class) 오름차순 (안전한 문자/숫자 혼합 정렬)
+            const classA = String(a.s.class || "");
+            const classB = String(b.s.class || "");
             if (classA !== classB) {
-                // numeric: true 옵션으로 "2반" < "10반" 처럼 상식적인 숫자 정렬 지원
                 return classA.localeCompare(classB, undefined, {numeric: true});
             }
 
-            // [핵심 수정] 3차 기준: 번호(number) 오름차순 (동일한 방어 로직 적용)
-            const numA = String(a.number || "");
-            const numB = String(b.number || "");
+            // 3차 기준: 번호(number) 오름차순
+            const numA = String(a.s.number || "");
+            const numB = String(b.s.number || "");
             return numA.localeCompare(numB, undefined, {numeric: true});
         })
         .slice(0, limit);
