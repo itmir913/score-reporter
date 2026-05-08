@@ -21,6 +21,8 @@ function exceljsTo2DArray(ws) {
                 if (val.result !== undefined) val = val.result; // 수식 셀인 경우 계산된 값
                 else if (val.error !== undefined) val = '';     // 에러 셀인 경우 빈칸
                 else if (val instanceof Date) val = val.toISOString().split('T')[0]; // 날짜 형식
+                else if (Array.isArray(val.richText)) val = val.richText.map(r => r.text || '').join(''); // 서식 있는 텍스트
+                else if (typeof val === 'object') val = ''; // 그 외 객체 타입 (하이퍼링크 등)
             } else {
                 val = '';
             }
