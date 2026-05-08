@@ -16,6 +16,13 @@ class GradeDataParser {
 
     _row(r) {
         const s = this.s;
+        const sumParts = (a, b) => (a !== null || b !== null) ? (a ?? 0) + (b ?? 0) : null;
+
+        const korCommon = s.num(r, 'kor_common_raw');
+        const korSelect = s.num(r, 'kor_select_raw');
+        const mathCommon = s.num(r, 'math_common_raw');
+        const mathSelect = s.num(r, 'math_select_raw');
+
         return {
             grade_year: s.str(r, 'grade_year'),
             class: s.str(r, 'class'),
@@ -23,18 +30,18 @@ class GradeDataParser {
             name: s.str(r, 'name'),
             korean: {
                 subject: s.str(r, 'kor_subject'),
-                common_raw: s.num(r, 'kor_common_raw'),
-                select_raw: s.num(r, 'kor_select_raw'),
-                raw: s.num(r, 'kor_raw'),
+                common_raw: korCommon,
+                select_raw: korSelect,
+                raw: s.num(r, 'kor_raw') ?? sumParts(korCommon, korSelect),
                 std: s.num(r, 'kor_std'),
                 pct: s.num(r, 'kor_pct'),
                 grade: s.num(r, 'kor_grade'),
             },
             math: {
                 subject: s.str(r, 'math_subject'),
-                common_raw: s.num(r, 'math_common_raw'),
-                select_raw: s.num(r, 'math_select_raw'),
-                raw: s.num(r, 'math_raw'),
+                common_raw: mathCommon,
+                select_raw: mathSelect,
+                raw: s.num(r, 'math_raw') ?? sumParts(mathCommon, mathSelect),
                 std: s.num(r, 'math_std'),
                 pct: s.num(r, 'math_pct'),
                 grade: s.num(r, 'math_grade'),
