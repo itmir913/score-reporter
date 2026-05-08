@@ -443,6 +443,7 @@ function loadSampleData() {
         const histRaw = generateScore(35, 8, 50);
 
         dummy.push({
+            exam_year: String(new Date().getFullYear()),
             grade_year: '3',
             class: cls,
             number: '0', // 정렬 후 재할당
