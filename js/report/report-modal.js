@@ -2,6 +2,8 @@
    § 모달 제어 및 상세 정보 표시
 ─────────────────────────────────────────── */
 
+let _printStudent = null;
+
 /**
  * 모달 열고 닫기 공통 함수
  */
@@ -97,6 +99,7 @@ function showBinStudentsModal(label, students) {
 function showStudentDetail(name, cls, num) {
     const s = ST.data.find(item => item.name === name && item.class === cls && item.number === num);
     if (!s) return;
+    _printStudent = s;
 
     document.getElementById('modal-student-info').innerText = `${s.class}반 ${s.number}번 ${s.name} 성적표`;
 
@@ -218,4 +221,182 @@ function showCsatStudents(n, targetSum) {
 
     // 5. 모달 열기 (기존의 openModal 함수 활용)
     openModal('csat-list-modal');
+}
+
+/* ───────────────────────────────────────────
+   § 개별 학생 성적통지표 팝업 인쇄
+─────────────────────────────────────────── */
+function printStudentDetail() {
+    const s = _printStudent;
+    if (!s) return;
+
+    const examYear = s.exam_year ? `${s.exam_year}학년도 ` : '';
+    const title = `${examYear}모의고사 성적표`;
+
+    // 원점수 표시 헬퍼
+    const fmtRaw = (subj) => {
+        const d = s[subj];
+        if (!d) return '-';
+        if (typeof d.common_raw === 'number' && typeof d.select_raw === 'number') {
+            return `공통 ${d.common_raw} + 선택 ${d.select_raw}<br><span style="font-size:11px;color:#555">(합계 ${d.common_raw + d.select_raw})</span>`;
+        }
+        if (typeof d.common_raw === 'number') return String(d.common_raw);
+        if (typeof d.select_raw === 'number') return String(d.select_raw);
+        return typeof d.raw === 'number' ? String(d.raw) : '-';
+    };
+    const fmtNum = (v) => (typeof v === 'number') ? String(v) : '-';
+    const fmtSubj = (subj) => {
+        const d = s[subj];
+        return (d && d.subject) ? escapeAttr(d.subject) : '-';
+    };
+
+    // 제2외국어 존재 여부
+    const hasFl2 = s.fl2 && (s.fl2.subject || typeof s.fl2.raw === 'number' || typeof s.fl2.grade === 'number');
+
+    const fl2SubjCell  = hasFl2 ? fmtSubj('fl2') : '-';
+    const fl2RawCell   = hasFl2 ? fmtRaw('fl2')  : '-';
+    const fl2DashCell = `<td>-</td>`;
+    const fl2GradeCell = hasFl2 ? fmtNum(s.fl2?.grade) : '-';
+
+    const html = `<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>${escapeAttr(title)}</title>
+<style>
+  @page { size: A4 portrait; margin: 20mm 15mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: '맑은 고딕', 'Malgun Gothic', sans-serif; font-size: 13px; color: #000; }
+  h1 { text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 14px; letter-spacing: -0.3px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 12px; table-layout: fixed; }
+  th, td { border: 1px solid #000; padding: 5px 4px; text-align: center; vertical-align: middle; }
+  thead th { background: #f0f0f0; font-weight: bold; }
+  .info-label { background: #f0f0f0; font-weight: bold; font-size: 12px; }
+  .row-label { background: #f7f7f7; font-weight: bold; font-size: 12px; white-space: nowrap; }
+  .score-big { font-size: 14px; }
+  .notice { font-size: 10px; color: #444; margin-top: 8px; }
+  .btn-wrap { text-align: center; margin: 16px 0 0; }
+  .btn-print { padding: 7px 24px; font-size: 13px; cursor: pointer; background: #1d4ed8; color: #fff; border: none; border-radius: 6px; }
+  .btn-close { padding: 7px 24px; font-size: 13px; cursor: pointer; background: #6b7280; color: #fff; border: none; border-radius: 6px; margin-left: 8px; }
+  @media print { .btn-wrap { display: none; } }
+</style>
+</head>
+<body>
+<h1>${escapeAttr(title)}</h1>
+
+<table>
+  <colgroup>
+    <col style="width:20%">
+    <col style="width:20%">
+    <col style="width:20%">
+    <col style="width:40%">
+  </colgroup>
+  <thead>
+    <tr>
+      <th class="info-label">학년</th>
+      <th class="info-label">반</th>
+      <th class="info-label">번호</th>
+      <th class="info-label">성&nbsp;&nbsp;&nbsp;명</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>${escapeAttr(s.grade_year) || '-'}</td>
+      <td>${escapeAttr(s.class) || '-'}</td>
+      <td>${escapeAttr(s.number) || '-'}</td>
+      <td style="font-weight:bold;font-size:14px;">${escapeAttr(s.name)}</td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <colgroup>
+    <col style="width:72px">
+    <col span="7">
+  </colgroup>
+  <thead>
+    <tr>
+      <th rowspan="2" class="row-label" style="width:72px;">영역</th>
+      <th rowspan="2">한국사</th>
+      <th rowspan="2">국어</th>
+      <th rowspan="2">수학</th>
+      <th rowspan="2">영어</th>
+      <th colspan="2">탐구</th>
+      <th rowspan="2">제2외국어<br>/한문</th>
+    </tr>
+    <tr>
+      <th>탐구1</th>
+      <th>탐구2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="row-label">선택과목</td>
+      <td>-</td>
+      <td>${fmtSubj('korean')}</td>
+      <td>${fmtSubj('math')}</td>
+      <td>-</td>
+      <td>${fmtSubj('inquiry1')}</td>
+      <td>${fmtSubj('inquiry2')}</td>
+      <td>${fl2SubjCell}</td>
+    </tr>
+    <tr>
+      <td class="row-label">원점수</td>
+      <td>${fmtRaw('hist')}</td>
+      <td>${fmtRaw('korean')}</td>
+      <td>${fmtRaw('math')}</td>
+      <td>${fmtRaw('english')}</td>
+      <td>${fmtRaw('inquiry1')}</td>
+      <td>${fmtRaw('inquiry2')}</td>
+      <td>${fl2RawCell}</td>
+    </tr>
+    <tr>
+      <td class="row-label">표준점수</td>
+      <td>-</td>
+      <td class="score-big">${fmtNum(s.korean?.std)}</td>
+      <td class="score-big">${fmtNum(s.math?.std)}</td>
+      <td>-</td>
+      <td class="score-big">${fmtNum(s.inquiry1?.std)}</td>
+      <td class="score-big">${fmtNum(s.inquiry2?.std)}</td>
+      ${fl2DashCell}
+    </tr>
+    <tr>
+      <td class="row-label">백분위</td>
+      <td>-</td>
+      <td class="score-big">${fmtNum(s.korean?.pct)}</td>
+      <td class="score-big">${fmtNum(s.math?.pct)}</td>
+      <td>-</td>
+      <td class="score-big">${fmtNum(s.inquiry1?.pct)}</td>
+      <td class="score-big">${fmtNum(s.inquiry2?.pct)}</td>
+      ${fl2DashCell}
+    </tr>
+    <tr>
+      <td class="row-label">등급</td>
+      <td class="score-big">${fmtNum(s.hist?.grade)}</td>
+      <td class="score-big">${fmtNum(s.korean?.grade)}</td>
+      <td class="score-big">${fmtNum(s.math?.grade)}</td>
+      <td class="score-big">${fmtNum(s.english?.grade)}</td>
+      <td class="score-big">${fmtNum(s.inquiry1?.grade)}</td>
+      <td class="score-big">${fmtNum(s.inquiry2?.grade)}</td>
+      <td class="score-big">${fl2GradeCell}</td>
+    </tr>
+  </tbody>
+</table>
+
+<p class="notice">★ 본 성적표는 성적을 통지하기 위한 용도이며, 다른 용도로는 사용할 수 없습니다.</p>
+
+<div class="btn-wrap">
+  <button class="btn-print" onclick="window.print()">인쇄</button>
+  <button class="btn-close" onclick="window.close()">닫기</button>
+</div>
+</body>
+</html>`;
+
+    const pw = window.open('', '_blank', 'width=800,height=620');
+    if (!pw) {
+        alert('팝업이 차단되었습니다. 브라우저의 팝업 허용 설정을 확인해주세요.');
+        return;
+    }
+    pw.document.write(html);
+    pw.document.close();
 }
