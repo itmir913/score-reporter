@@ -444,10 +444,11 @@ const SCHEMAS = {
 };
 
 // 숫자를 로마자로 변환 (1 -> Ⅰ)
+// (\D)로 앞 글자가 숫자가 아닌 경우만 치환 — "탐구11" → "탐구11" 유지, "물리학1" → "물리학Ⅰ"
 function convertNumberToRoman(s, baseValue) {
     if (!baseValue) return '';
     let val = baseValue.replace(/\s+/g, '');
-    return val.replace(/1$/, 'Ⅰ').replace(/2$/, 'Ⅱ');
+    return val.replace(/(\D)1$/, '$1Ⅰ').replace(/(\D)2$/, '$1Ⅱ');
 }
 
 // 로마자를 숫자로 변환 (Ⅰ -> 1)
