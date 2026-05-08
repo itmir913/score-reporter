@@ -463,6 +463,8 @@ function loadSampleData() {
             },
             english: {
                 raw: engRaw,
+                std: null,
+                pct: null,
                 grade: getGrade(engRaw, 100)
             },
             inquiry1: {
@@ -481,7 +483,16 @@ function loadSampleData() {
             },
             hist: {
                 raw: histRaw,
+                std: null,
+                pct: null,
                 grade: getGrade(histRaw, 50)
+            },
+            fl2: {
+                subject: '',
+                raw: null,
+                std: null,
+                pct: null,
+                grade: null
             }
         });
     }
