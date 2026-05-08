@@ -334,6 +334,8 @@ const SCHEMAS = {
         },
         customGetters: {
             student_id: (s, baseValue) => {
+                if (baseValue) return baseValue;
+
                 const toSafeInt = (v, fallback = 0) => {
                     const n = Number(v);
                     return Number.isInteger(n) && n >= 0 ? n : fallback;
