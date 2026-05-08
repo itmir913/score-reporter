@@ -317,7 +317,7 @@ canvas, img {
 
     #chart-grid {
         display: grid !important;
-        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         gap: 10px !important;
         width: 100% !important;
     }
