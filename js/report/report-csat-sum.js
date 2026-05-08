@@ -107,9 +107,9 @@ function renderCsatMinRequirement(cache) {
                     data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}"
                     onclick="handleRowClick(this)">
                     <td class="p-3 text-slate-500 font-medium">${idx + 1}</td>
-                    <td class="p-3 text-slate-700">${s.class || ''}</td>
-                    <td class="p-3 text-slate-700">${s.number || ''}</td>
-                    <td class="p-3 text-left font-semibold text-slate-800">${s.name || ''}</td>
+                    <td class="p-3 text-slate-700">${escapeAttr(s.class) || ''}</td>
+                    <td class="p-3 text-slate-700">${escapeAttr(s.number) || ''}</td>
+                    <td class="p-3 text-left font-semibold text-slate-800">${escapeAttr(s.name) || ''}</td>
                     <td class="p-3 bg-blue-50/50 text-blue-700 border-x border-slate-100">${csat.sum2}</td>
                     <td class="p-3 bg-emerald-50/50 text-emerald-700 border-r border-slate-100">${csat.sum3}</td>
                     <td class="p-3 bg-amber-50/50 text-amber-700 border-r border-slate-100">${csat.sum4}</td>
@@ -244,8 +244,8 @@ function renderCsatClassTable(cache) {
 
         classTbody.innerHTML = mappedData.map(({s, csat}) => `
             <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer group" data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" onclick="handleRowClick(this)">
-                <td class="p-3 text-slate-700">${s.number || ''}</td>
-                <td class="p-3 text-left font-semibold text-slate-800">${s.name || ''}</td>
+                <td class="p-3 text-slate-700">${escapeAttr(s.number) || ''}</td>
+                <td class="p-3 text-left font-semibold text-slate-800">${escapeAttr(s.name) || ''}</td>
                 <td class="p-3 bg-blue-50/50 text-blue-700 border-x border-slate-100">${fmtCsat(csat.sum2, csat.sum2_subj)}</td>
                 <td class="p-3 bg-emerald-50/50 text-emerald-700 border-r border-slate-100">${fmtCsat(csat.sum3, csat.sum3_subj)}</td>
                 <td class="p-3 bg-amber-50/50 text-amber-700 border-r border-slate-100">${fmtCsat(csat.sum4, csat.sum4_subj)}</td>

@@ -464,9 +464,11 @@ function removeSpaces(s, baseValue) {
     return baseValue.replace(/\s+/g, '');
 }
 
-// 숫자 점수 데이터를 0으로 변환 (비어있을 경우)
+// 숫자 점수 데이터를 export할 때 null/빈 값은 빈 문자열로, 실제 숫자는 숫자로 변환
+// 0 → 0, '0' → 0, null/undefined/'' → '' (빈 셀)
+// 이 함수를 0으로 반환하면 교차 포맷 변환 시 null 점수가 0으로 왜곡됨
 function ensureNumericOrZero(s, baseValue) {
-    if (baseValue === null || baseValue === undefined || baseValue === '') return 0;
+    if (baseValue === null || baseValue === undefined || baseValue === '') return '';
     const n = parseFloat(baseValue);
-    return isNaN(n) ? 0 : n;
+    return isNaN(n) ? '' : n;
 }

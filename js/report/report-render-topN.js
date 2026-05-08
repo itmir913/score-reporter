@@ -29,8 +29,9 @@ function renderTopN(cache) {
         })
         .slice(0, limit);
 
+    const limitLabel = topNValue === 'all' ? '전체' : `상위 ${limit}명`;
     document.getElementById('top-n-title').innerText =
-        `${basisLabel} 합(국어+수학+탐구1+탐구2) 상위 ${limit}명 학생`;
+        `${basisLabel} 합(국어+수학+탐구1+탐구2) ${limitLabel} 학생`;
 
     const thead = document.getElementById('top20-thead');
     thead.innerHTML = `
@@ -55,16 +56,16 @@ function renderTopN(cache) {
                 data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}"
                 onclick="handleRowClick(this)">
                 <td class="px-2 py-2 text-center font-bold text-slate-500">${i + 1}</td>
-                <td class="px-2 py-2 text-center">${s.class || '-'}</td>
-                <td class="px-2 py-2 text-center">${s.number || '-'}</td>
-                <td class="px-2 py-2 text-center font-semibold text-slate-800 whitespace-nowrap">${s.name || '-'}</td>
+                <td class="px-2 py-2 text-center">${escapeAttr(s.class) || '-'}</td>
+                <td class="px-2 py-2 text-center">${escapeAttr(s.number) || '-'}</td>
+                <td class="px-2 py-2 text-center font-semibold text-slate-800 whitespace-nowrap">${escapeAttr(s.name) || '-'}</td>
                 <td class="px-2 py-2 text-center font-bold text-blue-600 bg-blue-50/20">
                     ${displaySum}
                 </td>
-                <td class="px-1 py-2 text-center">${s.korean?.subject || '-'}</td>
-                <td class="px-1 py-2 text-center">${s.math?.subject || '-'}</td>
-                <td class="px-1 py-2 text-center">${s.inquiry1?.subject || '-'}</td>
-                <td class="px-1 py-2 text-center">${s.inquiry2?.subject || '-'}</td>
+                <td class="px-1 py-2 text-center">${escapeAttr(s.korean?.subject) || '-'}</td>
+                <td class="px-1 py-2 text-center">${escapeAttr(s.math?.subject) || '-'}</td>
+                <td class="px-1 py-2 text-center">${escapeAttr(s.inquiry1?.subject) || '-'}</td>
+                <td class="px-1 py-2 text-center">${escapeAttr(s.inquiry2?.subject) || '-'}</td>
             </tr>
         `;
     }).join('');

@@ -449,6 +449,8 @@ function loadSampleData() {
             name: name,
             korean: {
                 subject: subjectsKor[Math.floor(Math.random() * subjectsKor.length)],
+                common_raw: null,
+                select_raw: null,
                 raw: korRaw,
                 std: Math.floor(korRaw * 0.8 + 50),
                 pct: Math.floor((korRaw / 100) * 100),
@@ -456,6 +458,8 @@ function loadSampleData() {
             },
             math: {
                 subject: subjectsMath[Math.floor(Math.random() * subjectsMath.length)],
+                common_raw: null,
+                select_raw: null,
                 raw: mathRaw,
                 std: Math.floor(mathRaw * 0.9 + 40),
                 pct: Math.floor((mathRaw / 100) * 100),
