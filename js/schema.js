@@ -1,5 +1,6 @@
 // 영문 변수명을 한글 라벨로 변환해주는 매핑 사전
 const FIELD_LABELS = {
+    exam_year: '학년도',
     student_id: '학번',
     grade_year: '학년',
     class: '반',
