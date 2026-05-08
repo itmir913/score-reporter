@@ -18,13 +18,8 @@ function _getCsatRawSums(student) {
     });
 
     // 등급 기준 오름차순 정렬 (낮은 등급이 먼저 오도록)
-    grades.sort((a, b) => {
-        // [핵심 수정] 등급(grade) 결측치나 문자열 예외 상황 완벽 방어
-        const gradeA = String(a.grade || "");
-        const gradeB = String(b.grade || "");
-
-        return gradeA.localeCompare(gradeB, undefined, {numeric: true});
-    });
+    // grade는 14행에서 이미 1~9 정수로 걸러졌으므로 직접 비교
+    grades.sort((a, b) => a.grade - b.grade);
 
     // n개의 과목 합산 및 이름 조합 헬퍼 함수
     const getSumData = (n) => {
