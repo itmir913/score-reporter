@@ -24,6 +24,7 @@ class GradeDataParser {
         const mathSelect = s.num(r, 'math_select_raw');
 
         return {
+            exam_year: s.str(r, 'exam_year'),
             grade_year: s.str(r, 'grade_year'),
             class: s.str(r, 'class'),
             number: s.str(r, 'number'),
