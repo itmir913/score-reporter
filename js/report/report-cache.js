@@ -6,7 +6,10 @@
 function computeRenderCache(data, basis) {
     // [안전 장치] 데이터가 없으면 빈 객체 반환
     if (!data || !Array.isArray(data) || data.length === 0) {
-        return {korScores: [], mathScores: [], engGrades: [], studentWithSums: [], basis};
+        return {
+            korScores: [], mathScores: [], engGrades: [], studentWithSums: [], basis,
+            korSubjectStats: {}, mathSubjectStats: {}, inqSubjectStats: {}, csatSums: []
+        };
     }
 
     const korScores = [];
