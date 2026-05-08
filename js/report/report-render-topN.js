@@ -59,7 +59,7 @@ function renderTopN(cache) {
                 <td class="px-2 py-2 text-center">${s.number || '-'}</td>
                 <td class="px-2 py-2 text-center font-semibold text-slate-800 whitespace-nowrap">${s.name || '-'}</td>
                 <td class="px-2 py-2 text-center font-bold text-blue-600 bg-blue-50/20">
-                    ${sum > 0 ? displaySum : '-'}
+                    ${displaySum}
                 </td>
                 <td class="px-1 py-2 text-center">${s.korean?.subject || '-'}</td>
                 <td class="px-1 py-2 text-center">${s.math?.subject || '-'}</td>
