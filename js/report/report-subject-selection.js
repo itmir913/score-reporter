@@ -101,8 +101,9 @@ function renderSubjectSelection(cache) {
             const avgGrade = d.validGradeCount > 0 ? (d.sumGrade / d.validGradeCount).toFixed(1) : '-';
             html += `
             <tr class="hover:bg-blue-50 transition-colors cursor-pointer group"
-                onclick="showSelectedSubjectStudents('${type}', '${l}')">
-                <td class="py-2 font-medium text-slate-700 group-hover:text-blue-600">${l}</td>
+                data-type="${escapeAttr(type)}" data-subject="${escapeAttr(l)}"
+                onclick="showSelectedSubjectStudents(this.dataset.type, this.dataset.subject)">
+                <td class="py-2 font-medium text-slate-700 group-hover:text-blue-600">${escapeAttr(l)}</td>
                 <td class="py-2 text-slate-600">${pct}% <span class="text-base text-slate-400">(${d.count})</span></td>
                 <td class="py-2 text-blue-600 font-semibold">${avgScore}</td>
                 <td class="py-2 text-emerald-600 font-semibold">${avgGrade}</td>
