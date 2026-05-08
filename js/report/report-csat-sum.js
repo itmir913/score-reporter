@@ -138,16 +138,16 @@ function renderCsatSummaryTable(cache) {
 
     // ★ 캐시에서 직접 사용 — _getCsatRawSums() 재호출 없음
     cache.csatSums.forEach(raw => {
-        if (raw.sum2) {
+        if (raw.sum2 !== null) {
             for (let i = raw.sum2; i <= maxSum; i++) sums2[i]++;
         }
-        if (raw.sum3) {
+        if (raw.sum3 !== null) {
             for (let i = raw.sum3; i <= maxSum; i++) sums3[i]++;
         }
-        if (raw.sum4) {
+        if (raw.sum4 !== null) {
             for (let i = raw.sum4; i <= maxSum; i++) sums4[i]++;
         }
-        if (raw.sum5) {
+        if (raw.sum5 !== null) {
             for (let i = raw.sum5; i <= maxSum; i++) sums5[i]++;
         }
     });
