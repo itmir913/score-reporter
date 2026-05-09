@@ -1,21 +1,19 @@
 /* ───────────────────────────────────────────
    § 점수합 급간별 인원 분포 (전역 기준 적용 및 가로 표 추가)
 ─────────────────────────────────────────── */
-function renderScoreDistribution() {
+function renderScoreDistribution(cache = ST.cache) {
+    if (!cache) return;
     const intervalSize = parseInt(document.getElementById('interval-size').value, 10);
-    const basis = globalReportBasis;
-    const basisLabel = labelMap[basis];
+    const basisLabel = labelMap[cache.basis];
 
     document.getElementById('dist-title').innerText =
         `${basisLabel} 합(국어+수학+탐구1+탐구2) 급간별 인원 분포`;
 
-    const sums = ST.data.map(s => {
-        let sum = 0;
-        ['korean', 'math', 'inquiry1', 'inquiry2'].forEach(subj => {
-            if (s[subj] && typeof s[subj][basis] === 'number') sum += s[subj][basis];
-        });
-        return sum;
-    }).filter(sum => sum >= 0);
+    // ★ 캐시의 studentWithSums 재사용 — ST.data 재순회 없음
+    // cache.basis 기준 합산이 이미 되어 있으므로 합산 기준도 상위 N명 테이블과 완전히 일치
+    const sums = cache.studentWithSums
+        .map(({sum}) => sum)
+        .filter(sum => Number.isFinite(sum) && sum >= 0);
 
     if (sums.length === 0) return;
 
@@ -66,19 +64,11 @@ function renderScoreDistribution() {
                     const index = elements[0].index;
                     const label = `${this.data.labels[index]} 급간`;
 
-                    const range = label.split('~').map(v => parseFloat(v.trim()));
-                    const min = range[0];
-                    const max = range.length > 1 ? range[1] : min;
-
-                    const basis = globalReportBasis;
-                    const studentsInBin = ST.data.filter(s => {
-                        let sum = 0;
-                        ['korean', 'math', 'inquiry1', 'inquiry2'].forEach(subj => {
-                            if (s[subj] && typeof s[subj][basis] === 'number') sum += s[subj][basis];
-                        });
-                        const totalSum = Math.round(sum);
-                        return totalSum >= min && totalSum <= max;
-                    });
+                    // 히스토그램 빈 구성과 동일한 기준으로 필터 (Math.floor + 캐시 합산)
+                    const studentsInBin = cache.studentWithSums
+                        .filter(({sum}) => Number.isFinite(sum) && sum >= 0
+                            && Math.floor(sum / intervalSize) === numBins - 1 - index)
+                        .map(({s}) => s);
 
                     showBinStudentsModal(label, studentsInBin);
                 }

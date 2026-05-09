@@ -77,8 +77,7 @@ function renderAll() {
         renderStats(cache);
         renderTopN(cache);
 
-        // 캐시를 사용하지 않는 함수들도 데이터 존재 여부 확인 후 실행되므로 안전함
-        renderScoreDistribution();
+        renderScoreDistribution(cache);
         renderSubjectSelection(cache);
         renderSubjectsCharts();
         renderCsatMinRequirement(cache);

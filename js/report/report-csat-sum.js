@@ -62,8 +62,9 @@ function _getCsatSums(student) {
 function _getScoreSum(student, basis) {
     let sum = 0;
     ['korean', 'math', 'inquiry1', 'inquiry2'].forEach(subj => {
-        if (student[subj] && typeof student[subj][basis] === 'number') {
-            sum += student[subj][basis];
+        const val = student[subj]?.[basis];
+        if (typeof val === 'number' && !Number.isNaN(val)) {
+            sum += val;
         }
     });
     return sum;
