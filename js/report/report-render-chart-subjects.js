@@ -153,14 +153,12 @@ function renderSubjectsCharts() {
                             if (basis === 'grade') {
                                 return Math.round(targetValue) === (idx + 1);
                             } else {
-                                // [수정된 부분 4] 백분위와 표준점수 모두 대응하는 클릭 필터링 구간 처리
-                                const min = idx * 10;
+                                // 집계 시 사용한 floor 기반 binning과 동일한 로직으로 비교
+                                // (정수 범위 비교는 89.5 같은 소수점 값을 잘못 걸러냄)
                                 const maxIndex = currentLabels.length - 1;
-                                // 마지막 구간일 경우 백분위는 100, 표준점수는 200으로 상한선 처리
-                                const maxLimit = basis === 'std' ? 200 : 100;
-                                const max = (idx === maxIndex) ? maxLimit : (idx * 10 + 9);
-
-                                return targetValue >= min && targetValue <= max;
+                                let bin = Math.floor(targetValue / 10);
+                                if (bin > maxIndex) bin = maxIndex;
+                                return bin === idx;
                             }
                         });
 
