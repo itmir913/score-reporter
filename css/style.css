@@ -17,6 +17,11 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
+/* ─── details/summary 기본 마커 제거 + 셰브론 회전 ─── */
+details > summary { list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
+details[open] .eg-chevron { transform: rotate(180deg); }
+
 /* ─── 탭 버튼 (세련된 언더라인 애니메이션) ─── */
 .tab-btn {
     position: relative;
