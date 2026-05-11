@@ -48,8 +48,8 @@ function _getCsatSums(student) {
     const format = (val, subj) => val === null
         ? '<span class="text-slate-300">-</span>'
         : `<div class="flex flex-col">
-               <span class="font-extrabold text-base">${val}</span>
-               <span class="text-base text-slate-500 font-normal mt-0.5">(${subj})</span>
+               <span class="font-extrabold text-base">${escapeAttr(String(val))}</span>
+               <span class="text-base text-slate-500 font-normal mt-0.5">(${escapeAttr(subj)})</span>
            </div>`;
     return {
         sum2: format(raw.sum2, raw.sum2_subj),
@@ -124,7 +124,7 @@ function renderCsatMinRequirement(cache) {
     if (classSelect) {
         const classes = [...new Set(ST.data.map(s => s.class).filter(c => c))]
             .sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
-        classSelect.innerHTML = classes.map(c => `<option value="${c}">${c}반 보기</option>`).join('');
+        classSelect.innerHTML = classes.map(c => `<option value="${escapeAttr(c)}">${escapeAttr(c)}반 보기</option>`).join('');
         if (classes.length > 0) renderCsatClassTable(cache);
     }
 }
@@ -239,8 +239,8 @@ function renderCsatClassTable(cache) {
         const fmtCsat = (val, subj) => val === null
             ? '<span class="text-slate-300">-</span>'
             : `<div class="flex flex-col">
-                   <span class="font-extrabold text-base">${val}</span>
-                   <span class="text-base text-slate-500 font-normal mt-0.5">(${subj})</span>
+                   <span class="font-extrabold text-base">${escapeAttr(String(val))}</span>
+                   <span class="text-base text-slate-500 font-normal mt-0.5">(${escapeAttr(subj)})</span>
                </div>`;
 
         classTbody.innerHTML = mappedData.map(({s, csat}) => `

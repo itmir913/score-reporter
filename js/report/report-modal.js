@@ -210,7 +210,7 @@ function showCsatStudents(n, targetSum) {
                     <td class="border border-slate-300 p-3 text-slate-700">${escapeAttr(s.class) || ''}반 ${escapeAttr(s.number) || ''}번</td>
                     <td class="border border-slate-300 p-3 font-bold text-slate-800">${escapeAttr(s.name) || ''}</td>
                     <td class="border border-slate-300 p-3 text-blue-600 font-bold">${actualSum}</td>
-                    <td class="border border-slate-300 p-3 text-blue-600 font-bold">${actualSubj}</td>
+                    <td class="border border-slate-300 p-3 text-blue-600 font-bold">${escapeAttr(actualSubj || '-')}</td>
                 </tr>
             `;
         }).join('');
