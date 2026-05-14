@@ -158,7 +158,7 @@ function renderCsatSummaryTable(cache) {
     if (!thead || !tbody) return;
 
     let theadHtml = `<tr><th class="p-3 border-r border-slate-200 bg-slate-100 w-28">조건 이내</th>`;
-    for (let i = 2; i <= maxSum; i++) theadHtml += `<th class="p-3 w-12">${i}</th>`;
+    for (let i = 2; i <= maxSum; i++) theadHtml += `<th class="p-3 w-20 min-w-20">${i}</th>`;
     theadHtml += `</tr>`;
     thead.innerHTML = theadHtml;
 
@@ -166,15 +166,15 @@ function renderCsatSummaryTable(cache) {
         let row = `<tr><td class="p-3 font-bold border-r border-slate-200 ${colorClass}">${label}</td>`;
         for (let i = 2; i <= maxSum; i++) {
             if (i < startIdx) {
-                row += `<td class="p-3 text-slate-300 bg-slate-50">-</td>`;
+                row += `<td class="p-3 min-w-20 text-slate-300 bg-slate-50">-</td>`;
             } else {
                 const val = dataArr[i];
                 row += val > 0
-                    ? `<td class="p-3 font-bold text-slate-800 cursor-pointer hover:bg-slate-100 transition-colors"
+                    ? `<td class="p-3 min-w-20 font-bold text-slate-800 cursor-pointer hover:bg-slate-100 transition-colors"
                            onclick="showCsatStudents(${nSum}, ${i})">
                            <span class="underline underline-offset-2 decoration-slate-300 hover:decoration-slate-500">${val}명</span>
                        </td>`
-                    : `<td class="p-3 text-slate-300">-</td>`;
+                    : `<td class="p-3 min-w-20 text-slate-300">-</td>`;
             }
         }
         return row + `</tr>`;
