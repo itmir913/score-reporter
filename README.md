@@ -35,7 +35,6 @@ src/
     main.css        스타일시트 로드 순서를 정하는 파일
     style.css       앱 고유 스타일
     tailwind.css    @tailwind 지시어
-public/docs/        사용 설명서 (PDF, HWPX). 빌드하면 dist/docs/ 로 복사된다.
 tests/              Vitest 테스트
 vendor/             npm 레지스트리에서 받을 수 없는 의존성 (아래 참고)
 ```
@@ -59,6 +58,25 @@ HTML에 `onclick="switchTab('upload')"` 같은 인라인 핸들러가 남아 있
 외부 라이브러리는 모두 npm으로 관리하며 빌드 시 번들에 포함됩니다. CDN을 실행 시점에 부르지 않습니다.
 
 Chart.js, ExcelJS, SheetJS(xlsx), buffer, Font Awesome, Pretendard.
+
+### 사용 설명서
+
+설명서(PDF, HWPX)는 저장소에 두지 않고 `latest` 릴리스의 자산으로 올립니다. 바이너리라서 개정할 때마다 델타 압축이 듣지 않고 이력에 1MB씩 그대로 쌓이기 때문입니다.
+
+| 자산 | 용도 |
+| --- | --- |
+| `score-reporter-manual.pdf` | 배포용. 앱의 '매뉴얼 PDF 다운로드' 버튼이 이 URL을 가리킨다. |
+| `score-reporter-manual.hwpx` | 편집 원본. 고칠 때 여기서 받아 고치고 두 파일을 다시 올린다. |
+
+개정 절차는 이렇습니다.
+
+```bash
+gh release download latest -p 'score-reporter-manual.hwpx'
+# 고친 뒤 PDF로 내보내고
+gh release upload latest score-reporter-manual.pdf score-reporter-manual.hwpx --clobber
+```
+
+배포 워크플로는 `score-reporter.zip` 만 올리므로 이 두 자산을 건드리지 않습니다.
 
 ### xlsx 가 `vendor/` 에 있는 이유
 
@@ -86,6 +104,8 @@ SheetJS는 0.18.5 이후 npm 레지스트리에 게시하지 않습니다. 0.19.
 
 - 모든 경로가 상대 경로 (`base: './'`)
 - 번들을 iife로 내보내고 `type="module"` 과 `crossorigin` 을 걷어냄
+
+번들에 설명서는 들어 있지 않습니다. 앱의 설명서 버튼은 릴리스 자산을 가리키는 외부 링크이므로 오프라인에서는 열리지 않습니다.
 
 `file://` 은 출처가 `null` 이라 모듈 스크립트와 `crossorigin` 리소스가 CORS로 막힙니다. 이 두 가지가 지켜지지 않으면 압축을 풀어 열었을 때 빈 화면이 뜹니다. 자세한 내용은 `vite.config.js` 의 주석에 적어 두었습니다.
 
