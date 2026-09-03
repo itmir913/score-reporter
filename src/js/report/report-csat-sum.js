@@ -112,7 +112,7 @@ export function renderCsatMinRequirement(cache) {
             return `
                 <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer group"
                     data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}"
-                    onclick="handleRowClick(this)">
+                    data-action="row-click">
                     <td class="p-3 text-slate-500 font-medium">${idx + 1}</td>
                     <td class="p-3 text-slate-700">${escapeAttr(s.class) || ''}</td>
                     <td class="p-3 text-slate-700">${escapeAttr(s.number) || ''}</td>
@@ -177,7 +177,7 @@ export function renderCsatSummaryTable(cache) {
                 const val = dataArr[i];
                 row += val > 0
                     ? `<td class="p-3 min-w-20 font-bold text-slate-800 cursor-pointer hover:bg-slate-100 transition-colors"
-                           onclick="showCsatStudents(${nSum}, ${i})">
+                           data-action="csat-students" data-sum="${nSum}" data-index="${i}">
                            <span class="underline underline-offset-2 decoration-slate-300 hover:decoration-slate-500">${val}명</span>
                        </td>`
                     : `<td class="p-3 min-w-20 text-slate-300">-</td>`;
@@ -250,7 +250,7 @@ export function renderCsatClassTable(cache) {
                </div>`;
 
         classTbody.innerHTML = mappedData.map(({s, csat}) => `
-            <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer group" data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" onclick="handleRowClick(this)">
+            <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer group" data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" data-action="row-click">
                 <td class="p-3 text-slate-700">${escapeAttr(s.number) || ''}</td>
                 <td class="p-3 text-left font-semibold text-slate-800">${escapeAttr(s.name) || ''}</td>
                 <td class="p-3 bg-blue-50/50 text-blue-700 border-x border-slate-100">${fmtCsat(csat.sum2, csat.sum2_subj)}</td>

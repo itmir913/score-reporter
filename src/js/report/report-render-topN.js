@@ -59,7 +59,7 @@ export function renderTopN(cache) {
         return `
             <tr class="hover:bg-slate-50 cursor-pointer transition-colors divide-x divide-slate-100 border-b border-slate-100"
                 data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}"
-                onclick="handleRowClick(this)">
+                data-action="row-click">
                 <td class="px-2 py-2 text-center font-bold text-slate-500">${i + 1}</td>
                 <td class="px-2 py-2 text-center">${escapeAttr(s.class) || '-'}</td>
                 <td class="px-2 py-2 text-center">${escapeAttr(s.number) || '-'}</td>

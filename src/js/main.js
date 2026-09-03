@@ -207,7 +207,7 @@ export function renderFormatCards() {
     const cont = document.getElementById('format-cards');
     cont.innerHTML = Object.values(SCHEMAS).map(s => `
             <div class="format-card border-2 border-slate-200 rounded-xl p-4 flex items-center justify-between"
-                 onclick="selectFormat('${s.id}')" id="fmt-${s.id}">
+                 data-action="select-format" data-format="${s.id}" id="fmt-${s.id}">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-lg bg-${s.color}-100 flex items-center justify-center">
                         <i class="fa-solid ${s.icon} text-${s.color}-600"></i>
@@ -366,7 +366,7 @@ export function renderExportCards() {
                         <h2 class="font-bold text-slate-800">${s.label} 양식으로 내보내기</h2>
                     </div>
                 </div>
-                <button onclick="exportTo('${s.id}')"
+                <button data-action="export-to" data-format="${s.id}"
                         class="bg-white border border-${s.color}-200 text-${s.color}-600 hover:bg-${s.color}-50
                                px-4 py-2 rounded-lg text-base font-bold transition">
                     <i class="fa-solid fa-download mr-1.5"></i>다운로드

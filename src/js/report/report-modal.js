@@ -79,7 +79,7 @@ export function showBinStudentsModal(label, students) {
         const sum = ['korean', 'math', 'inquiry1', 'inquiry2'].reduce((acc, cur) => acc + (s[cur]?.[basis] || 0), 0);
         return `
             <tr class="hover:bg-blue-50 cursor-pointer transition-colors group"
-                data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" onclick="handleRowClick(this)">
+                data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" data-action="row-click">
                 <td class="border-b border-slate-200 p-3 text-slate-600">${escapeAttr(s.class)}반</td>
                 <td class="border-b border-slate-200 p-3 text-slate-600">${escapeAttr(s.number)}번</td>
                 <td class="border-b border-slate-200 p-3 font-bold text-slate-800">${escapeAttr(s.name)}</td>
@@ -211,7 +211,7 @@ export function showCsatStudents(n, targetSum) {
             const actualSubj = raw[`sum${n}_subj`]; // 새로 추가된 과목명 데이터 가져오기
             return `
                 <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer group"
-                    data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" onclick="handleRowClick(this)">
+                    data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" data-action="row-click">
                     <td class="border border-slate-300 p-3 text-slate-700">${escapeAttr(s.class) || ''}반 ${escapeAttr(s.number) || ''}번</td>
                     <td class="border border-slate-300 p-3 font-bold text-slate-800">${escapeAttr(s.name) || ''}</td>
                     <td class="border border-slate-300 p-3 text-blue-600 font-bold">${actualSum}</td>
@@ -393,6 +393,8 @@ export function printStudentDetail() {
 
 <p class="notice">★ 본 성적표는 성적을 통지하기 위한 용도이며, 다른 용도로는 사용할 수 없습니다.</p>
 
+<!-- 이 두 개만 인라인으로 남는다. 아래에서 window.open으로 여는 별도 문서라
+     우리 스크립트가 닿지 않고, 부르는 것도 그 창 자신의 print/close다. -->
 <div class="btn-wrap">
   <button class="btn-print" onclick="window.print()">인쇄</button>
   <button class="btn-close" onclick="window.close()">닫기</button>
