@@ -1,0 +1,86 @@
+# GitHub Pages 배포와 릴리스 갱신.
+#
+# **push로는 아무 일도 일어나지 않는다.** Actions 탭에서 직접 실행할 때에만
+# 사이트가 갱신되고, 같은 실행에서 앱 전체를 담은 score-reporter.zip이
+# latest 릴리스에 올라간다.
+#
+# teacher-utility-kit의 deploy-pages.yml을 단일 앱 저장소에 맞게 옮긴 것이다.
+# 거기서는 최상위 폴더마다 zip을 만들었지만, 여기서는 저장소 뿌리가 곧 앱이다.
+#
+# 두 일을 한 워크플로에 둔 이유는 둘이 같은 것을 배포하기 때문이다.
+# 따로 두면 사이트와 릴리스가 서로 다른 커밋을 가리키는 때가 생긴다.
+# release 잡은 deploy 잡이 성공해야 돌아간다 - 배포가 실패했는데
+# 내려받기용 zip만 새것으로 바뀌는 상황을 막는다.
+#
+# 저장소 설정이 Settings → Pages → Source: GitHub Actions 여야 한다.
+# 'Deploy from a branch'로 되돌리면 push마다 자동 배포가 되살아난다.
+#
+# 빌드 단계가 생기면(Vite 도입 등) upload-pages-artifact의 path와
+# zip 대상을 빌드 산출물 폴더로 바꾼다.
+
+name: Deploy to GitHub Pages
+
+on:
+  workflow_dispatch:
+
+# 배포가 겹치지 않게 한 번에 하나만 돌린다.
+# 진행 중인 배포를 취소하지 않는다 - 중간에 끊으면 사이트가 반쯤 갱신된 채 남는다.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy site
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v6
+
+      # 저장소 뿌리를 그대로 올린다. 빌드 단계가 없는 정적 사이트이므로
+      # 옮겨 담을 것이 없다.
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: '.'
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v5
+
+  release:
+    name: Update latest release
+    needs: deploy          # 배포가 성공한 뒤에만 올린다
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write      # 릴리스를 만들고 갱신하는 데 필요하다
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # 저장소 뿌리 전체를 하나의 zip으로 만든다. .git, .github 는 뺀다.
+      - name: Zip the app
+        run: zip -r score-reporter.zip . -x '.git/*' '.github/*' '*.zip'
+
+      - name: Upload zip to latest release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: "latest"
+          artifacts: "score-reporter.zip"
+          allowUpdates: true          # 기존 latest 릴리스를 갱신한다
+          replacesArtifacts: true     # 옛 zip을 새것으로 바꾼다
+          omitName: true              # 릴리스 제목을 덮어쓰지 않는다
+          omitBody: true              # 릴리스 본문을 덮어쓰지 않는다
+          token: ${{ secrets.GITHUB_TOKEN }}

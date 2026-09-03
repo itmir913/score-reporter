@@ -1,0 +1,26 @@
+# 의존성 / 도구 캐시
+node_modules/
+.npm/
+.cache/
+
+# IDE / 에디터 (teacher-utility-kit과 같은 기준: .idea 는 무시, *.iml 은 커밋)
+.idea/
+.vscode/
+
+# Claude Code 로컬 설정 (teacher-utility-kit과 동일하게 무시)
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 로그 / 환경변수
+*.log
+.env
+.env.*
+
+# 테스트 산출물
+coverage/
+
+# 주의: dist/tailwind.css 는 커밋 대상이다. 빌드 단계 없이 저장소 뿌리를 그대로 배포한다.
+# Vite 도입으로 빌드 산출물 폴더가 생기면 그 폴더를 여기에 추가한다.
