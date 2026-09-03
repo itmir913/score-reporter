@@ -1,7 +1,14 @@
+import Chart from 'chart.js/auto';
+import {ST} from '../main.js';
+import {labelMap} from '../report.js';
+/* 아래 마크업의 on* 속성이 부르는 함수는 모듈 스코프가 아니라 전역에서 찾는다.
+ * src/main.js가 window에 올려두므로 여기서 import 하지 않는다. */
+import {escapeAttr} from '../utils.js';
+
 /* ───────────────────────────────────────────
    § 선택과목 비율 분석
 ─────────────────────────────────────────── */
-function renderSubjectSelection(cache) {
+export function renderSubjectSelection(cache) {
     if (!ST.data || ST.data.length === 0) return;
     if (!ST.charts) ST.charts = {};
 

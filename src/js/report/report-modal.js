@@ -1,20 +1,25 @@
+import {ST} from '../main.js';
+import {globalReportBasis} from '../report.js';
+import {_getCsatRawSums} from './report-csat-sum.js';
+import {escapeAttr} from '../utils.js';
+
 /* ───────────────────────────────────────────
    § 모달 제어 및 상세 정보 표시
 ─────────────────────────────────────────── */
 
-let _printStudent = null;
+export let _printStudent = null;
 
 /**
  * 모달 열고 닫기 공통 함수
  */
-function openModal(modalId) {
+export function openModal(modalId) {
     document.getElementById(modalId).classList.remove('hidden');
     // 모달을 표시하는 코드 아래에 추가
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden'; // html까지 확실하게 잠금
 }
 
-function closeModal(modalId) {
+export function closeModal(modalId) {
     document.getElementById(modalId).classList.add('hidden');
     const anyOpen = ['bin-students-modal', 'student-modal', 'csat-list-modal']
         .some(id => !document.getElementById(id).classList.contains('hidden'));
@@ -27,7 +32,7 @@ function closeModal(modalId) {
 /**
  * 행 클릭 시 데이터를 읽어와 상세 모달을 띄우는 핸들러
  */
-function handleRowClick(el) {
+export function handleRowClick(el) {
     const name = el.dataset.name;
     const cls = el.dataset.class;
     const num = el.dataset.num;
@@ -40,7 +45,7 @@ function handleRowClick(el) {
 /**
  * 구간별 학생 명단 팝업 (차트 클릭 시 호출)
  */
-function showBinStudentsModal(label, students) {
+export function showBinStudentsModal(label, students) {
     const basis = globalReportBasis;
 
     // 1. 반, 번호, 이름 순으로 정렬
@@ -99,7 +104,7 @@ function showBinStudentsModal(label, students) {
 /**
  * 개별 학생 상세 성적표 팝업 (명단 클릭 시 호출)
  */
-function showStudentDetail(name, cls, num) {
+export function showStudentDetail(name, cls, num) {
     const s = ST.data.find(item => item.name === name && item.class === cls && item.number === num);
     if (!s) return;
     _printStudent = s;
@@ -146,7 +151,7 @@ function showStudentDetail(name, cls, num) {
 /**
  * 선택과목별 학생 명단 모달 띄우기
  */
-function showSelectedSubjectStudents(type, subjectName) {
+export function showSelectedSubjectStudents(type, subjectName) {
     if (!ST.data || ST.data.length === 0) return;
 
     const filtered = ST.data.filter(s => {
@@ -164,7 +169,7 @@ function showSelectedSubjectStudents(type, subjectName) {
 /* ───────────────────────────────────────────
    § 수능 최저 충족 학생 명단 모달 띄우기
 ─────────────────────────────────────────── */
-function showCsatStudents(n, targetSum) {
+export function showCsatStudents(n, targetSum) {
     if (!ST.data) return;
 
     // 1. 해당 조건(n합 targetSum 이하)을 만족하는 학생 필터링
@@ -229,7 +234,7 @@ function showCsatStudents(n, targetSum) {
 /* ───────────────────────────────────────────
    § 개별 학생 성적통지표 팝업 인쇄
 ─────────────────────────────────────────── */
-function printStudentDetail() {
+export function printStudentDetail() {
     const s = _printStudent;
     if (!s) return;
 

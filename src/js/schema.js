@@ -1,5 +1,7 @@
+import {colToIdx} from './utils.js';
+
 // 영문 변수명을 한글 라벨로 변환해주는 매핑 사전
-const FIELD_LABELS = {
+export const FIELD_LABELS = {
     exam_year: '학년도',
     student_id: '학번',
     grade_year: '학년',
@@ -49,7 +51,7 @@ const FIELD_LABELS = {
 /* ───────────────────────────────────────────
        § FormatSchema 클래스
     ─────────────────────────────────────────── */
-class FormatSchema {
+export class FormatSchema {
     constructor({id, label, color, icon, headerRows, fields, exportHeaders, customGetters}) {
         this.id = id;
         this.label = label;
@@ -108,7 +110,7 @@ class FormatSchema {
 /* ───────────────────────────────────────────
    § 양식 스키마 정의
 ─────────────────────────────────────────── */
-const SCHEMAS = {
+export const SCHEMAS = {
     /**
      * 대교협 스키마
      */
@@ -447,21 +449,21 @@ const SCHEMAS = {
 
 // 숫자를 로마자로 변환 (1 -> Ⅰ)
 // (\D)로 앞 글자가 숫자가 아닌 경우만 치환 — "탐구11" → "탐구11" 유지, "물리학1" → "물리학Ⅰ"
-function convertNumberToRoman(s, baseValue) {
+export function convertNumberToRoman(s, baseValue) {
     if (!baseValue) return '';
     let val = baseValue.replace(/\s+/g, '');
     return val.replace(/(\D)1$/, '$1Ⅰ').replace(/(\D)2$/, '$1Ⅱ');
 }
 
 // 로마자를 숫자로 변환 (Ⅰ -> 1)
-function convertRomanToNumber(s, baseValue) {
+export function convertRomanToNumber(s, baseValue) {
     if (!baseValue) return '';
     let val = baseValue.replace(/\s+/g, '');
     return val.replace(/Ⅰ$/, '1').replace(/Ⅱ$/, '2');
 }
 
 // 공백 삭제
-function removeSpaces(s, baseValue) {
+export function removeSpaces(s, baseValue) {
     if (!baseValue) return '';
     return baseValue.replace(/\s+/g, '');
 }
@@ -469,7 +471,7 @@ function removeSpaces(s, baseValue) {
 // 숫자 점수 데이터를 export할 때 null/빈 값은 빈 문자열로, 실제 숫자는 숫자로 변환
 // 0 → 0, '0' → 0, null/undefined/'' → '' (빈 셀)
 // 이 함수를 0으로 반환하면 교차 포맷 변환 시 null 점수가 0으로 왜곡됨
-function ensureNumericOrZero(s, baseValue) {
+export function ensureNumericOrZero(s, baseValue) {
     if (baseValue === null || baseValue === undefined || baseValue === '') return '';
     const n = parseFloat(baseValue);
     return isNaN(n) ? '' : n;

@@ -1,7 +1,10 @@
+import {ST} from '../main.js';
+import {labelMap} from '../report.js';
+
 /* ───────────────────────────────────────────
    § 요약 통계 (과목별 고유 컬러 및 지표명 적용)
 ─────────────────────────────────────────── */
-function renderStats(cache) {
+export function renderStats(cache) {
     const total = ST.data.length;
     if (total === 0) return;
 

@@ -1,22 +1,16 @@
-# GitHub Pages 배포와 릴리스 갱신.
+# GitHub Pages 배포와 오프라인 번들 릴리스.
 #
 # **push로는 아무 일도 일어나지 않는다.** Actions 탭에서 직접 실행할 때에만
-# 사이트가 갱신되고, 같은 실행에서 앱 전체를 담은 score-reporter.zip이
-# latest 릴리스에 올라간다.
+# 사이트가 갱신되고, 같은 실행에서 score-reporter.zip이 latest 릴리스에 올라간다.
 #
-# teacher-utility-kit의 deploy-pages.yml을 단일 앱 저장소에 맞게 옮긴 것이다.
-# 거기서는 최상위 폴더마다 zip을 만들었지만, 여기서는 저장소 뿌리가 곧 앱이다.
-#
-# 두 일을 한 워크플로에 둔 이유는 둘이 같은 것을 배포하기 때문이다.
-# 따로 두면 사이트와 릴리스가 서로 다른 커밋을 가리키는 때가 생긴다.
-# release 잡은 deploy 잡이 성공해야 돌아간다 - 배포가 실패했는데
-# 내려받기용 zip만 새것으로 바뀌는 상황을 막는다.
+# 세 잡을 한 워크플로에 둔 이유는 셋이 같은 산출물을 다루기 때문이다. 따로 두면
+# 사이트와 릴리스가 서로 다른 커밋을 가리키는 때가 생긴다. build가 dist를 한 번만
+# 만들어 두 잡에 넘기므로 배포된 사이트와 내려받는 zip이 같은 파일임이 보장된다.
+# release는 deploy가 성공해야 돌아간다 - 배포가 실패했는데 zip만 새것으로 바뀌는
+# 상황을 막는다.
 #
 # 저장소 설정이 Settings → Pages → Source: GitHub Actions 여야 한다.
 # 'Deploy from a branch'로 되돌리면 push마다 자동 배포가 되살아난다.
-#
-# 빌드 단계가 생기면(Vite 도입 등) upload-pages-artifact의 path와
-# zip 대상을 빌드 산출물 폴더로 바꾼다.
 
 name: Deploy to GitHub Pages
 
@@ -30,11 +24,60 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    name: Deploy site
+  build:
+    name: Build
     runs-on: ubuntu-latest
     permissions:
       contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      # xlsx는 vendor/의 tarball을 file: 의존성으로 받는다. SheetJS가 0.18.5 이후
+      # npm 레지스트리를 떠나서, 저장소에 넣어 두지 않으면 재현 설치가 안 된다.
+      - name: Install
+        run: npm ci
+
+      # 배포 전에 걸러낸다. 여기서 실패하면 사이트도 릴리스도 갱신되지 않는다.
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      # 오프라인 번들. dist 안에서 묶어야 압축을 풀었을 때 index.html이 최상위에
+      # 온다. vite의 base: './' 덕에 그대로 더블클릭해 열어도 동작한다.
+      - name: Pack offline bundle
+        run: cd dist && zip -r ../score-reporter.zip .
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+      # release 잡에 넘기려고 따로 올린다. Pages artifact는 형식이 달라 재사용할 수 없다.
+      - name: Upload bundle for the release job
+        uses: actions/upload-artifact@v4
+        with:
+          name: offline-bundle
+          path: score-reporter.zip
+          retention-days: 1
+
+  deploy:
+    name: Deploy site
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
       pages: write
       id-token: write
     environment:
@@ -42,19 +85,6 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v6
-
-      # 저장소 뿌리를 그대로 올린다. 빌드 단계가 없는 정적 사이트이므로
-      # 옮겨 담을 것이 없다.
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: '.'
-
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v5
@@ -67,12 +97,10 @@ jobs:
       contents: write      # 릴리스를 만들고 갱신하는 데 필요하다
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      # 저장소 뿌리 전체를 하나의 zip으로 만든다. .git, .github 는 뺀다.
-      - name: Zip the app
-        run: zip -r score-reporter.zip . -x '.git/*' '.github/*' '*.zip'
+      - name: Download bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: offline-bundle
 
       - name: Upload zip to latest release
         uses: ncipollo/release-action@v1

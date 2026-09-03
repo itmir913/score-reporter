@@ -1,7 +1,12 @@
+import Chart from 'chart.js/auto';
+import {ST} from '../main.js';
+import {labelMap} from '../report.js';
+import {showBinStudentsModal} from './report-modal.js';
+
 /* ───────────────────────────────────────────
    § 점수합 급간별 인원 분포 (전역 기준 적용 및 가로 표 추가)
 ─────────────────────────────────────────── */
-function renderScoreDistribution(cache = ST.cache) {
+export function renderScoreDistribution(cache = ST.cache) {
     if (!cache) return;
     const intervalSize = parseInt(document.getElementById('interval-size').value, 10);
     const basisLabel = labelMap[cache.basis];

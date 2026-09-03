@@ -1,7 +1,12 @@
+import Chart from 'chart.js/auto';
+import {ST} from '../main.js';
+import {showBinStudentsModal} from './report-modal.js';
+import {escapeAttr} from '../utils.js';
+
 /* ───────────────────────────────────────────
    § 과목별 성적 분포 종합 (등급 or 백분위)
 ─────────────────────────────────────────── */
-function renderSubjectsCharts() {
+export function renderSubjectsCharts() {
     const MAX_GRADE = 9;
     const grid = document.getElementById('chart-grid');
     grid.innerHTML = '';

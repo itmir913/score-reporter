@@ -1,0 +1,14 @@
+/* 스타일시트 로드 순서.
+ *
+ * 분리 전 index.html의 <link> 순서(style.css → tailwind → font-awesome)를 그대로
+ * 옮긴 것이다. 순서가 바뀌면 화면이 달라진다. tailwind base(preflight)가 style.css
+ * 뒤에 와야 원래대로 preflight가 이기고, font-awesome은 아이콘 폰트를 마지막에
+ * 얹는다.
+ *
+ * @import 는 CSS 명세상 다른 규칙보다 앞에 와야 하므로 @tailwind 지시어는
+ * tailwind.css로 따로 빼서 import 한다.
+ */
+@import 'pretendard/dist/web/variable/pretendardvariable.css';
+@import './style.css';
+@import './tailwind.css';
+@import '@fortawesome/fontawesome-free/css/all.min.css';

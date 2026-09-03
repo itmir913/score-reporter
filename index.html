@@ -5,14 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>모의고사 성적 분석 시스템 | Teacher Utility Kit</title>
 
-    <link rel="stylesheet" href="./css/style.css"/>
-    <link rel="stylesheet" href="./dist/tailwind.css">
-    <link rel="stylesheet" href="./lib/font-awesome@6.4.0.min.css"/>
-
-    <script src="./lib/buffer@6.0.3.js"></script>
-    <script src="./lib/exceljs.min.js"></script>
-    <script src="./lib/xlsx-0.20.0.js"></script>
-    <script src="./lib/chart.js@4.4.0.js"></script>
+    <!-- 스타일시트와 외부 라이브러리는 전부 src/main.js가 import 한다.
+         Vite가 번들해서 해시 붙은 파일로 내보내고 이 자리에 태그를 끼워 넣는다. -->
+    <script type="module" src="/src/main.js"></script>
 </head>
 <body class="min-h-screen selection:bg-indigo-100 selection:text-indigo-900 text-slate-800 pb-20">
 
@@ -830,26 +825,6 @@
         </div>
     </div>
 </div>
-
-<!-- ═══════════════════════════════════════════════════════════════
-     JavaScript
-═══════════════════════════════════════════════════════════════ -->
-<script src="./js/utils.js"></script>
-<script src="./js/schema.js"></script>
-<script src="./js/parser.js"></script>
-<script src="./js/exporter.js"></script>
-
-<script src="./js/report/report-cache.js"></script>
-<script src="./js/report/report-render-stats.js"></script>
-<script src="./js/report/report-render-topN.js"></script>
-<script src="./js/report/report-score-distribution.js"></script>
-<script src="./js/report/report-subject-selection.js"></script>
-<script src="./js/report/report-csat-sum.js"></script>
-<script src="./js/report/report-render-chart-subjects.js"></script>
-<script src="./js/report/report-modal.js"></script>
-<script src="./js/report.js"></script>
-
-<script src="./js/main.js"></script>
 
 </body>
 </html>

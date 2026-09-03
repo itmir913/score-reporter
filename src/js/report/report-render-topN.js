@@ -1,7 +1,12 @@
+import {labelMap} from '../report.js';
+/* 아래 마크업의 on* 속성이 부르는 함수는 모듈 스코프가 아니라 전역에서 찾는다.
+ * src/main.js가 window에 올려두므로 여기서 import 하지 않는다. */
+import {escapeAttr} from '../utils.js';
+
 /* ───────────────────────────────────────────
    § 상위 N명 명단 렌더링 (전역 기준 적용)
 ─────────────────────────────────────────── */
-function renderTopN(cache) {
+export function renderTopN(cache) {
     const topNValue = document.getElementById('top-n-count').value;
     // 'all'이 선택되면 무한대(Infinity)를 주어 전체 배열이 잘리지 않게 합니다.
     const limit = topNValue === 'all' ? Infinity : parseInt(topNValue, 10);

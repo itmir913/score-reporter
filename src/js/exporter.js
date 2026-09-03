@@ -1,7 +1,10 @@
+import ExcelJS from 'exceljs';
+import {dlBlob} from './utils.js';
+
 /* ───────────────────────────────────────────
    § GradeExporter 클래스
 ─────────────────────────────────────────── */
-class GradeExporter {
+export class GradeExporter {
     static async toXlsx(students, target, fileName) {
         // 스키마 인덱스 중 가장 큰 값(가장 우측 컬럼) 계산
         const maxCol = Math.max(0, ...Object.values(target._idx).filter(i => i !== null && i !== undefined));

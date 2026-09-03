@@ -1,7 +1,16 @@
+import ExcelJS from 'exceljs';
+import * as XLSX from 'xlsx';
+import {Buffer} from 'buffer';
+import {GradeExporter} from './exporter.js';
+import {GradeDataParser} from './parser.js';
+import {renderReport} from './report.js';
+import {FIELD_LABELS, SCHEMAS} from './schema.js';
+import {escapeAttr} from './utils.js';
+
 /* ───────────────────────────────────────────
        § 애플리케이션 상태 (ST) 및 로직
     ─────────────────────────────────────────── */
-const ST = {
+export const ST = {
     wb: null,
     file: null,
     fmtId: null,
@@ -10,7 +19,7 @@ const ST = {
 };
 
 // ExcelJS 워크시트를 2차원 배열(SheetJS의 sheet_to_json({header:1}) 형태)로 변환하는 헬퍼 함수
-function exceljsTo2DArray(ws) {
+export function exceljsTo2DArray(ws) {
     if (!ws) return [];
     const result = [];
     ws.eachRow({includeEmpty: true}, function (row, rowNumber) {
@@ -44,7 +53,7 @@ function exceljsTo2DArray(ws) {
 }
 
 // 탭 전환 로직
-function switchTab(tabId) {
+export function switchTab(tabId) {
     ['upload', 'report', 'export'].forEach(t => {
         document.getElementById(`tab-${t}`).classList.add('hidden');
         document.querySelector(`.tab-btn[data-tab="${t}"]`).classList.remove('active');
@@ -54,9 +63,9 @@ function switchTab(tabId) {
 }
 
 // 토스트 알림
-let toastTimeout;
+export let toastTimeout;
 
-function showToast(msg, isErr = false) {
+export function showToast(msg, isErr = false) {
     const toast = document.getElementById('toast');
     const inner = document.getElementById('toast-inner');
     const iconBg = document.getElementById('toast-icon-bg');
@@ -81,7 +90,7 @@ function showToast(msg, isErr = false) {
 }
 
 // 파일 초기화
-function clearFile() {
+export function clearFile() {
     ST.wb = null;
     ST.file = null;
     ST.fmtId = null;
@@ -98,27 +107,27 @@ function clearFile() {
 }
 
 // 드래그 앤 드롭
-function handleDragOver(e) {
+export function handleDragOver(e) {
     e.preventDefault();
     document.getElementById('dropzone').classList.add('drag-over');
 }
 
-function handleDragLeave() {
+export function handleDragLeave() {
     document.getElementById('dropzone').classList.remove('drag-over');
 }
 
-function handleDrop(e) {
+export function handleDrop(e) {
     e.preventDefault();
     handleDragLeave();
     if (e.dataTransfer.files.length > 0) processFile(e.dataTransfer.files[0]);
 }
 
-function handleFileSelect(e) {
+export function handleFileSelect(e) {
     if (e.target.files.length > 0) processFile(e.target.files[0]);
 }
 
 // ★ 변경: 비동기(async) 방식으로 ExcelJS 적용 및 비밀번호 프롬프트 추가
-async function processFile(file) {
+export async function processFile(file) {
     clearFile();
 
     // ★ 개선 1: 파일 처리를 시작하기 전에 로딩 안내 띄우기
@@ -195,7 +204,7 @@ async function processFile(file) {
 }
 
 // 양식 선택 UI
-function renderFormatCards() {
+export function renderFormatCards() {
     const cont = document.getElementById('format-cards');
     cont.innerHTML = Object.values(SCHEMAS).map(s => `
             <div class="format-card border-2 border-slate-200 rounded-xl p-4 flex items-center justify-between"
@@ -216,7 +225,7 @@ function renderFormatCards() {
         `).join('');
 }
 
-function selectFormat(id) {
+export function selectFormat(id) {
     ST.fmtId = id;
     document.querySelectorAll('.format-card').forEach(el => {
         el.classList.remove('selected', 'border-blue-500', 'bg-blue-50', 'ring-2', 'ring-blue-200');
@@ -246,7 +255,7 @@ function selectFormat(id) {
 }
 
 // 원본 데이터 미리보기 (ExcelJS 로직 적용)
-function renderRawPreview() {
+export function renderRawPreview() {
     if (!ST.wb || !ST.fmtId) return;
     const sheetName = document.getElementById('sheet-select').value;
     const ws = ST.wb.getWorksheet(sheetName);
@@ -311,7 +320,7 @@ function renderRawPreview() {
 }
 
 // 데이터 파싱 실행
-function parseData() {
+export function parseData() {
     if (!ST.wb || !ST.fmtId) return;
     try {
         const sheetName = document.getElementById('sheet-select').value;
@@ -335,7 +344,7 @@ function parseData() {
 /* ───────────────────────────────────────────
    § 내보내기 탭 렌더링
 ─────────────────────────────────────────── */
-function renderExportCards() {
+export function renderExportCards() {
     if (!ST.data) return;
     document.getElementById('export-summary').innerHTML = `
             <div class="bg-blue-50 text-blue-700 p-4 rounded-xl flex items-center justify-between">
@@ -368,7 +377,7 @@ function renderExportCards() {
 }
 
 // ★ 변경: 내보내기가 비동기 버퍼 쓰기를 요구하므로 async 추가
-async function exportTo(formatId) {
+export async function exportTo(formatId) {
     if (!ST.data) {
         showToast('파싱된 데이터가 없습니다.', true);
         return;
@@ -387,7 +396,7 @@ async function exportTo(formatId) {
 /* ───────────────────────────────────────────
    § 샘플 데이터 로드 (현실적인 랜덤 데이터 생성)
 ─────────────────────────────────────────── */
-function loadSampleData() {
+export function loadSampleData() {
     const dummy = [];
 
     // 무작위 이름 생성을 위한 성/이름 배열

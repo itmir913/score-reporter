@@ -1,11 +1,20 @@
+import {ST} from './main.js';
+import {computeRenderCache} from './report/report-cache.js';
+import {renderCsatMinRequirement} from './report/report-csat-sum.js';
+import {renderSubjectsCharts} from './report/report-render-chart-subjects.js';
+import {renderStats} from './report/report-render-stats.js';
+import {renderTopN} from './report/report-render-topN.js';
+import {renderScoreDistribution} from './report/report-score-distribution.js';
+import {renderSubjectSelection} from './report/report-subject-selection.js';
+
 // ★ 전역 상태: 현재 통계 기준 (raw: 원점수, std: 표준점수)
-let globalReportBasis = 'raw';
-const labelMap = {'raw': '원점수', 'std': '표준점수', 'pct': '백분위'};
+export let globalReportBasis = 'raw';
+export const labelMap = {'raw': '원점수', 'std': '표준점수', 'pct': '백분위'};
 
 /* ───────────────────────────────────────────
    § 통계 기준 설정 및 UI 업데이트
 ─────────────────────────────────────────── */
-function setGlobalBasis(basis) {
+export function setGlobalBasis(basis) {
     globalReportBasis = basis;
 
     const buttons = {
@@ -28,7 +37,7 @@ function setGlobalBasis(basis) {
 /* ───────────────────────────────────────────
    § 보고서 생성 로직
 ─────────────────────────────────────────── */
-function renderReport() {
+export function renderReport() {
     const wrap = document.getElementById('report-content');
     const empty = document.getElementById('report-empty');
     if (!ST.data || ST.data.length === 0) {
@@ -52,7 +61,7 @@ function renderReport() {
 /* ───────────────────────────────────────────
    § 모든 렌더링 함수
 ─────────────────────────────────────────── */
-function renderAll() {
+export function renderAll() {
     // 1. ST.data가 유효한 배열인지 최우선 확인
     if (!ST.data || !Array.isArray(ST.data) || ST.data.length === 0) {
         console.warn("표시할 데이터가 없거나 로딩 중입니다.");
@@ -90,7 +99,7 @@ function renderAll() {
 /* ───────────────────────────────────────────
    § 리사이즈 디바운스
 ─────────────────────────────────────────── */
-let resizeTimer;
+export let resizeTimer;
 window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {

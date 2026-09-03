@@ -1,13 +1,19 @@
-# 의존성 / 도구 캐시
+# 의존성
 node_modules/
 .npm/
-.cache/
+
+# 빌드 산출물. npm run build 로 언제든 다시 만든다.
+dist/
+*.zip
+
+# 로컬 확인용 임시 폴더
+.offline-test/
 
 # IDE / 에디터 (teacher-utility-kit과 같은 기준: .idea 는 무시, *.iml 은 커밋)
 .idea/
 .vscode/
 
-# Claude Code 로컬 설정 (teacher-utility-kit과 동일하게 무시)
+# Claude Code 로컬 설정
 .claude/
 
 # OS
@@ -22,5 +28,5 @@ Thumbs.db
 # 테스트 산출물
 coverage/
 
-# 주의: dist/tailwind.css 는 커밋 대상이다. 빌드 단계 없이 저장소 뿌리를 그대로 배포한다.
-# Vite 도입으로 빌드 산출물 폴더가 생기면 그 폴더를 여기에 추가한다.
+# 주의: vendor/ 는 무시하지 않는다. xlsx tarball이 거기 들어 있고,
+# 그게 없으면 npm ci 가 실패한다. 아래 § 의존성 항목 참고.

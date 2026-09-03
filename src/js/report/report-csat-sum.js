@@ -1,8 +1,14 @@
+import {ST} from '../main.js';
+import {renderAll} from '../report.js';
+/* 아래 마크업의 on* 속성이 부르는 함수는 모듈 스코프가 아니라 전역에서 찾는다.
+ * src/main.js가 window에 올려두므로 여기서 import 하지 않는다. */
+import {escapeAttr} from '../utils.js';
+
 /* ───────────────────────────────────────────
    § 수능 최저학력기준 분석 로직
 ─────────────────────────────────────────── */
 
-function _getCsatRawSums(student) {
+export function _getCsatRawSums(student) {
     // 과목명 매핑을 위한 객체
     const subjNames = {
         korean: '국어', math: '수학', english: '영어', inquiry1: '탐구1', inquiry2: '탐구2'
@@ -43,7 +49,7 @@ function _getCsatRawSums(student) {
     };
 }
 
-function _getCsatSums(student) {
+export function _getCsatSums(student) {
     const raw = _getCsatRawSums(student);
     const format = (val, subj) => val === null
         ? '<span class="text-slate-300">-</span>'
@@ -59,7 +65,7 @@ function _getCsatSums(student) {
     };
 }
 
-function _getScoreSum(student, basis) {
+export function _getScoreSum(student, basis) {
     let sum = 0;
     ['korean', 'math', 'inquiry1', 'inquiry2'].forEach(subj => {
         const val = student[subj]?.[basis];
@@ -71,7 +77,7 @@ function _getScoreSum(student, basis) {
 }
 
 /* ── 메인 렌더링 함수 ── */
-function renderCsatMinRequirement(cache) {
+export function renderCsatMinRequirement(cache) {
     if (!ST.data || ST.data.length === 0) return;
 
     // ★ cache 전달
@@ -130,7 +136,7 @@ function renderCsatMinRequirement(cache) {
 }
 
 /* ── 전체 통계표 (누적 인원) ── */
-function renderCsatSummaryTable(cache) {
+export function renderCsatSummaryTable(cache) {
     const maxSum = 15;
     const sums2 = Array(maxSum + 1).fill(0);
     const sums3 = Array(maxSum + 1).fill(0);
@@ -188,7 +194,7 @@ function renderCsatSummaryTable(cache) {
 }
 
 /* ── 학급 테이블 ── */
-function handleClassChange() {
+export function handleClassChange() {
     // ST.cache가 있는지 확인 (renderAll에서 ST.cache = cache; 를 해줘야 함)
     if (ST.cache) {
         renderCsatClassTable(ST.cache);
@@ -202,7 +208,7 @@ function handleClassChange() {
  * 학급별 수능 최저 학력 기준 충족 현황 렌더링
  * @param {Object} cache - renderAll에서 생성된 캐시 데이터
  */
-function renderCsatClassTable(cache) {
+export function renderCsatClassTable(cache) {
     if (!ST.data || ST.data.length === 0 || !cache || !cache.csatSums) {
         console.error("캐시 데이터가 준비되지 않았습니다.");
         return;

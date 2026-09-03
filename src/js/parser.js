@@ -1,7 +1,9 @@
+import {exceljsTo2DArray} from './main.js';
+
 /* ───────────────────────────────────────────
    § GradeDataParser 클래스
 ─────────────────────────────────────────── */
-class GradeDataParser {
+export class GradeDataParser {
     constructor(schema) {
         this.s = schema;
     }

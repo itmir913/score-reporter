@@ -1,0 +1,43 @@
+# push와 PR마다 도는 검사. 배포는 하지 않는다.
+#
+# 배포는 deploy-pages.yml이 Actions 탭에서 수동으로 실행될 때에만 일어난다.
+# 여기서는 "지금 커밋이 빌드되고 테스트를 통과하는가"만 본다.
+
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint, test, build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build

@@ -1,9 +1,11 @@
+import {_getCsatRawSums} from './report-csat-sum.js';
+
 /* ───────────────────────────────────────────
    § renderAll() 공용 캐시 계산
    ST.data를 단 한 번만 순회하여 모든 렌더링 함수에
    필요한 집계 데이터를 미리 계산합니다.
 ─────────────────────────────────────────── */
-function computeRenderCache(data, basis) {
+export function computeRenderCache(data, basis) {
     // [안전 장치] 데이터가 없으면 빈 객체 반환
     if (!data || !Array.isArray(data) || data.length === 0) {
         return {
