@@ -26,12 +26,40 @@ function fileProtocolSafeHtml() {
     };
 }
 
+/* postcss.config.js가 @font-face에서 ttf 폴백을 지워도 파일 자체는 여전히 나온다.
+ * Vite가 @import를 인라인하면서 url()을 먼저 asset으로 등록해 두고, 그 뒤에
+ * PostCSS가 선언을 지우기 때문이다. 등록만 남고 참조가 없는 상태가 된다.
+ *
+ * 그래서 번들을 내보내기 직전에, 아무 데서도 참조하지 않는 폰트 파일을 뺀다.
+ * 이름으로 지우지 않고 참조 여부로 판단하므로, 폴백을 되살리면 파일도 같이 돌아온다. */
+function dropUnreferencedFonts() {
+    return {
+        name: 'drop-unreferenced-fonts',
+        enforce: 'post',
+        generateBundle(_options, bundle) {
+            // 폰트를 가리키는 곳은 CSS뿐이지만, 나중에 JS가 참조해도 안전하도록 함께 훑는다.
+            const isReferenced = (name) => Object.values(bundle).some((c) =>
+                c.type === 'chunk'
+                    ? c.code.includes(name)
+                    : /[.](css|html|svg|json)$/.test(c.fileName) && String(c.source).includes(name));
+
+            for (const [fileName, chunk] of Object.entries(bundle)) {
+                if (chunk.type !== 'asset') continue;
+                if (!/[.](ttf|eot|woff|otf)$/.test(fileName)) continue;
+                if (isReferenced(fileName.split('/').pop())) continue;
+                delete bundle[fileName];
+                this.warn(`참조 없는 폰트 제외: ${fileName}`);
+            }
+        },
+    };
+}
+
 export default defineConfig({
     // 상대 경로로 내보낸다. GitHub Pages의 하위 경로에서도, 오프라인 zip을 풀어
     // file:// 로 열어도 똑같이 동작하게 하려는 것이다. 절대 경로면 둘 중 하나가 깨진다.
     base: './',
 
-    plugins: [fileProtocolSafeHtml()],
+    plugins: [fileProtocolSafeHtml(), dropUnreferencedFonts()],
 
     build: {
         outDir: 'dist',
