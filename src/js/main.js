@@ -67,7 +67,6 @@ export let toastTimeout;
 
 export function showToast(msg, isErr = false) {
     const toast = document.getElementById('toast');
-    const inner = document.getElementById('toast-inner');
     const iconBg = document.getElementById('toast-icon-bg');
     const icon = document.getElementById('toast-icon');
     const msgEl = document.getElementById('toast-msg');
@@ -166,7 +165,7 @@ export async function processFile(file) {
         } else if (fileExt === 'xlsx') {
             try {
                 await wb.xlsx.load(arrayBuffer);
-            } catch (err) {
+            } catch {
                 const pwd = prompt("암호가 걸려있는 엑셀 파일입니다.\n비밀번호를 입력해주세요.");
                 if (pwd === null) return showToast("취소되었습니다.", true);
 
