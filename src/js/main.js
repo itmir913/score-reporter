@@ -1,11 +1,11 @@
 import ExcelJS from 'exceljs';
 import * as XLSX from 'xlsx';
-import {Buffer} from 'buffer';
 import {GradeExporter} from './exporter.js';
 import {GradeDataParser} from './parser.js';
 import {renderReport} from './report.js';
 import {FIELD_LABELS, SCHEMAS} from './schema.js';
 import {escapeAttr} from './utils.js';
+import {decryptXlsx, isEncryptedOfficeFile, WrongPasswordError} from './xlsx-decrypt.js';
 
 /* ───────────────────────────────────────────
        § 애플리케이션 상태 (ST) 및 로직
@@ -163,19 +163,18 @@ export async function processFile(file) {
                 newWs.addRows(jsonData); // 한 줄씩 addRow 하는 것보다 훨씬 빠름
             });
         } else if (fileExt === 'xlsx') {
-            try {
-                await wb.xlsx.load(arrayBuffer);
-            } catch {
+            /* 암호가 걸린 xlsx 는 zip 이 아니라 OLE2 컨테이너로 저장된다. ExcelJS 는
+             * 그걸 그대로 zip 으로 읽으려다 실패하므로, 먼저 우리가 풀어서 넘긴다. */
+            let data = arrayBuffer;
+            if (isEncryptedOfficeFile(arrayBuffer)) {
                 const pwd = prompt("암호가 걸려있는 엑셀 파일입니다.\n비밀번호를 입력해주세요.");
                 if (pwd === null) return showToast("취소되었습니다.", true);
 
-                showToast("암호를 해제하는 중입니다. PC 성능에 따라 수십초가 소요될 수 있으니 잠시만 기다려주세요...");
+                showToast("암호를 해제하는 중입니다. 잠시만 기다려주세요...");
                 await new Promise(r => setTimeout(r, 50));
-
-                // ★ 수정: 동적 import 제거 → index.html에서 미리 로드한 전역 Buffer 사용
-                const fileBuffer = Buffer.from(arrayBuffer);
-                await wb.xlsx.load(fileBuffer, {password: pwd});
+                data = await decryptXlsx(arrayBuffer, pwd);
             }
+            await wb.xlsx.load(data);
         }
 
         // 공통 마무리 로직
@@ -198,7 +197,9 @@ export async function processFile(file) {
 
     } catch (err) {
         console.error("파일 처리 에러:", err);
-        showToast('파일을 읽는 데 실패했습니다. 암호가 틀렸거나 파일이 손상되었을 수 있습니다.', true);
+        showToast(err instanceof WrongPasswordError
+            ? '비밀번호가 올바르지 않습니다. 파일을 다시 올려 주세요.'
+            : '파일을 읽는 데 실패했습니다. 파일이 손상되었을 수 있습니다.', true);
     }
 }
 

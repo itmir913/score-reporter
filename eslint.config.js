@@ -17,4 +17,9 @@ export default [
             'no-unused-vars': ['warn', {args: 'none', varsIgnorePattern: '^_'}],
         },
     },
+    {
+        // 테스트는 node 위에서 돌아간다. 픽스처를 만들 때 Buffer 같은 node 전역을 쓴다.
+        files: ['tests/**/*.js'],
+        languageOptions: {globals: {...globals.node}},
+    },
 ];
