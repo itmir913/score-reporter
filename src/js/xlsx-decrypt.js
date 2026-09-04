@@ -1,4 +1,5 @@
 import * as XLSX from 'xlsx';
+import {hashFn} from './sha.js';
 
 /* 암호가 걸린 xlsx 를 푸는 곳.
  *
@@ -13,8 +14,9 @@ import * as XLSX from 'xlsx';
  *   - Standard (버전 2.2/3.2/4.2, Excel 2007): 바이너리 헤더 + AES-ECB
  * 확장형(4.3)은 규격이 서드파티 CSP 에 맡기는 형태라 풀 수 없다.
  *
- * 해시와 AES 는 WebCrypto 를 쓴다. spinCount 가 10만인 파일도 순식간에 끝난다.
- * 다만 WebCrypto 에는 ECB 도, 패딩 없는 CBC 도 없어서 아래 두 헬퍼로 우회한다.
+ * AES 는 WebCrypto 를 쓴다. 다만 거기에는 ECB 도, 패딩 없는 CBC 도 없어서
+ * 아래 두 헬퍼로 우회한다. 해시는 sha.js 의 동기 구현을 쓴다. 회전(spin) 수가
+ * 10만이라 WebCrypto 의 호출당 고정 비용이 그대로 십수 초로 불어나기 때문이다.
  */
 
 const SUBTLE = () => {
@@ -116,15 +118,14 @@ async function aesEcbDecrypt(key, data) {
 
 const HASH_NAMES = {sha1: 'SHA-1', sha256: 'SHA-256', sha384: 'SHA-384', sha512: 'SHA-512'};
 
-function hashName(algorithm) {
-    const name = HASH_NAMES[String(algorithm).toLowerCase().replace(/[-_]/g, '')];
+/** 헤더의 표기(SHA512, SHA-512 …)를 sha.js 의 해시 함수로 옮긴다. */
+function hashFor(algorithm) {
+    const name = HASH_NAMES[String(algorithm).toLowerCase().replace(/[^a-z0-9]/g, '')];
     if (!name) throw new Error(`지원하지 않는 해시 알고리즘입니다: ${algorithm}`);
-    return name;
+    return hashFn(name);
 }
 
-async function hash(algo, ...parts) {
-    return u8(await SUBTLE().digest(algo, concat(...parts)));
-}
+const hash = (fn, ...parts) => fn(concat(...parts));
 
 /* ─── Agile (4.4) ─────────────────────────────────────── */
 
@@ -144,15 +145,15 @@ function attrs(xml, tag) {
 /* 비밀번호를 spinCount 만큼 되풀이해 해시한다. 실제 파일은 10만 번이라 여기가
  * 전체 시간의 거의 전부다. 파생 키가 셋 필요하지만 회전은 셋이 공유하므로,
  * 한 번만 돌리고 blockKey 별 마지막 해시만 따로 한다. */
-async function spinPassword(algo, password, salt, spinCount) {
-    let h = await hash(algo, salt, utf16le(password));
-    for (let i = 0; i < spinCount; i++) h = await hash(algo, le32(i), h);
+function spinPassword(algo, password, salt, spinCount) {
+    let h = hash(algo, salt, utf16le(password));
+    for (let i = 0; i < spinCount; i++) h = hash(algo, le32(i), h);
     return h;
 }
 
 /** 회전이 끝난 해시에서 용도(blockKey)별 키를 뽑는다. */
-async function deriveKey(algo, spun, blockKey, keyBytes) {
-    return fit(await hash(algo, spun, blockKey), keyBytes);
+function deriveKey(algo, spun, blockKey, keyBytes) {
+    return fit(hash(algo, spun, blockKey), keyBytes);
 }
 
 function packageSize(bytes) {
@@ -164,28 +165,28 @@ async function decryptAgile(infoBytes, packageBytes, password) {
     const keyData = attrs(xml, 'keyData');
     const enc = attrs(xml, 'encryptedKey');
 
-    const encAlgo = hashName(enc.hashAlgorithm);
+    const encAlgo = hashFor(enc.hashAlgorithm);
     const encSalt = fromBase64(enc.saltValue);
     const encKeyBytes = Number(enc.keyBits) / 8;
     const spin = Number(enc.spinCount);
 
-    const spun = await spinPassword(encAlgo, password, encSalt, spin);
+    const spun = spinPassword(encAlgo, password, encSalt, spin);
 
     // 비밀번호 검증: 입력값을 풀어 해시한 값이 저장된 해시와 같아야 한다.
-    const inputKey = await deriveKey(encAlgo, spun, BLOCK_KEY_VERIFIER_INPUT, encKeyBytes);
-    const valueKey = await deriveKey(encAlgo, spun, BLOCK_KEY_VERIFIER_VALUE, encKeyBytes);
+    const inputKey = deriveKey(encAlgo, spun, BLOCK_KEY_VERIFIER_INPUT, encKeyBytes);
+    const valueKey = deriveKey(encAlgo, spun, BLOCK_KEY_VERIFIER_VALUE, encKeyBytes);
     const verifier = await aesCbcDecrypt(await importAesKey(inputKey), encSalt, fromBase64(enc.encryptedVerifierHashInput));
     const stored = await aesCbcDecrypt(await importAesKey(valueKey), encSalt, fromBase64(enc.encryptedVerifierHashValue));
-    const actual = await hash(encAlgo, verifier);
+    const actual = hash(encAlgo, verifier);
     if (!sameBytes(stored, actual, actual.length)) throw new WrongPasswordError();
 
     // 패키지를 실제로 푸는 키는 파일이 따로 들고 있다. 비밀번호로는 그 키를 꺼낸다.
-    const wrapKey = await deriveKey(encAlgo, spun, BLOCK_KEY_SECRET_KEY, encKeyBytes);
+    const wrapKey = deriveKey(encAlgo, spun, BLOCK_KEY_SECRET_KEY, encKeyBytes);
     const secret = (await aesCbcDecrypt(await importAesKey(wrapKey), encSalt, fromBase64(enc.encryptedKeyValue)))
         .subarray(0, encKeyBytes);
 
     // 패키지는 4096바이트 세그먼트마다 IV 를 새로 만들어 암호화되어 있다.
-    const keyAlgo = hashName(keyData.hashAlgorithm);
+    const keyAlgo = hashFor(keyData.hashAlgorithm);
     const keySalt = fromBase64(keyData.saltValue);
     const blockSize = Number(keyData.blockSize);
     const aesKey = await importAesKey(secret);
@@ -198,7 +199,7 @@ async function decryptAgile(infoBytes, packageBytes, password) {
     for (let i = 0, off = 0; off < body.length; i++, off += SEGMENT) {
         const chunk = body.subarray(off, Math.min(off + SEGMENT, body.length));
         if (chunk.length % 16 !== 0) break; // 규격상 세그먼트는 항상 블록 단위다
-        const iv = fit(await hash(keyAlgo, keySalt, le32(i)), blockSize);
+        const iv = fit(hash(keyAlgo, keySalt, le32(i)), blockSize);
         const plain = await aesCbcDecrypt(aesKey, iv, chunk);
         out.set(plain.subarray(0, Math.max(0, Math.min(plain.length, size - i * SEGMENT))), i * SEGMENT);
     }
@@ -209,13 +210,14 @@ async function decryptAgile(infoBytes, packageBytes, password) {
 
 /* 이쪽은 회전 수가 50000 으로 고정이고 해시는 언제나 SHA-1 이다. 마지막에
  * 0x36/0x5C 패딩을 얹어 두 번 해시한 값을 이어 붙인 것이 키가 된다. */
-async function deriveStandardKey(password, salt, keyBytes) {
-    let h = await hash('SHA-1', salt, utf16le(password));
-    for (let i = 0; i < 50000; i++) h = await hash('SHA-1', le32(i), h);
-    h = await hash('SHA-1', h, le32(0));
+function deriveStandardKey(password, salt, keyBytes) {
+    const sha1 = hashFn('SHA-1');
+    let h = hash(sha1, salt, utf16le(password));
+    for (let i = 0; i < 50000; i++) h = hash(sha1, le32(i), h);
+    h = hash(sha1, h, le32(0));
 
-    const x1 = await hash('SHA-1', xorInto(new Uint8Array(64).fill(0x36), fit(h, 64)));
-    const x2 = await hash('SHA-1', xorInto(new Uint8Array(64).fill(0x5c), fit(h, 64)));
+    const x1 = hash(sha1, xorInto(new Uint8Array(64).fill(0x36), fit(h, 64)));
+    const x2 = hash(sha1, xorInto(new Uint8Array(64).fill(0x5c), fit(h, 64)));
     return concat(x1, x2).subarray(0, keyBytes);
 }
 
@@ -231,10 +233,10 @@ async function decryptStandard(infoBytes, packageBytes, password) {
     const hashSize = dv.getUint32(at + 20 + saltSize, true);
     const encVerifierHash = infoBytes.subarray(at + 24 + saltSize, at + 24 + saltSize + 32);
 
-    const key = await importAesKey(await deriveStandardKey(password, salt, keyBits / 8));
+    const key = await importAesKey(deriveStandardKey(password, salt, keyBits / 8));
     const verifier = await aesEcbDecrypt(key, encVerifier);
     const stored = await aesEcbDecrypt(key, encVerifierHash);
-    const actual = await hash('SHA-1', verifier);
+    const actual = hash(hashFn('SHA-1'), verifier);
     if (!sameBytes(stored, actual, hashSize)) throw new WrongPasswordError();
 
     const size = packageSize(packageBytes);

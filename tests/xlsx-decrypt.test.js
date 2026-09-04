@@ -174,8 +174,7 @@ describe('xlsx 암호 해제', () => {
     it('Standard(3.2) 파일을 풀어 원본 xlsx 를 돌려준다', async () => {
         const out = await decryptXlsx(toContainer(encryptStandard(plain)), PASSWORD);
         expect(Buffer.from(out).equals(plain)).toBe(true);
-        // 이쪽은 회전 수가 5만으로 고정이라(양쪽 구현 합쳐 10만 번) 기본 제한시간으로는 모자란다.
-    }, 60_000);
+    });
 
     it('비밀번호가 틀리면 WrongPasswordError 를 던진다', async () => {
         const bytes = toContainer(encryptAgile(plain));
