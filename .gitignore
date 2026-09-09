@@ -10,7 +10,9 @@ dist/
 .offline-test/
 
 # IDE / 에디터 (teacher-utility-kit과 같은 기준: .idea 는 무시, *.iml 은 커밋)
-.idea/
+# 단, 실행 구성(ci/dev/build)은 팀이 공유하므로 추적한다.
+.idea/*
+!.idea/runConfigurations/
 .vscode/
 
 # Claude Code 로컬 설정

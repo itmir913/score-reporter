@@ -33,11 +33,7 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Lint
-        run: npm run lint
-
-      - name: Test
-        run: npm test
-
-      - name: Build
-        run: npm run build
+      # 로컬 IntelliJ 의 ci 실행 구성도 이 스크립트를 부른다. 검사 목록이
+      # package.json 한 곳에만 적혀 있어야 둘이 갈라지지 않는다.
+      - name: Lint, test, build
+        run: npm run ci
