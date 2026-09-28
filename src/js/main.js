@@ -210,7 +210,8 @@ export async function processFile(file) {
         document.getElementById('file-meta').innerText = `크기: ${(file.size / 1024).toFixed(1)} KB | 시트 수: ${sheetNames.length}`;
 
         const sel = document.getElementById('sheet-select');
-        sel.innerHTML = sheetNames.map(s => `<option value="${s}">${s}</option>`).join('');
+        // 시트 이름에는 " 나 & 가 들어갈 수 있다. 그대로 넣으면 value 가 잘려 시트를 못 찾는다.
+        sel.innerHTML = sheetNames.map(s => `<option value="${escapeAttr(s)}">${escapeAttr(s)}</option>`).join('');
 
         renderFormatCards();
         document.getElementById('format-area').classList.remove('hidden');
