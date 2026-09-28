@@ -145,7 +145,10 @@ export function renderCsatMinRequirement(cache) {
     if (classSelect) {
         const classes = [...new Set(ST.data.map(s => s.class).filter(c => c))]
             .sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
+        // 목록을 새로 만들면 고른 반이 첫 반으로 돌아간다. 새 목록에도 있으면 되살린다
+        const prevClass = classSelect.value;
         classSelect.innerHTML = classes.map(c => `<option value="${escapeAttr(c)}">${escapeAttr(c)}반 보기</option>`).join('');
+        if (classes.includes(prevClass)) classSelect.value = prevClass;
         if (classes.length > 0) renderCsatClassTable(cache);
     }
 }
