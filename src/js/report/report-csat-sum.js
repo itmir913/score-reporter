@@ -89,6 +89,32 @@ export function renderCsatMinRequirement(cache) {
 
     // ★ cache 전달
     renderCsatSummaryTable(cache);
+    renderCsatSchoolTable();
+
+    const classSelect = document.getElementById('class-select');
+    if (classSelect) {
+        const classes = [...new Set(ST.data.map(s => s.class).filter(c => c))]
+            .sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
+        // 목록을 새로 만들면 고른 반이 첫 반으로 돌아간다. 새 목록에도 있으면 되살린다
+        const prevClass = classSelect.value;
+        classSelect.innerHTML = classes.map(c => `<option value="${escapeAttr(c)}">${escapeAttr(c)}반 보기</option>`).join('');
+        if (classes.includes(prevClass)) classSelect.value = prevClass;
+        if (classes.length > 0) {
+            renderCsatClassTable(cache);
+        } else {
+            // 반 열이 없는 양식이면 이전 파일의 학급 표가 남지 않게 비운다
+            const classTbody = document.getElementById('csat-class-tbody');
+            if (classTbody) {
+                classTbody.innerHTML = `<tr><td colspan="6" class="p-8 text-slate-400 text-center">반 정보가 없습니다.</td></tr>`;
+            }
+        }
+    }
+}
+
+/* ── 전교 석차 표 ──
+ * 표시 인원을 바꿀 때는 이 표만 다시 그린다 (캐시·차트는 그대로 둔다) */
+export function renderCsatSchoolTable() {
+    if (!ST.data || ST.data.length === 0) return;
 
     // --- 전교 석차 기준 (원점수 기준 정렬 — globalReportBasis와 무관) ---
     const limitElement = document.getElementById('csat-top-n-count');
@@ -140,25 +166,6 @@ export function renderCsatMinRequirement(cache) {
                 </tr>
             `;
         }).join('');
-    }
-
-    const classSelect = document.getElementById('class-select');
-    if (classSelect) {
-        const classes = [...new Set(ST.data.map(s => s.class).filter(c => c))]
-            .sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
-        // 목록을 새로 만들면 고른 반이 첫 반으로 돌아간다. 새 목록에도 있으면 되살린다
-        const prevClass = classSelect.value;
-        classSelect.innerHTML = classes.map(c => `<option value="${escapeAttr(c)}">${escapeAttr(c)}반 보기</option>`).join('');
-        if (classes.includes(prevClass)) classSelect.value = prevClass;
-        if (classes.length > 0) {
-            renderCsatClassTable(cache);
-        } else {
-            // 반 열이 없는 양식이면 이전 파일의 학급 표가 남지 않게 비운다
-            const classTbody = document.getElementById('csat-class-tbody');
-            if (classTbody) {
-                classTbody.innerHTML = `<tr><td colspan="6" class="p-8 text-slate-400 text-center">반 정보가 없습니다.</td></tr>`;
-            }
-        }
     }
 }
 

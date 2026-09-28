@@ -19,6 +19,10 @@ vi.mock('chart.js/auto', () => ({
 const {ST} = await import('../src/js/main.js');
 const {renderAll} = await import('../src/js/report.js');
 const modal = await import('../src/js/report/report-modal.js');
+const {initActions} = await import('../src/js/actions.js');
+
+// 선택 상자의 change 를 실제 위임 경로로 보낸다. document 에 한 번만 건다
+initActions();
 
 /* 리포트 화면의 선택 상자·행 클릭이 상태를 제대로 이어 가는지 실제 마크업 위에서 본다. */
 
@@ -128,5 +132,35 @@ describe('행을 눌러 여는 학생', () => {
         // 2합: A 는 1+2=3, B 는 1+1=2. 2 이내는 B 만 들어간다
         modal.showCsatStudents(2, 2);
         expect(openFrom(document.querySelector('#csat-list-modal-tbody tr'))).toBe('B');
+    });
+});
+
+describe('표시 인원 선택', () => {
+    // 표시 인원만 바꿔도 renderAll 이 돌아 캐시를 다시 만들고 차트를 모두 새로 그렸다.
+    const change = (id, value) => {
+        const el = document.getElementById(id);
+        el.value = value;
+        el.dispatchEvent(new Event('change', {bubbles: true}));
+    };
+    const many = () => Array.from({length: 30}, (_, i) => student(`학생${i}`, '1', String(i + 1), i));
+
+    it('상위 N명 표시 인원은 그 표만 다시 그린다', () => {
+        ST.data = many();
+        renderAll();
+        charts.created = 0;
+        change('top-n-count', '10');
+        expect(charts.created).toBe(0);
+        expect(document.querySelectorAll('#top20-tbody tr')).toHaveLength(10);
+        expect(document.getElementById('top-n-title').innerText).toContain('상위 10명');
+    });
+
+    it('전교 석차 표시 인원은 그 표만 다시 그린다', () => {
+        ST.data = many();
+        renderAll();
+        charts.created = 0;
+        change('csat-top-n-count', '10');
+        expect(charts.created).toBe(0);
+        expect(document.querySelectorAll('#csat-school-tbody tr')).toHaveLength(10);
+        expect(document.querySelectorAll('#top20-tbody tr')).toHaveLength(20);
     });
 });
