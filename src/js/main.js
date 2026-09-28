@@ -52,6 +52,16 @@ export function exceljsTo2DArray(ws) {
     return result;
 }
 
+// SheetJS 시트를 A1 부터 시작하는 2차원 배열로 바꾼다.
+// sheet_to_json 은 !ref 의 시작 칸부터 읽는다. 1행이나 A열이 통째로 비어 있으면
+// !ref 가 A2·B1 같은 곳에서 시작하고, 그만큼 행·열이 앞으로 당겨진다. 그러면
+// 머리글 행 수와 열 문자가 어긋나 첫 학생이 빠지거나 옆 열을 읽는다. 시작을 A1 로 고정한다.
+export function sheetjsTo2DArray(sheet) {
+    if (!sheet || !sheet['!ref']) return [];
+    const {e} = XLSX.utils.decode_range(sheet['!ref']);
+    return XLSX.utils.sheet_to_json(sheet, {header: 1, defval: null, range: {s: {r: 0, c: 0}, e}});
+}
+
 // 탭 전환 로직
 export function switchTab(tabId) {
     ['upload', 'report', 'export'].forEach(t => {
@@ -159,7 +169,7 @@ export async function processFile(file) {
             // [최적화 3] addRow 반복문 대신 addRows 일괄 처리
             xlsWorkbook.SheetNames.forEach(sheetName => {
                 const newWs = wb.addWorksheet(sheetName);
-                const jsonData = XLSX.utils.sheet_to_json(xlsWorkbook.Sheets[sheetName], {header: 1, defval: null});
+                const jsonData = sheetjsTo2DArray(xlsWorkbook.Sheets[sheetName]);
                 newWs.addRows(jsonData); // 한 줄씩 addRow 하는 것보다 훨씬 빠름
             });
         } else if (fileExt === 'xlsx') {
