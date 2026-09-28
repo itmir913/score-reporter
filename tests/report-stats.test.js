@@ -237,6 +237,26 @@ describe('소수 합의 2진 오차', () => {
         expect(cellTexts('csat-school-tbody').map(r => r[0])).toEqual(['1', '1']);
     });
 
+    it('급간 분포: 화면에 50.0 인 합은 50~59 급간에 센다', () => {
+        // 3.8+33.3+12.9 는 49.99999999999999 라 상위 N명에는 50.0 인데 40~49 급간에 들어갔다
+        const threePct = (name, number, a, b, c) => student(name, number, {
+            korean: {...score('화법과 작문', 90), pct: a},
+            math: {...score('미적분', 80), pct: b},
+            inquiry1: {...score('물리학Ⅰ', 40), pct: c},
+        });
+        ST.data = [threePct('가', 1, 3.8, 33.3, 12.9), threePct('나', 2, 20, 20, 10)];
+        document.getElementById('interval-size').value = '10';
+        setGlobalBasis('pct');
+        const [labels, counts] = cellTexts('score-dist-tbody').map(r => r.slice(1).filter(Boolean));
+        const chart = ST.charts['scoreDist'].cfg;
+        chart.options.onClick.call({data: chart.data}, null, [{index: 0}]);
+        const binNames = cellTexts('bin-modal-tbody').map(r => r[2]);
+        setGlobalBasis('raw');
+        expect(labels).toEqual(['50~59', '40~49', '30~39', '20~29', '10~19', '0~9']);
+        expect(counts).toEqual(['2', '0', '0', '0', '0', '0']);
+        expect(binNames).toEqual(['가', '나']);
+    });
+
     it('빈 분포 안내는 기준 이름만 쓴다', () => {
         ST.data = [student('가', 1, {korean: {...score('화법과 작문', 90), std: null, pct: null}})];
         setGlobalBasis('std');
