@@ -73,6 +73,13 @@ describe('학급 기준 반 선택', () => {
         expect(document.getElementById('class-select').value).toBe('1');
         expect(classRowNames()).toEqual(['가']);
     });
+
+    // 머리글은 "학번 > 이름 순" 인데 번호로만 정렬해, 번호가 같거나 빈 학생은 파일 순서대로 나왔다
+    it('번호가 같거나 비어 있으면 이름순이다', () => {
+        ST.data = [student('하', '1', ''), student('가', '1', ''), student('다', '1', '2'), student('나', '1', '2')];
+        renderAll();
+        expect(classRowNames()).toEqual(['가', '하', '나', '다']);
+    });
 });
 
 describe('반 정보가 없는 데이터', () => {
