@@ -74,8 +74,9 @@ export function computeRenderCache(data, basis) {
         if (Number.isFinite(mathVal)) mathScores.push(mathVal);
         if (Number.isFinite(engGrade)) engGrades.push(engGrade);
 
-        /* 2. 4과목 합산 (상위N · 분포 공용) */
-        let sum = 0;
+        /* 2. 4과목 합산 (상위N · 분포 공용)
+         *    네 과목 모두 점수가 없으면(전 과목 결시) 0점이 아니라 null 로 두어 순위·분포에서 뺀다 */
+        let sum = 0, hasAny = false;
         const subjects = ['korean', 'math', 'inquiry1', 'inquiry2'];
 
         subjects.forEach(subj => {
@@ -84,10 +85,11 @@ export function computeRenderCache(data, basis) {
             // 수정된 조건: 타입이 숫자이고, NaN이 아닐 때만 합산
             if (typeof val === 'number' && !Number.isNaN(val)) {
                 sum += val;
+                hasAny = true;
             }
         });
 
-        studentWithSums.push({s, sum});
+        studentWithSums.push({s, sum: hasAny ? sum : null});
 
         /* 3. 선택과목별 집계 */
         accSubject(korSubjectStats, s.korean?.subject, s.korean);

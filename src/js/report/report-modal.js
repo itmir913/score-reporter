@@ -76,7 +76,9 @@ export function showBinStudentsModal(label, students) {
     // 3. tbody 내용 삽입 (td에 border-b만 남겨서 깔끔하게 표시)
     const tbody = document.getElementById('bin-modal-tbody');
     tbody.innerHTML = students.map(s => {
-        const sum = ['korean', 'math', 'inquiry1', 'inquiry2'].reduce((acc, cur) => acc + (s[cur]?.[basis] || 0), 0);
+        // 전 과목 결시면 0 이 아니라 - 를 찍는다 (상위 N명·분포에서도 빠진 학생이다)
+        const vals = ['korean', 'math', 'inquiry1', 'inquiry2'].map(cur => s[cur]?.[basis]).filter(Number.isFinite);
+        const sum = vals.length ? vals.reduce((a, b) => a + b, 0) : null;
         return `
             <tr class="hover:bg-blue-50 cursor-pointer transition-colors group"
                 data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" data-action="row-click">
@@ -84,7 +86,7 @@ export function showBinStudentsModal(label, students) {
                 <td class="border-b border-slate-200 p-3 text-slate-600">${escapeAttr(s.number)}번</td>
                 <td class="border-b border-slate-200 p-3 font-bold text-slate-800">${escapeAttr(s.name)}</td>
                 <td class="border-b border-slate-200 p-3 text-blue-600 font-bold">
-                    ${toFixedHalfUp(sum, basis === 'pct' ? 1 : 0)}
+                    ${sum === null ? '-' : toFixedHalfUp(sum, basis === 'pct' ? 1 : 0)}
                 </td>
                 <td class="border-b border-slate-200 p-3 text-base text-slate-400 group-hover:text-blue-500 font-medium">
                     상세보기 >

@@ -13,7 +13,9 @@ export function renderTopN(cache) {
     const basisLabel = labelMap[cache.basis];
 
     // ★ 캐시의 studentWithSums 활용 — 정렬 시 getSum() 재호출 없음
-    const topData = [...cache.studentWithSums]
+    // 전 과목 결시(sum === null)는 순위에 넣지 않는다
+    const topData = cache.studentWithSums
+        .filter(({sum}) => sum !== null)
         .sort((a, b) => {
             // 1차 기준: 총점(sum) 내림차순 (총점은 숫자로 보장되어 있다고 가정)
             if (b.sum !== a.sum) {

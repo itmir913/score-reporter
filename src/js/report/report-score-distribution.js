@@ -20,7 +20,15 @@ export function renderScoreDistribution(cache = ST.cache) {
         .map(({sum}) => sum)
         .filter(sum => Number.isFinite(sum) && sum >= 0);
 
-    if (sums.length === 0) return;
+    // 이 기준의 점수가 아무에게도 없으면 이전 기준의 차트와 표를 남기지 않는다
+    if (sums.length === 0) {
+        if (ST.charts['scoreDist']) ST.charts['scoreDist'].destroy();
+        delete ST.charts['scoreDist'];
+        document.getElementById('score-dist-thead').innerHTML = '';
+        document.getElementById('score-dist-tbody').innerHTML =
+            `<tr><td class="p-8 text-slate-400 text-center">${basisLabel} 점수가 없습니다.</td></tr>`;
+        return;
+    }
 
     const maxScore = Math.max(...sums);
     const numBins = Math.floor(maxScore / intervalSize) + 1;

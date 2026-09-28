@@ -76,6 +76,12 @@ export function _getScoreSum(student, basis) {
     return sum;
 }
 
+/** 국어·수학·탐구1·탐구2 중 원점수·표준점수·백분위가 하나라도 있는가 (전 과목 결시가 아닌가) */
+export function _hasAnyScore(student) {
+    return ['korean', 'math', 'inquiry1', 'inquiry2'].some(subj =>
+        ['raw', 'std', 'pct'].some(basis => Number.isFinite(student[subj]?.[basis])));
+}
+
 /* ── 메인 렌더링 함수 ── */
 export function renderCsatMinRequirement(cache) {
     if (!ST.data || ST.data.length === 0) return;
@@ -89,7 +95,8 @@ export function renderCsatMinRequirement(cache) {
         ? (limitElement.value === 'all' ? Infinity : parseInt(limitElement.value, 10))
         : 20;
 
-    const sortedData = [...ST.data].sort((a, b) => {
+    // 전 과목 결시는 석차에 넣지 않는다
+    const sortedData = ST.data.filter(_hasAnyScore).sort((a, b) => {
         // [핵심 수정] Number() 캐스팅과 || 0 을 통해 NaN, null, undefined를 0점으로 안전하게 치환
         const aRaw = Number(_getScoreSum(a, 'raw')) || 0;
         const bRaw = Number(_getScoreSum(b, 'raw')) || 0;

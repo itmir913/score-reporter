@@ -15,7 +15,8 @@ vi.mock('chart.js/auto', () => ({
 }));
 
 const {ST} = await import('../src/js/main.js');
-const {renderAll} = await import('../src/js/report.js');
+const {renderAll, setGlobalBasis} = await import('../src/js/report.js');
+const {showSelectedSubjectStudents} = await import('../src/js/report/report-modal.js');
 
 /* 통계 화면이 보여주는 숫자를 실제 마크업 위에서 본다. */
 
@@ -78,5 +79,59 @@ describe('요약 카드: 응시자가 없는 지표', () => {
             .find(el => el.textContent.includes('영어'));
         expect(card.textContent).not.toContain('0.0');
         expect(card.querySelector('.text-3xl').textContent.trim()).toBe('-');
+    });
+});
+
+describe('네 과목 모두 결시한 학생', () => {
+    const data = () => [
+        student('응시', 1, {
+            korean: score('화법과 작문', 90), math: score('미적분', 80),
+            inquiry1: score('물리학Ⅰ', 40), inquiry2: score('화학Ⅰ', 40),
+        }),
+        student('결시', 2), // 과목명은 있지만 점수가 전부 비었다
+    ];
+
+    it('점수 합 상위 명단에 넣지 않는다', () => {
+        ST.data = data();
+        document.getElementById('top-n-count').value = 'all';
+        renderAll();
+        const names = cellTexts('top20-tbody').map(r => r[3]);
+        expect(names).toEqual(['응시']);
+    });
+
+    it('급간 분포에 0점으로 세지 않는다', () => {
+        ST.data = data();
+        renderAll();
+        const {labels, datasets} = ST.charts.scoreDist.cfg.data;
+        expect(datasets[0].data.reduce((a, b) => a + b, 0)).toBe(1);
+        const zeroBin = datasets[0].data[labels.indexOf('0~9')];
+        expect(zeroBin).toBe(0);
+    });
+
+    it('전교 석차 표에 넣지 않는다', () => {
+        ST.data = data();
+        document.getElementById('csat-top-n-count').value = 'all';
+        renderAll();
+        expect(cellTexts('csat-school-tbody').map(r => r[3])).toEqual(['응시']);
+    });
+
+    it('명단 모달의 점수 합은 0 이 아니라 - 이다', () => {
+        ST.data = data();
+        renderAll();
+        showSelectedSubjectStudents('kor', '화법과 작문');
+        const row = cellTexts('bin-modal-tbody').find(r => r[2] === '결시');
+        expect(row[3]).toBe('-');
+    });
+
+    it('기준 점수가 아무에게도 없으면 이전 분포를 남기지 않는다', () => {
+        // 대교협(가채점)은 표준점수가 없다. 표준점수 기준으로 바꾸면 모두가 0점 급간에 몰렸다.
+        ST.data = [student('가', 1, {korean: {...score('화법과 작문', 90), std: null, pct: null}})];
+        setGlobalBasis('raw');
+        expect(ST.charts.scoreDist).toBeTruthy();
+        setGlobalBasis('std');
+        expect(ST.charts.scoreDist).toBeUndefined();
+        expect(cellTexts('top20-tbody').flat().join('')).not.toContain('가');
+        expect(document.getElementById('score-dist-tbody').textContent).not.toMatch(/\d+~\d+/);
+        setGlobalBasis('raw');
     });
 });
