@@ -105,6 +105,7 @@ export function showBinStudentsModal(label, students) {
  * 개별 학생 상세 성적표 팝업 (명단 클릭 시 호출)
  */
 export function showStudentDetail(name, cls, num) {
+    if (!ST.data) return; // 파일을 새로 올리는 중에는 데이터가 비어 있다
     const s = ST.data.find(item => item.name === name && item.class === cls && item.number === num);
     if (!s) return;
     _printStudent = s;

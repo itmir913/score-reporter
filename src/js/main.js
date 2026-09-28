@@ -115,6 +115,7 @@ export function clearFile() {
     ST.file = null;
     ST.fmtId = null;
     ST.data = null;
+    ST.cache = null;
     document.getElementById('fileInput').value = '';
     document.getElementById('file-info').classList.add('hidden');
     document.getElementById('dropzone').classList.remove('hidden');
@@ -124,6 +125,18 @@ export function clearFile() {
     document.getElementById('preview-section').classList.add('hidden');
     document.getElementById('badge-text').innerText = '데이터 없음';
     document.getElementById('data-badge').querySelector('span').className = 'w-2 h-2 rounded-full bg-slate-300';
+
+    // 데이터를 비웠으면 리포트와 내보내기 화면도 빈 상태로 되돌린다. 그대로 두면
+    // 이전 파일의 리포트가 남아, 거기서 행을 누르거나 선택을 바꿀 때 비어 있는
+    // ST.data 를 건드려 오류가 났다.
+    renderReport();
+    document.getElementById('export-cards').innerHTML = '';
+    document.getElementById('export-summary').innerHTML = `
+            <div class="py-8 text-center text-slate-400 text-base font-medium">
+                <i class="fa-solid fa-inbox text-4xl mb-3 block text-slate-200"></i>
+                불러온 데이터가 없습니다
+            </div>
+        `;
 }
 
 // 드래그 앤 드롭

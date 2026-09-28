@@ -7,6 +7,7 @@ import {escapeAttr} from '../utils.js';
    § 과목별 성적 분포 종합 (등급 or 백분위)
 ─────────────────────────────────────────── */
 export function renderSubjectsCharts() {
+    if (!ST.data) return; // 파일을 새로 올리는 중에는 데이터가 비어 있다
     const MAX_GRADE = 9;
     const grid = document.getElementById('chart-grid');
     grid.innerHTML = '';
@@ -141,7 +142,7 @@ export function renderSubjectsCharts() {
             }, options: {
                 responsive: true, maintainAspectRatio: true, aspectRatio: 1.5, // ★ 클릭 이벤트 추가
                 onClick: (event, elements) => {
-                    if (elements.length > 0) {
+                    if (elements.length > 0 && ST.data) {
                         const idx = elements[0].index;
                         const label = currentLabels[idx];
 
