@@ -37,8 +37,28 @@ export function handleRowClick(el) {
     const cls = el.dataset.class;
     const num = el.dataset.num;
 
-    // 기존에 사용하던 상세 보기 함수 호출
+    // 반·번호가 빈 양식(김영일)은 이름이 같은 학생을 이름·반·번호로 가를 수 없다.
+    // 행에 적어 둔 ST.data 위치로 찾고, 그 자리의 학생이 다르면(데이터가 바뀐 뒤) 예전 방식으로 찾는다
+    const s = el.dataset.idx !== undefined && el.dataset.idx !== '' ? ST.data?.[Number(el.dataset.idx)] : null;
+    if (s && s.name === name) {
+        _showStudent(s);
+        return;
+    }
     showStudentDetail(name, cls, num);
+}
+
+/* 학생 → ST.data 위치. ST.data 가 바뀔 때만 다시 만든다 */
+let _indexedData = null;
+let _indexMap = new Map();
+
+/** 행에 넣을 data-idx 속성. 목록이 걸러지거나 정렬된 사본이어도 원래 위치를 찾는다 */
+export function studentIdxAttr(s) {
+    if (_indexedData !== ST.data) {
+        _indexedData = ST.data;
+        _indexMap = new Map((ST.data || []).map((item, i) => [item, i]));
+    }
+    const i = _indexMap.get(s);
+    return i === undefined ? '' : `data-idx="${i}"`;
 }
 
 
@@ -81,7 +101,7 @@ export function showBinStudentsModal(label, students) {
         const sum = vals.length ? vals.reduce((a, b) => a + b, 0) : null;
         return `
             <tr class="hover:bg-blue-50 cursor-pointer transition-colors group"
-                data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" data-action="row-click">
+                data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" ${studentIdxAttr(s)} data-action="row-click">
                 <td class="border-b border-slate-200 p-3 text-slate-600">${escapeAttr(s.class)}반</td>
                 <td class="border-b border-slate-200 p-3 text-slate-600">${escapeAttr(s.number)}번</td>
                 <td class="border-b border-slate-200 p-3 font-bold text-slate-800">${escapeAttr(s.name)}</td>
@@ -109,7 +129,10 @@ export function showBinStudentsModal(label, students) {
 export function showStudentDetail(name, cls, num) {
     if (!ST.data) return; // 파일을 새로 올리는 중에는 데이터가 비어 있다
     const s = ST.data.find(item => item.name === name && item.class === cls && item.number === num);
-    if (!s) return;
+    if (s) _showStudent(s);
+}
+
+function _showStudent(s) {
     _printStudent = s;
 
     document.getElementById('modal-student-info').innerText = `${s.class}반 ${s.number}번 ${s.name} 성적표`;
@@ -214,7 +237,7 @@ export function showCsatStudents(n, targetSum) {
             const actualSubj = raw[`sum${n}_subj`]; // 새로 추가된 과목명 데이터 가져오기
             return `
                 <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer group"
-                    data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" data-action="row-click">
+                    data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" ${studentIdxAttr(s)} data-action="row-click">
                     <td class="border border-slate-300 p-3 text-slate-700">${escapeAttr(s.class) || ''}반 ${escapeAttr(s.number) || ''}번</td>
                     <td class="border border-slate-300 p-3 font-bold text-slate-800">${escapeAttr(s.name) || ''}</td>
                     <td class="border border-slate-300 p-3 text-blue-600 font-bold">${actualSum}</td>

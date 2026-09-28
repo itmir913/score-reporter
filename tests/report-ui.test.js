@@ -18,6 +18,7 @@ vi.mock('chart.js/auto', () => ({
 
 const {ST} = await import('../src/js/main.js');
 const {renderAll} = await import('../src/js/report.js');
+const modal = await import('../src/js/report/report-modal.js');
 
 /* 리포트 화면의 선택 상자·행 클릭이 상태를 제대로 이어 가는지 실제 마크업 위에서 본다. */
 
@@ -81,5 +82,51 @@ describe('반 정보가 없는 데이터', () => {
         expect(document.getElementById('class-select').options).toHaveLength(0);
         expect(classRowNames()).toEqual([undefined]);
         expect(document.getElementById('csat-class-tbody').textContent.trim()).toBe('반 정보가 없습니다.');
+    });
+});
+
+describe('행을 눌러 여는 학생', () => {
+    // 이름·반·번호로 학생을 찾았다. 김영일 양식은 반·번호가 비어 있어 이름이 같은
+    // 학생이 둘이면 어느 행을 눌러도 앞 학생의 성적표가 열리고 인쇄되었다.
+    const twins = () => {
+        const a = {...student('김철수', '', '', 90), student_id: 'A'};
+        const b = {...student('김철수', '', '', 10), student_id: 'B'};
+        return [a, b];
+    };
+    const openFrom = (row) => {
+        modal.handleRowClick(row);
+        return modal._printStudent?.student_id;
+    };
+
+    it('상위 N명·전교 석차 행은 그 행의 학생을 연다', () => {
+        ST.data = twins();
+        document.getElementById('csat-top-n-count').value = 'all';
+        renderAll();
+        // 합이 낮은 B 는 두 표 모두 두 번째 행이다
+        expect(openFrom(document.querySelectorAll('#top20-tbody tr')[1])).toBe('B');
+        expect(openFrom(document.querySelectorAll('#csat-school-tbody tr')[1])).toBe('B');
+    });
+
+    it('학급 표 행은 정렬된 순서와 상관없이 그 행의 학생을 연다', () => {
+        const [a, b] = twins();
+        // 번호가 빈 두 학생이 앞으로 정렬되어 ST.data 순서와 행 순서가 다르다
+        ST.data = [student('다', '1', '3'), {...a, class: '1'}, {...b, class: '1'}];
+        renderAll();
+        const rows = document.querySelectorAll('#csat-class-tbody tr');
+        expect(openFrom(rows[0])).toBe('A');
+        expect(openFrom(rows[1])).toBe('B');
+        expect(rows[2].dataset.name).toBe('다');
+    });
+
+    it('구간 명단·수능 최저 명단 행도 그 행의 학생을 연다', () => {
+        ST.data = twins();
+        ST.data[1].korean = {...ST.data[1].korean, grade: 1};
+        renderAll();
+        modal.showSelectedSubjectStudents('kor', '화법과 작문');
+        const binRows = [...document.querySelectorAll('#bin-modal-tbody tr')];
+        expect(binRows.map(openFrom)).toEqual(['A', 'B']);
+        // 2합: A 는 1+2=3, B 는 1+1=2. 2 이내는 B 만 들어간다
+        modal.showCsatStudents(2, 2);
+        expect(openFrom(document.querySelector('#csat-list-modal-tbody tr'))).toBe('B');
     });
 });

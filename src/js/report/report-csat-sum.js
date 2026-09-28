@@ -3,6 +3,7 @@ import {renderAll} from '../report.js';
 /* 아래 마크업의 on* 속성이 부르는 함수는 모듈 스코프가 아니라 전역에서 찾는다.
  * src/main.js가 window에 올려두므로 여기서 import 하지 않는다. */
 import {escapeAttr, roundHalfUp} from '../utils.js';
+import {studentIdxAttr} from './report-modal.js';
 
 /* ───────────────────────────────────────────
    § 수능 최저학력기준 분석 로직
@@ -126,7 +127,7 @@ export function renderCsatMinRequirement(cache) {
             const csat = _getCsatSums(s);
             return `
                 <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer group"
-                    data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}"
+                    data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" ${studentIdxAttr(s)}
                     data-action="row-click">
                     <td class="p-3 text-slate-500 font-medium">${rank}</td>
                     <td class="p-3 text-slate-700">${escapeAttr(s.class) || ''}</td>
@@ -276,7 +277,7 @@ export function renderCsatClassTable(cache) {
                </div>`;
 
         classTbody.innerHTML = mappedData.map(({s, csat}) => `
-            <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer group" data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" data-action="row-click">
+            <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer group" data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" ${studentIdxAttr(s)} data-action="row-click">
                 <td class="p-3 text-slate-700">${escapeAttr(s.number) || ''}</td>
                 <td class="p-3 text-left font-semibold text-slate-800">${escapeAttr(s.name) || ''}</td>
                 <td class="p-3 bg-blue-50/50 text-blue-700 border-x border-slate-100">${fmtCsat(csat.sum2, csat.sum2_subj)}</td>

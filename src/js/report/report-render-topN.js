@@ -2,6 +2,7 @@ import {labelMap} from '../report.js';
 /* 아래 마크업의 on* 속성이 부르는 함수는 모듈 스코프가 아니라 전역에서 찾는다.
  * src/main.js가 window에 올려두므로 여기서 import 하지 않는다. */
 import {escapeAttr, roundHalfUp, toFixedHalfUp} from '../utils.js';
+import {studentIdxAttr} from './report-modal.js';
 
 /* ───────────────────────────────────────────
    § 상위 N명 명단 렌더링 (전역 기준 적용)
@@ -70,7 +71,7 @@ export function renderTopN(cache) {
         const displaySum = toFixedHalfUp(sum, cache.basis === 'pct' ? 1 : 0);
         return `
             <tr class="hover:bg-slate-50 cursor-pointer transition-colors divide-x divide-slate-100 border-b border-slate-100"
-                data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}"
+                data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" ${studentIdxAttr(s)}
                 data-action="row-click">
                 <td class="px-2 py-2 text-center font-bold text-slate-500">${rank}</td>
                 <td class="px-2 py-2 text-center">${escapeAttr(s.class) || '-'}</td>
