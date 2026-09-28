@@ -52,6 +52,19 @@ describe('processFile', () => {
     });
 });
 
+describe('지원하지 않는 파일 형식', () => {
+    // 끌어다 놓기는 accept 를 거치지 않는다. .xlsm 같은 파일이 시트 0개로
+    // "데이터를 성공적으로 불러왔습니다." 를 띄웠다.
+    it('.xlsm 은 오류를 알리고 파일 올리기 화면에 머문다', async () => {
+        await processFile(fakeFile('성적.xlsm', new ArrayBuffer(8)));
+        expect(document.getElementById('toast-msg').innerText).toBe('지원하지 않는 파일 형식입니다. (.xlsx, .xls, .csv)');
+        expect(ST.wb).toBeNull();
+        expect(document.getElementById('dropzone').classList.contains('hidden')).toBe(false);
+        expect(document.getElementById('file-info').classList.contains('hidden')).toBe(true);
+        expect(document.getElementById('format-area').classList.contains('hidden')).toBe(true);
+    });
+});
+
 describe('processFile 을 겹쳐 부를 때', () => {
     // 앞 파일을 읽는(암호를 푸는) 동안 다른 파일을 올리면, 늦게 끝난 앞 파일이
     // 화면과 ST.wb 를 덮어써 고른 양식·미리보기는 뒤 파일 것인데 앞 파일을 파싱했다.
