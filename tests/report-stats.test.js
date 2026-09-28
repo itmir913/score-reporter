@@ -186,3 +186,28 @@ describe('선택과목 평균 원점수', () => {
         expect(row[2]).toBe('80.0');
     });
 });
+
+describe('선택과목 원그래프 색', () => {
+    const inquiries = (n) => Array.from({length: n}, (_, i) => student(`학생${i}`, i + 1, {
+        // 인원이 서로 달라야 정렬 순서가 정해진다: 과목 i 를 i+1 명이 고르게 한다
+        inquiry1: score(`탐구${i}`, 40), inquiry2: score('', null),
+    })).flatMap((s, i) => Array.from({length: i + 1}, () => s));
+
+    // 팔레트가 10색이라 11번째 과목부터 색이 비어 Chart.js 기본 회색이 칠해졌다
+    it('과목이 13개여도 모두 서로 다른 색이다', () => {
+        ST.data = inquiries(13);
+        renderAll();
+        const colors = ST.charts.inqSelectPie.cfg.data.datasets[0].backgroundColor;
+        expect(colors).toHaveLength(13);
+        expect(colors.every(c => typeof c === 'string')).toBe(true);
+        expect(new Set(colors).size).toBe(13);
+    });
+
+    it('팔레트보다 과목이 많으면 색을 돌려 쓴다', () => {
+        ST.data = inquiries(25);
+        renderAll();
+        const colors = ST.charts.inqSelectPie.cfg.data.datasets[0].backgroundColor;
+        expect(colors).toHaveLength(25);
+        expect(colors.every(c => typeof c === 'string')).toBe(true);
+    });
+});

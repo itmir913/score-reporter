@@ -46,9 +46,13 @@ export function renderSubjectSelection(cache) {
         }
 
         const counts = labels.map(l => statsData[l].count);
+        // 탐구는 과목이 10개를 넘기 쉽다. 색이 모자라면 Chart.js 기본 회색이 칠해지므로
+        // 20색을 두고, 그보다 많으면 처음부터 돌려 쓴다.
         const colors = [
             '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-            '#ec4899', '#14b8a6', '#64748b', '#0ea5e9', '#d946ef'
+            '#ec4899', '#14b8a6', '#64748b', '#0ea5e9', '#d946ef',
+            '#84cc16', '#f97316', '#6366f1', '#06b6d4', '#eab308',
+            '#1e3a8a', '#92400e', '#166534', '#9f1239', '#334155'
         ];
 
         ST.charts[chartKey] = new Chart(canvasEl.getContext('2d'), {
@@ -57,7 +61,7 @@ export function renderSubjectSelection(cache) {
                 labels: labels,
                 datasets: [{
                     data: counts,
-                    backgroundColor: colors.slice(0, labels.length),
+                    backgroundColor: labels.map((_, i) => colors[i % colors.length]),
                     borderWidth: 2,
                     borderColor: '#ffffff'
                 }]
