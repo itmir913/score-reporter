@@ -15,6 +15,7 @@ export class GradeExporter {
             // ───────────────────────────────────────────
             const MAP = {
                 grade_year: 'grade_year', class: 'class', number: 'number', name: 'name', exam_year: 'exam_year',
+                student_id: 'student_id',
                 kor_subject: s => s.korean.subject, kor_common_raw: s => s.korean.common_raw,
                 kor_select_raw: s => s.korean.select_raw, kor_raw: s => s.korean.raw,
                 kor_std: s => s.korean.std, kor_pct: s => s.korean.pct, kor_grade: s => s.korean.grade,

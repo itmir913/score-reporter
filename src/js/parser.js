@@ -27,6 +27,7 @@ export class GradeDataParser {
 
         return {
             exam_year: s.str(r, 'exam_year'),
+            student_id: s.str(r, 'student_id'),
             grade_year: s.str(r, 'grade_year'),
             class: s.str(r, 'class'),
             number: s.str(r, 'number'),

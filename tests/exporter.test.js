@@ -152,6 +152,24 @@ describe('내보낸 파일을 다시 읽어도 성적이 그대로다', () => {
         if (schema.supports('eng_grade')) expect(back[1].english.grade).toBeNull();
     });
 
+    // 김영일 양식에는 반·번호가 없어서, 아이디를 읽어 두지 않으면 다시 내보낼 때
+    // 학년만으로 아이디를 새로 지어 모든 학생이 같은 아이디(300000)가 되었다.
+    it('김영일 아이디는 왕복해도 그대로다', async () => {
+        const students = [
+            {...student({name: '홍길동', cls: '', number: ''}), student_id: '30115'},
+            {...student({name: '김철수', cls: '', number: ''}), student_id: '30220'},
+        ];
+        const rows = await exportAndRead(students, SCHEMAS.kimyoungil);
+
+        const wb = new ExcelJS.Workbook();
+        wb.addWorksheet('성적').addRows(rows);
+        const back = new GradeDataParser(SCHEMAS.kimyoungil).parse(wb, '성적');
+        expect(back.map(s => s.student_id)).toEqual(['30115', '30220']);
+
+        const again = await exportAndRead(back, SCHEMAS.kimyoungil);
+        expect(again.slice(1).map(r => String(r[0]))).toEqual(['30115', '30220']);
+    });
+
     // 위 왕복 시험이 조건부로 넘어가는 항목들이 실제로 어떤 상태인지 못 박아 둔다.
     // 이게 없으면 열이 통째로 빠져도 시험이 조용히 통과한다.
     it('양식마다 지원 항목이 다르다', () => {
