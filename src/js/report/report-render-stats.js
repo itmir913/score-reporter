@@ -20,7 +20,7 @@ export function renderStats(cache) {
 
         // [핵심 수정] 2. 카운트 기준을 '오염된 전체 배열'이 아닌 '유효한 점수 배열'로 변경
         const count = validScores.length;
-        if (count === 0) return "0.0"; // 유효한 응시자가 없을 경우
+        if (count === 0) return '-'; // 유효한 응시자가 없을 경우 (0.0 은 실제 점수처럼 보인다)
 
         // 2. 상위 20% 기준 인원 산출
         const topCount = Math.max(1, Math.ceil(count * 0.2));
@@ -39,6 +39,9 @@ export function renderStats(cache) {
         return toFixedHalfUp(sum / topSlice.length, 1); // topCount가 아닌 동점자가 포함된 topSlice.length로 나눔
     };
 
+    // 값이 없으면('-') 단위를 붙이지 않는다
+    const withUnit = (v, u) => v === '-' ? v : `${v}<span class="text-lg font-normal ml-0.5">${u}</span>`;
+
     // 각 과목별 실제 응시자 수 기준 상위 20% 계산
     const korTop20Avg = getTop20Avg(cache.korScores);
     const mathTop20Avg = getTop20Avg(cache.mathScores);
@@ -52,17 +55,17 @@ export function renderStats(cache) {
         
         <div class="stat-card bg-white border border-slate-200 border-b-4 border-b-blue-500 rounded-2xl p-5 flex flex-col justify-center items-center text-center shadow-sm">
             <span class="text-base text-blue-600 font-bold mb-1 uppercase tracking-tight">국어 상위 20% ${basisLabel} 평균</span>
-            <span class="text-3xl font-black text-blue-700">${korTop20Avg}<span class="text-lg font-normal ml-0.5">${unit}</span></span>
+            <span class="text-3xl font-black text-blue-700">${withUnit(korTop20Avg, unit)}</span>
         </div>
 
         <div class="stat-card bg-white border border-slate-200 border-b-4 border-b-amber-400 rounded-2xl p-5 flex flex-col justify-center items-center text-center shadow-sm">
             <span class="text-base text-amber-600 font-bold mb-1 uppercase tracking-tight">수학 상위 20% ${basisLabel} 평균</span>
-            <span class="text-3xl font-black text-amber-600">${mathTop20Avg}<span class="text-lg font-normal ml-0.5">${unit}</span></span>
+            <span class="text-3xl font-black text-amber-600">${withUnit(mathTop20Avg, unit)}</span>
         </div>
 
         <div class="stat-card bg-white border border-slate-200 border-b-4 border-b-rose-500 rounded-2xl p-5 flex flex-col justify-center items-center text-center shadow-sm">
             <span class="text-base text-rose-600 font-bold mb-1 uppercase tracking-tight">영어 상위 20% 등급</span>
-            <span class="text-3xl font-black text-rose-700">${engTop20Avg}<span class="text-lg font-normal ml-0.5">등급</span></span>
+            <span class="text-3xl font-black text-rose-700">${withUnit(engTop20Avg, '등급')}</span>
         </div>
     `;
 }

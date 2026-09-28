@@ -65,3 +65,18 @@ describe('평균 소수점 반올림', () => {
         expect(document.getElementById('stat-cards').textContent).toContain('80.4');
     });
 });
+
+describe('요약 카드: 응시자가 없는 지표', () => {
+    // 대교협(가채점)은 등급 열이 없다. 예전에는 "0.0등급" 을 보여 주었다.
+    it('등급이 하나도 없으면 영어 상위 20% 는 - 이다', () => {
+        ST.data = [
+            student('가', 1, {korean: score('화법과 작문', 90)}),
+            student('나', 2, {korean: score('화법과 작문', 70)}),
+        ];
+        renderAll();
+        const card = [...document.querySelectorAll('#stat-cards .stat-card')]
+            .find(el => el.textContent.includes('영어'));
+        expect(card.textContent).not.toContain('0.0');
+        expect(card.querySelector('.text-3xl').textContent.trim()).toBe('-');
+    });
+});
