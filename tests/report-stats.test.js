@@ -173,3 +173,16 @@ describe('동점자 순위', () => {
         expect(rows[0][3]).toBe('학생5');
     });
 });
+
+describe('선택과목 평균 원점수', () => {
+    // 유니브·김영일 양식은 원점수 열이 따로 있다. 공통·선택 칸 하나가 비어도 원점수는 있다.
+    it('공통+선택을 다시 더하지 않고 원점수를 쓴다', () => {
+        ST.data = [
+            student('가', 1, {korean: {...score('화법과 작문', 85), common_raw: 60, select_raw: null}}),
+            student('나', 2, {korean: {...score('화법과 작문', 75), common_raw: 50, select_raw: 25}}),
+        ];
+        renderAll();
+        const row = cellTexts('kor-select-stats').find(r => r[0] === '화법과 작문');
+        expect(row[2]).toBe('80.0');
+    });
+});

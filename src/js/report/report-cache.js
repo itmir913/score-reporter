@@ -39,16 +39,10 @@ export function computeRenderCache(data, basis) {
         d.count++;
         if (!scoreObj) return;
 
-        let rawScore = 0, hasRaw = false;
-        if (typeof scoreObj.common_raw === 'number' || typeof scoreObj.select_raw === 'number') {
-            rawScore = (scoreObj.common_raw || 0) + (scoreObj.select_raw || 0);
-            hasRaw = true;
-        } else if (typeof scoreObj.raw === 'number') {
-            rawScore = scoreObj.raw;
-            hasRaw = true;
-        }
-        if (hasRaw) {
-            d.sumRaw += rawScore;
+        // 원점수는 raw 만 본다. 원점수 열이 없는 양식이면 파서가 이미 공통+선택으로 채워 두었고,
+        // 여기서 다시 더하면 원점수 열이 있는 양식에서 빈 칸 하나가 0점이 된다.
+        if (Number.isFinite(scoreObj.raw)) {
+            d.sumRaw += scoreObj.raw;
             d.validRawCount++;
         }
         if (typeof scoreObj.std === 'number' && !Number.isNaN(scoreObj.std)) {
