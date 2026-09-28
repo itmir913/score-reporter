@@ -159,8 +159,14 @@ export function handleFileSelect(e) {
     if (e.target.files.length > 0) processFile(e.target.files[0]);
 }
 
+// 파일 읽기 차례. 앞 파일을 읽는(암호를 푸는) 동안 다른 파일을 올리면, 늦게 끝난
+// 앞 파일이 화면과 ST.wb 를 덮어썼다. 기다림이 끝날 때마다 내가 마지막 파일인지 본다
+let loadSeq = 0;
+
 // ★ 변경: 비동기(async) 방식으로 ExcelJS 적용 및 비밀번호 프롬프트 추가
 export async function processFile(file) {
+    const seq = ++loadSeq;
+    const superseded = () => seq !== loadSeq;
     clearFile();
 
     // ★ 개선 1: 파일 처리를 시작하기 전에 로딩 안내 띄우기
@@ -168,9 +174,11 @@ export async function processFile(file) {
 
     // ★ 개선 2: UI가 그려질(Toast가 뜰) 시간을 주기 위해 메인 스레드를 잠깐 쉬게 함 (매우 중요)
     await new Promise(resolve => setTimeout(resolve, 50));
+    if (superseded()) return;
 
     try {
         const arrayBuffer = await file.arrayBuffer();
+        if (superseded()) return;
         const fileExt = file.name.split('.').pop().toLowerCase();
 
         let wb = new ExcelJS.Workbook(); // 미리 생성
@@ -206,13 +214,17 @@ export async function processFile(file) {
             let data = arrayBuffer;
             if (isEncryptedOfficeFile(arrayBuffer)) {
                 const pwd = prompt("암호가 걸려있는 엑셀 파일입니다.\n비밀번호를 입력해주세요.");
+                if (superseded()) return;
                 if (pwd === null) return showToast("취소되었습니다.", true);
 
                 showToast("암호를 해제하는 중입니다. 잠시만 기다려주세요...");
                 await new Promise(r => setTimeout(r, 50));
+                if (superseded()) return;
                 data = await decryptXlsx(arrayBuffer, pwd);
+                if (superseded()) return;
             }
             await wb.xlsx.load(data);
+            if (superseded()) return;
         }
 
         // 공통 마무리 로직
@@ -235,6 +247,7 @@ export async function processFile(file) {
         showToast("데이터를 성공적으로 불러왔습니다.");
 
     } catch (err) {
+        if (superseded()) return; // 이미 다른 파일을 읽고 있다. 앞 파일의 오류는 알리지 않는다
         console.error("파일 처리 에러:", err);
         showToast(err instanceof WrongPasswordError
             ? '비밀번호가 올바르지 않습니다. 파일을 다시 올려 주세요.'

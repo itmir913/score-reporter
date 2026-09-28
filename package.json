@@ -1,6 +1,6 @@
 {
   "name": "score-reporter",
-  "version": "0.1.21",
+  "version": "0.1.22",
   "private": true,
   "type": "module",
   "description": "모의고사 성적 분석 리포트 시스템",

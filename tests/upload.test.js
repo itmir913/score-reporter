@@ -52,6 +52,33 @@ describe('processFile', () => {
     });
 });
 
+describe('processFile 을 겹쳐 부를 때', () => {
+    // 앞 파일을 읽는(암호를 푸는) 동안 다른 파일을 올리면, 늦게 끝난 앞 파일이
+    // 화면과 ST.wb 를 덮어써 고른 양식·미리보기는 뒤 파일 것인데 앞 파일을 파싱했다.
+    it('나중에 올린 파일이 이긴다', async () => {
+        let releaseA;
+        const gate = new Promise(r => {
+            releaseA = r;
+        });
+        const csv = (text) => new TextEncoder().encode(text).buffer;
+        const slowA = {
+            name: 'A.csv', size: 10, arrayBuffer: async () => {
+                await gate;
+                return csv('이름\n가\n');
+            }
+        };
+        const pA = processFile(slowA);
+        await new Promise(r => setTimeout(r, 60));
+        await processFile(fakeFile('B.csv', csv('이름\n나\n')));
+        const wbB = ST.wb;
+        releaseA();
+        await pA;
+        expect(ST.file.name).toBe('B.csv');
+        expect(ST.wb).toBe(wbB);
+        expect(document.getElementById('file-name').innerText).toBe('B.csv');
+    });
+});
+
 describe('clearFile', () => {
     // 새 파일을 올리면 clearFile 이 ST.data 를 비운다. 이전 리포트가 화면에 남아
     // 있으면 그 위의 선택 상자나 학생 행이 비어 있는 ST.data 를 건드려 오류가 났다.
