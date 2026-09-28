@@ -69,3 +69,17 @@ describe('학급 기준 반 선택', () => {
         expect(classRowNames()).toEqual(['가']);
     });
 });
+
+describe('반 정보가 없는 데이터', () => {
+    // 반 열이 없는 양식(김영일)을 올리면 반 목록만 비고 학급 표는 그대로 남아,
+    // 이전 파일 학생들이 계속 보였다.
+    it('학급 표에 이전 데이터를 남기지 않는다', () => {
+        ST.data = [student('이전1', '1', '1'), student('이전2', '1', '2')];
+        renderAll();
+        ST.data = [student('새1', '', ''), student('새2', '', '')];
+        renderAll();
+        expect(document.getElementById('class-select').options).toHaveLength(0);
+        expect(classRowNames()).toEqual([undefined]);
+        expect(document.getElementById('csat-class-tbody').textContent.trim()).toBe('반 정보가 없습니다.');
+    });
+});

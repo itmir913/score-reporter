@@ -149,7 +149,15 @@ export function renderCsatMinRequirement(cache) {
         const prevClass = classSelect.value;
         classSelect.innerHTML = classes.map(c => `<option value="${escapeAttr(c)}">${escapeAttr(c)}반 보기</option>`).join('');
         if (classes.includes(prevClass)) classSelect.value = prevClass;
-        if (classes.length > 0) renderCsatClassTable(cache);
+        if (classes.length > 0) {
+            renderCsatClassTable(cache);
+        } else {
+            // 반 열이 없는 양식이면 이전 파일의 학급 표가 남지 않게 비운다
+            const classTbody = document.getElementById('csat-class-tbody');
+            if (classTbody) {
+                classTbody.innerHTML = `<tr><td colspan="6" class="p-8 text-slate-400 text-center">반 정보가 없습니다.</td></tr>`;
+            }
+        }
     }
 }
 
