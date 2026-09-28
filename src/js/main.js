@@ -426,7 +426,7 @@ export function loadSampleData() {
 
     const subjectsKor = ['화법과 작문', '언어와 매체'];
     const subjectsMath = ['확률과 통계', '미적분', '기하'];
-    const subjectsInq = ['생활과 윤리', '윤리와 사상', '한국지리', '세계지리', '동아시아사', '세계사', '경제', '정치와 법', '사회·문화', '물리학I', '화학I', '생명과학I', '지구과학I'];
+    const subjectsInq = ['생활과 윤리', '윤리와 사상', '한국지리', '세계지리', '동아시아사', '세계사', '경제', '정치와 법', '사회·문화', '물리학Ⅰ', '화학Ⅰ', '생명과학Ⅰ', '지구과학Ⅰ'];
 
     // 원점수 기반 등급 계산
     const getGrade = (raw, max) => {
