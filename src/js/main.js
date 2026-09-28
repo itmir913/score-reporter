@@ -508,6 +508,10 @@ export function loadSampleData() {
         const inq1Raw = generateScore(30, 10, 50);
         const inq2Raw = generateScore(30, 10, 50);
         const histRaw = generateScore(35, 8, 50);
+        // 탐구 두 과목은 서로 다른 과목이다. 따로 뽑으면 같은 과목이 두 번 나온다
+        const inq1Subject = subjectsInq[Math.floor(Math.random() * subjectsInq.length)];
+        const inq2Choices = subjectsInq.filter(sub => sub !== inq1Subject);
+        const inq2Subject = inq2Choices[Math.floor(Math.random() * inq2Choices.length)];
 
         dummy.push({
             exam_year: String(new Date().getFullYear()),
@@ -540,14 +544,14 @@ export function loadSampleData() {
                 grade: getGrade(engRaw, 100)
             },
             inquiry1: {
-                subject: subjectsInq[Math.floor(Math.random() * subjectsInq.length)],
+                subject: inq1Subject,
                 raw: inq1Raw,
                 std: Math.floor(inq1Raw * 1.2 + 20),
                 pct: Math.floor((inq1Raw / 50) * 100),
                 grade: getGrade(inq1Raw, 50)
             },
             inquiry2: {
-                subject: subjectsInq[Math.floor(Math.random() * subjectsInq.length)],
+                subject: inq2Subject,
                 raw: inq2Raw,
                 std: Math.floor(inq2Raw * 1.2 + 20),
                 pct: Math.floor((inq2Raw / 50) * 100),

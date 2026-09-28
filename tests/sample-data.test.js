@@ -25,3 +25,22 @@ it('샘플 과학탐구 과목명은 실제 시험 파일처럼 로마 숫자 �
     const science = subjects.filter(sub => /(물리학|화학|생명과학|지구과학)/.test(sub));
     for (const sub of science) expect(convertRomanToNumber(null, sub)).toMatch(/1$/);
 });
+
+// 탐구 두 과목을 따로 뽑아, 샘플 학생 열셋에 하나 꼴로 같은 과목이 두 번 들어갔다.
+// 난수를 0.5 로 고정하면 예전 방식은 모든 학생이 같은 칸에서 두 과목을 뽑는다.
+it('샘플 학생의 탐구1·탐구2 는 서로 다른 과목이다', () => {
+    document.body.innerHTML = readFileSync(resolve(process.cwd(), 'index.html'), 'utf-8')
+        .replace(/^[\s\S]*<body[^>]*>/, '').replace(/<\/body>[\s\S]*$/, '');
+    vi.spyOn(console, 'error').mockImplementation(() => {
+    });
+    vi.spyOn(Math, 'random').mockReturnValue(0.5);
+    try {
+        loadSampleData();
+    } catch {
+        // 차트 그리기 실패는 이 시험의 관심사가 아니다
+    }
+    vi.restoreAllMocks();
+
+    expect(ST.data).toHaveLength(100);
+    for (const s of ST.data) expect(s.inquiry2.subject).not.toBe(s.inquiry1.subject);
+});
