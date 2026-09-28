@@ -26,7 +26,7 @@ export function renderScoreDistribution(cache = ST.cache) {
         delete ST.charts['scoreDist'];
         document.getElementById('score-dist-thead').innerHTML = '';
         document.getElementById('score-dist-tbody').innerHTML =
-            `<tr><td class="p-8 text-slate-400 text-center">${basisLabel} 점수가 없습니다.</td></tr>`;
+            `<tr><td class="p-8 text-slate-400 text-center">${basisLabel}가 없습니다.</td></tr>`;
         return;
     }
 

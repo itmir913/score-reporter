@@ -2,7 +2,7 @@ import {ST} from '../main.js';
 import {renderAll} from '../report.js';
 /* 아래 마크업의 on* 속성이 부르는 함수는 모듈 스코프가 아니라 전역에서 찾는다.
  * src/main.js가 window에 올려두므로 여기서 import 하지 않는다. */
-import {escapeAttr} from '../utils.js';
+import {escapeAttr, roundHalfUp} from '../utils.js';
 
 /* ───────────────────────────────────────────
    § 수능 최저학력기준 분석 로직
@@ -97,11 +97,13 @@ export function renderCsatMinRequirement(cache) {
 
     // 전 과목 결시는 석차에 넣지 않는다
     // [핵심 수정] Number() 캐스팅과 || 0 을 통해 NaN, null, undefined를 0점으로 안전하게 치환
+    // 소수 6자리로 다듬어 0.1+0.2 와 0.3 처럼 2진 오차만 다른 합을 같게 본다
+    const sumKey = (s, basis) => roundHalfUp(Number(_getScoreSum(s, basis)) || 0, 6);
     const keyed = ST.data.filter(_hasAnyScore).map(s => ({
         s,
-        raw: Number(_getScoreSum(s, 'raw')) || 0,
-        std: Number(_getScoreSum(s, 'std')) || 0,
-        pct: Number(_getScoreSum(s, 'pct')) || 0,
+        raw: sumKey(s, 'raw'),
+        std: sumKey(s, 'std'),
+        pct: sumKey(s, 'pct'),
     })).sort((a, b) => {
         if (b.raw !== a.raw) return b.raw - a.raw;
         if (b.std !== a.std) return b.std - a.std;

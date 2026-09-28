@@ -21,6 +21,7 @@ export function roundHalfUp(v, d = 0) {
 }
 
 export function toFixedHalfUp(v, d = 0) {
+    if (!Number.isFinite(v)) return '-';
     return roundHalfUp(v, d).toFixed(d);
 }
 

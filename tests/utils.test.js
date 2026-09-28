@@ -137,3 +137,12 @@ describe('avgOf: 숫자가 아닌 값', () => {
         expect(avgOf(['80', '90'])).toBeNull();
     });
 });
+
+describe('toFixedHalfUp: 값이 없을 때', () => {
+    // 예전에는 null 이 "0.0", NaN 이 "NaN" 으로 찍혔다
+    it('유한한 숫자가 아니면 - 이다', () => {
+        for (const v of [null, undefined, NaN, Infinity, -Infinity]) {
+            expect(toFixedHalfUp(v, 1)).toBe('-');
+        }
+    });
+});

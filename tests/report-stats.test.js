@@ -211,3 +211,37 @@ describe('선택과목 원그래프 색', () => {
         expect(colors.every(c => typeof c === 'string')).toBe(true);
     });
 });
+
+describe('소수 합의 2진 오차', () => {
+    // 백분위 0.1+0.2 는 0.30000000000000004 라 0.3 인 학생과 다른 순위를 받았다
+    const pctOnly = (name, number, kor, math) => student(name, number, {
+        korean: {...score('화법과 작문', 90), pct: kor},
+        math: {...score('미적분', 80), pct: math},
+    });
+
+    it('상위 N명: 화면에 같은 합이면 같은 순위다', () => {
+        ST.data = [pctOnly('가', 1, 0.1, 0.2), pctOnly('나', 2, 0.3, 0), pctOnly('다', 3, 0.2, 0.1)];
+        document.getElementById('top-n-count').value = 'all';
+        setGlobalBasis('pct');
+        const rows = cellTexts('top20-tbody');
+        setGlobalBasis('raw');
+        expect(rows.map(r => r[0])).toEqual(['1', '1', '1']);
+        // 동점이면 반·번호 순이다
+        expect(rows.map(r => r[3])).toEqual(['가', '나', '다']);
+    });
+
+    it('전교 석차: 백분위 합의 오차로 순위가 갈리지 않는다', () => {
+        ST.data = [pctOnly('나', 2, 0.3, 0), pctOnly('가', 1, 0.1, 0.2)];
+        document.getElementById('csat-top-n-count').value = 'all';
+        renderAll();
+        expect(cellTexts('csat-school-tbody').map(r => r[0])).toEqual(['1', '1']);
+    });
+
+    it('빈 분포 안내는 기준 이름만 쓴다', () => {
+        ST.data = [student('가', 1, {korean: {...score('화법과 작문', 90), std: null, pct: null}})];
+        setGlobalBasis('std');
+        const text = document.getElementById('score-dist-tbody').textContent.trim();
+        setGlobalBasis('raw');
+        expect(text).toBe('표준점수가 없습니다.');
+    });
+});

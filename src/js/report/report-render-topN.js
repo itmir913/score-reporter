@@ -1,7 +1,7 @@
 import {labelMap} from '../report.js';
 /* 아래 마크업의 on* 속성이 부르는 함수는 모듈 스코프가 아니라 전역에서 찾는다.
  * src/main.js가 window에 올려두므로 여기서 import 하지 않는다. */
-import {escapeAttr, toFixedHalfUp} from '../utils.js';
+import {escapeAttr, roundHalfUp, toFixedHalfUp} from '../utils.js';
 
 /* ───────────────────────────────────────────
    § 상위 N명 명단 렌더링 (전역 기준 적용)
@@ -16,10 +16,12 @@ export function renderTopN(cache) {
     // 전 과목 결시(sum === null)는 순위에 넣지 않는다
     const sorted = cache.studentWithSums
         .filter(({sum}) => sum !== null)
+        // 비교용 합: 0.1+0.2 와 0.3 처럼 2진 오차만 다른 합을 같게 본다
+        .map(item => ({...item, key: roundHalfUp(item.sum, 6)}))
         .sort((a, b) => {
             // 1차 기준: 총점(sum) 내림차순 (총점은 숫자로 보장되어 있다고 가정)
-            if (b.sum !== a.sum) {
-                return b.sum - a.sum;
+            if (b.key !== a.key) {
+                return b.key - a.key;
             }
 
             // 2차 기준: 반(class) 오름차순 (안전한 문자/숫자 혼합 정렬)
@@ -38,7 +40,7 @@ export function renderTopN(cache) {
     // 공동 순위(1,1,3): 앞 학생과 합이 같으면 같은 순위. N위와 동점인 학생은 모두 보여 준다.
     const topData = [];
     sorted.forEach((item, i) => {
-        const rank = i > 0 && item.sum === sorted[i - 1].sum ? topData[i - 1].rank : i + 1;
+        const rank = i > 0 && item.key === sorted[i - 1].key ? topData[i - 1].rank : i + 1;
         topData.push({...item, rank});
     });
     const shown = topData.filter(({rank}) => rank <= limit);
