@@ -1,5 +1,6 @@
 import {ST} from '../main.js';
 import {labelMap} from '../report.js';
+import {toFixedHalfUp} from '../utils.js';
 
 /* ───────────────────────────────────────────
    § 요약 통계 (과목별 고유 컬러 및 지표명 적용)
@@ -35,7 +36,7 @@ export function renderStats(cache) {
 
         // 5. 최종 산출: 동점자가 포함된 실제 집단의 크기로 평균 계산
         const sum = topSlice.reduce((a, b) => a + b, 0);
-        return (sum / topSlice.length).toFixed(1); // topCount가 아닌 동점자가 포함된 topSlice.length로 나눔
+        return toFixedHalfUp(sum / topSlice.length, 1); // topCount가 아닌 동점자가 포함된 topSlice.length로 나눔
     };
 
     // 각 과목별 실제 응시자 수 기준 상위 20% 계산

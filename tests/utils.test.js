@@ -1,5 +1,5 @@
 import {describe, expect, it, vi} from 'vitest';
-import {avgOf, colToIdx, dlBlob, escapeAttr, fmt} from '../src/js/utils.js';
+import {avgOf, colToIdx, dlBlob, escapeAttr, fmt, toFixedHalfUp} from '../src/js/utils.js';
 
 describe('colToIdx: 엑셀 열 이름 → 0-based 인덱스', () => {
     it('한 글자 열을 변환한다', () => {
@@ -109,5 +109,31 @@ describe('dlBlob: 파일 내려받기', () => {
 
         click.mockRestore();
         vi.unstubAllGlobals();
+    });
+});
+
+describe('toFixedHalfUp: 2진 오차에 흔들리지 않는 사사오입', () => {
+    it('x.x5 를 올린다', () => {
+        expect(toFixedHalfUp(80.35, 1)).toBe('80.4');
+        expect(toFixedHalfUp(1.005, 2)).toBe('1.01');
+        expect(toFixedHalfUp(2.45, 1)).toBe('2.5');
+    });
+
+    it('자릿수를 채운다', () => {
+        expect(toFixedHalfUp(5, 1)).toBe('5.0');
+        expect(toFixedHalfUp(249.5, 0)).toBe('250');
+    });
+
+    it('음수는 0에서 먼 쪽으로 올린다', () => {
+        expect(toFixedHalfUp(-2.5, 0)).toBe('-3');
+        expect(toFixedHalfUp(-80.35, 1)).toBe('-80.4');
+    });
+});
+
+describe('avgOf: 숫자가 아닌 값', () => {
+    // 빈 문자열이 isNaN 을 통과해 0 + '' 로 문자열 이어붙이기가 되었다
+    it('문자열은 결측치로 본다', () => {
+        expect(avgOf(['', 5])).toBe(5);
+        expect(avgOf(['80', '90'])).toBeNull();
     });
 });

@@ -1,7 +1,7 @@
 import {ST} from '../main.js';
 import {globalReportBasis} from '../report.js';
 import {_getCsatRawSums} from './report-csat-sum.js';
-import {escapeAttr} from '../utils.js';
+import {escapeAttr, toFixedHalfUp} from '../utils.js';
 
 /* ───────────────────────────────────────────
    § 모달 제어 및 상세 정보 표시
@@ -84,7 +84,7 @@ export function showBinStudentsModal(label, students) {
                 <td class="border-b border-slate-200 p-3 text-slate-600">${escapeAttr(s.number)}번</td>
                 <td class="border-b border-slate-200 p-3 font-bold text-slate-800">${escapeAttr(s.name)}</td>
                 <td class="border-b border-slate-200 p-3 text-blue-600 font-bold">
-                    ${sum.toFixed(basis === 'pct' ? 1 : 0)}
+                    ${toFixedHalfUp(sum, basis === 'pct' ? 1 : 0)}
                 </td>
                 <td class="border-b border-slate-200 p-3 text-base text-slate-400 group-hover:text-blue-500 font-medium">
                     상세보기 >
