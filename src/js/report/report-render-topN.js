@@ -14,7 +14,7 @@ export function renderTopN(cache) {
 
     // ★ 캐시의 studentWithSums 활용 — 정렬 시 getSum() 재호출 없음
     // 전 과목 결시(sum === null)는 순위에 넣지 않는다
-    const topData = cache.studentWithSums
+    const sorted = cache.studentWithSums
         .filter(({sum}) => sum !== null)
         .sort((a, b) => {
             // 1차 기준: 총점(sum) 내림차순 (총점은 숫자로 보장되어 있다고 가정)
@@ -33,10 +33,18 @@ export function renderTopN(cache) {
             const numA = String(a.s.number || "");
             const numB = String(b.s.number || "");
             return numA.localeCompare(numB, undefined, {numeric: true});
-        })
-        .slice(0, limit);
+        });
 
-    const limitLabel = topNValue === 'all' ? '전체' : `상위 ${limit}명`;
+    // 공동 순위(1,1,3): 앞 학생과 합이 같으면 같은 순위. N위와 동점인 학생은 모두 보여 준다.
+    const topData = [];
+    sorted.forEach((item, i) => {
+        const rank = i > 0 && item.sum === sorted[i - 1].sum ? topData[i - 1].rank : i + 1;
+        topData.push({...item, rank});
+    });
+    const shown = topData.filter(({rank}) => rank <= limit);
+
+    const limitLabel = topNValue === 'all' ? '전체'
+        : shown.length > limit ? `상위 ${limit}명(동점 포함 ${shown.length}명)` : `상위 ${limit}명`;
     document.getElementById('top-n-title').innerText =
         `${basisLabel} 합(국어+수학+탐구1+탐구2) ${limitLabel} 학생`;
 
@@ -56,13 +64,13 @@ export function renderTopN(cache) {
     `;
 
     const tbody = document.getElementById('top20-tbody');
-    tbody.innerHTML = topData.map(({s, sum}, i) => {
+    tbody.innerHTML = shown.map(({s, sum, rank}) => {
         const displaySum = toFixedHalfUp(sum, cache.basis === 'pct' ? 1 : 0);
         return `
             <tr class="hover:bg-slate-50 cursor-pointer transition-colors divide-x divide-slate-100 border-b border-slate-100"
                 data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}"
                 data-action="row-click">
-                <td class="px-2 py-2 text-center font-bold text-slate-500">${i + 1}</td>
+                <td class="px-2 py-2 text-center font-bold text-slate-500">${rank}</td>
                 <td class="px-2 py-2 text-center">${escapeAttr(s.class) || '-'}</td>
                 <td class="px-2 py-2 text-center">${escapeAttr(s.number) || '-'}</td>
                 <td class="px-2 py-2 text-center font-semibold text-slate-800 whitespace-nowrap">${escapeAttr(s.name) || '-'}</td>

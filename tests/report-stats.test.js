@@ -135,3 +135,41 @@ describe('네 과목 모두 결시한 학생', () => {
         setGlobalBasis('raw');
     });
 });
+
+describe('동점자 순위', () => {
+    // 합 250 이 아홉 명, 240 이 세 명. 10명을 고르면 10위 동점 세 명이 모두 들어가야 한다.
+    const twelve = () => Array.from({length: 12}, (_, i) => student(`학생${i}`, i + 1, {
+        korean: score('화법과 작문', i < 9 ? 90 : 80, 1), math: score('미적분', 80, 1),
+        inquiry1: score('물리학Ⅰ', 40, 1), inquiry2: score('화학Ⅰ', 40, 1),
+    }));
+
+    it('상위 N명은 공동 순위(1,1,3)를 매기고 N번째 동점자를 모두 넣는다', () => {
+        ST.data = twelve();
+        document.getElementById('top-n-count').value = '10';
+        renderAll();
+        const ranks = cellTexts('top20-tbody').map(r => r[0]);
+        expect(ranks).toEqual([...Array(9).fill('1'), '10', '10', '10']);
+        expect(document.getElementById('top-n-title').innerText).toContain('동점');
+    });
+
+    it('동점자가 경계에 없으면 제목과 인원은 그대로다', () => {
+        ST.data = twelve();
+        document.getElementById('top-n-count').value = '10';
+        ST.data[11].korean = score('화법과 작문', 70, 1);
+        ST.data[10].korean = score('화법과 작문', 70, 1);
+        renderAll();
+        expect(cellTexts('top20-tbody')).toHaveLength(10);
+        expect(document.getElementById('top-n-title').innerText).not.toContain('동점');
+    });
+
+    it('전교 석차는 세 기준이 모두 같을 때만 공동 순위다', () => {
+        ST.data = twelve();
+        // 원점수 합은 같지만 표준점수 합이 높은 학생은 단독 1위다
+        ST.data[5].korean = {...score('화법과 작문', 90, 1), std: 999};
+        document.getElementById('csat-top-n-count').value = '10';
+        renderAll();
+        const rows = cellTexts('csat-school-tbody');
+        expect(rows.map(r => r[0])).toEqual(['1', ...Array(8).fill('2'), '10', '10', '10']);
+        expect(rows[0][3]).toBe('학생5');
+    });
+});

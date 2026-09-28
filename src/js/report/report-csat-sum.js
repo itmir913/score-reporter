@@ -96,31 +96,37 @@ export function renderCsatMinRequirement(cache) {
         : 20;
 
     // 전 과목 결시는 석차에 넣지 않는다
-    const sortedData = ST.data.filter(_hasAnyScore).sort((a, b) => {
-        // [핵심 수정] Number() 캐스팅과 || 0 을 통해 NaN, null, undefined를 0점으로 안전하게 치환
-        const aRaw = Number(_getScoreSum(a, 'raw')) || 0;
-        const bRaw = Number(_getScoreSum(b, 'raw')) || 0;
-        if (bRaw !== aRaw) return bRaw - aRaw;
+    // [핵심 수정] Number() 캐스팅과 || 0 을 통해 NaN, null, undefined를 0점으로 안전하게 치환
+    const keyed = ST.data.filter(_hasAnyScore).map(s => ({
+        s,
+        raw: Number(_getScoreSum(s, 'raw')) || 0,
+        std: Number(_getScoreSum(s, 'std')) || 0,
+        pct: Number(_getScoreSum(s, 'pct')) || 0,
+    })).sort((a, b) => {
+        if (b.raw !== a.raw) return b.raw - a.raw;
+        if (b.std !== a.std) return b.std - a.std;
+        return b.pct - a.pct;
+    });
 
-        const aStd = Number(_getScoreSum(a, 'std')) || 0;
-        const bStd = Number(_getScoreSum(b, 'std')) || 0;
-        if (bStd !== aStd) return bStd - aStd;
-
-        const aPct = Number(_getScoreSum(a, 'pct')) || 0;
-        const bPct = Number(_getScoreSum(b, 'pct')) || 0;
-
-        return bPct - aPct;
-    }).slice(0, limit);
+    // 공동 순위(1,1,3): 원점수·표준점수·백분위 합이 모두 같을 때만 같은 석차.
+    // 표시 인원 경계의 동점자는 모두 보여 준다.
+    const sortedData = [];
+    keyed.forEach((k, i) => {
+        const p = keyed[i - 1];
+        const tied = p && p.raw === k.raw && p.std === k.std && p.pct === k.pct;
+        const rank = tied ? sortedData[i - 1].rank : i + 1;
+        sortedData.push({s: k.s, rank});
+    });
 
     const schoolTbody = document.getElementById('csat-school-tbody');
     if (schoolTbody) {
-        schoolTbody.innerHTML = sortedData.map((s, idx) => {
+        schoolTbody.innerHTML = sortedData.filter(({rank}) => rank <= limit).map(({s, rank}) => {
             const csat = _getCsatSums(s);
             return `
                 <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer group"
                     data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}"
                     data-action="row-click">
-                    <td class="p-3 text-slate-500 font-medium">${idx + 1}</td>
+                    <td class="p-3 text-slate-500 font-medium">${rank}</td>
                     <td class="p-3 text-slate-700">${escapeAttr(s.class) || ''}</td>
                     <td class="p-3 text-slate-700">${escapeAttr(s.number) || ''}</td>
                     <td class="p-3 text-left font-semibold text-slate-800">${escapeAttr(s.name) || ''}</td>
