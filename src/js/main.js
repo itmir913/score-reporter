@@ -18,6 +18,24 @@ export const ST = {
     charts: {}
 };
 
+// ExcelJS 셀 값을 문자열·숫자 같은 평범한 값으로 푼다.
+// 수식의 계산 결과도 다시 이 함수를 거친다. 결과가 #N/A 같은 에러 객체인데 그대로
+// 두면 이름 칸이 "[object Object]" 가 되어 학생으로 섞여 들어갔다.
+function cellToPlain(val) {
+    if (val === null || val === undefined) return '';
+    if (typeof val !== 'object') return val;
+    if (val instanceof Date) return val.toISOString().split('T')[0]; // 날짜 형식
+    if ('formula' in val || 'sharedFormula' in val || 'result' in val) {
+        return val.result === undefined ? '' : cellToPlain(val.result); // 수식 셀은 계산된 값
+    }
+    if (val.error !== undefined) return ''; // 에러 셀인 경우 빈칸
+    if (Array.isArray(val.richText)) return val.richText.map(r => r.text || '').join(''); // 서식 있는 텍스트
+    // 하이퍼링크 셀은 {text, hyperlink} 로 온다. 보이는 글자를 버리면 이름이 링크로
+    // 걸린 학생이 통째로 빠진다. text 가 다시 서식 있는 텍스트일 수도 있다.
+    if (val.text !== undefined) return cellToPlain(val.text);
+    return ''; // 그 외 객체 타입
+}
+
 // ExcelJS 워크시트를 2차원 배열(SheetJS의 sheet_to_json({header:1}) 형태)로 변환하는 헬퍼 함수
 export function exceljsTo2DArray(ws) {
     if (!ws) return [];
@@ -25,17 +43,10 @@ export function exceljsTo2DArray(ws) {
     ws.eachRow({includeEmpty: true}, function (row, rowNumber) {
         const rowData = [];
         row.eachCell({includeEmpty: true}, function (cell, colNumber) {
-            let val = cell.value;
-            if (val !== null && val !== undefined) {
-                if (val.result !== undefined) val = val.result; // 수식 셀인 경우 계산된 값
-                else if (val.error !== undefined) val = '';     // 에러 셀인 경우 빈칸
-                else if (val instanceof Date) val = val.toISOString().split('T')[0]; // 날짜 형식
-                else if (Array.isArray(val.richText)) val = val.richText.map(r => r.text || '').join(''); // 서식 있는 텍스트
-                else if (typeof val === 'object') val = ''; // 그 외 객체 타입 (하이퍼링크 등)
-            } else {
-                val = '';
-            }
-            rowData[colNumber - 1] = val;
+            // ExcelJS 의 cell.value 는 수식 결과가 0 이나 '' 이면 result 를 빼고 돌려준다.
+            // 그대로 쓰면 수식으로 낸 0점이 빈칸(미응시)이 되므로 결과는 cell.result 로 읽는다.
+            const val = cell.type === ExcelJS.ValueType.Formula ? {result: cell.result} : cell.value;
+            rowData[colNumber - 1] = cellToPlain(val);
         });
 
         // 빈 셀을 ''로 채우기
