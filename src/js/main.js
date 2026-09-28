@@ -5,7 +5,7 @@ import {GradeDataParser} from './parser.js';
 import {renderReport} from './report.js';
 import {FIELD_LABELS, SCHEMAS} from './schema.js';
 import {escapeAttr} from './utils.js';
-import {decryptXlsx, isEncryptedOfficeFile, WrongPasswordError} from './xlsx-decrypt.js';
+import {decryptXlsx, isCfbContainer, isEncryptedOfficeFile, WrongPasswordError} from './xlsx-decrypt.js';
 
 /* ───────────────────────────────────────────
        § 애플리케이션 상태 (ST) 및 로직
@@ -175,7 +175,11 @@ export async function processFile(file) {
 
         let wb = new ExcelJS.Workbook(); // 미리 생성
 
-        if (fileExt === 'xls' || fileExt === 'csv') {
+        // 확장자는 .xlsx 인데 속은 옛 .xls(OLE2) 인 파일이 있다. 암호 정보가 없으면
+        // 비밀번호를 묻지 않고 .xls 처럼 SheetJS 로 읽는다.
+        const isLegacyXls = fileExt === 'xlsx' && isCfbContainer(arrayBuffer) && !isEncryptedOfficeFile(arrayBuffer);
+
+        if (fileExt === 'xls' || fileExt === 'csv' || isLegacyXls) {
             // [최적화 2] .xls와 .csv는 SheetJS가 훨씬 빠릅니다.
             let xlsWorkbook;
             if (fileExt === 'csv') {

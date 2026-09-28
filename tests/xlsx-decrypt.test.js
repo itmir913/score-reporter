@@ -2,7 +2,7 @@ import {beforeAll, describe, expect, it} from 'vitest';
 import crypto from 'node:crypto';
 import ExcelJS from 'exceljs';
 import * as XLSX from 'xlsx';
-import {decryptXlsx, isEncryptedOfficeFile, WrongPasswordError} from '../src/js/xlsx-decrypt.js';
+import {decryptXlsx, isCfbContainer, isEncryptedOfficeFile, WrongPasswordError} from '../src/js/xlsx-decrypt.js';
 
 /* 암호가 걸린 진짜 파일을 저장소에 넣어 두는 대신, 테스트에서 규격대로 직접
  * 암호화해 만든다. 모듈이 쓰는 WebCrypto 와 달리 여기서는 node:crypto 를 쓰므로
@@ -158,6 +158,15 @@ describe('xlsx 암호 해제', () => {
         expect(isEncryptedOfficeFile(new Uint8Array(bytes).buffer)).toBe(true);
         expect(isEncryptedOfficeFile(new Uint8Array([0x50, 0x4b, 3, 4, 0, 0, 0, 0]).buffer)).toBe(false);
         expect(isEncryptedOfficeFile(new Uint8Array([0x50]).buffer)).toBe(false);
+    });
+
+    // 옛 .xls 도 같은 OLE2 컨테이너다. 암호 정보가 없으면 암호 파일이 아니다.
+    it('암호 정보가 없는 OLE2 파일(평범한 .xls)은 암호 파일로 보지 않는다', () => {
+        const book = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet([['이름'], ['학생1']]), 'S');
+        const xls = new Uint8Array(XLSX.write(book, {type: 'array', bookType: 'biff8'}));
+        expect(isCfbContainer(xls.buffer)).toBe(true);
+        expect(isEncryptedOfficeFile(xls.buffer)).toBe(false);
     });
 
     it('Agile(4.4) 파일을 풀어 원본 xlsx 를 돌려준다', async () => {

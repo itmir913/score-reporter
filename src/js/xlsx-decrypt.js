@@ -27,11 +27,23 @@ const SUBTLE = () => {
 
 const CFB_MAGIC = [0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1];
 
-/** 암호가 걸린 Office 파일(OLE2 컨테이너)인지 앞 8바이트로 본다. */
-export function isEncryptedOfficeFile(buffer) {
+/** OLE2(CFB) 컨테이너인지 앞 8바이트로 본다. */
+export function isCfbContainer(buffer) {
     if (buffer.byteLength < 8) return false;
     const head = new Uint8Array(buffer, 0, 8);
     return CFB_MAGIC.every((b, i) => head[i] === b);
+}
+
+/* 암호가 걸린 Office 파일인지 본다. 옛 .xls 도 같은 OLE2 컨테이너라서 시그니처만
+ * 보면 확장자만 .xlsx 로 바뀐 평범한 .xls 에도 비밀번호를 물었다. 컨테이너 안에
+ * /EncryptionInfo 스트림이 있어야 암호 파일로 본다. */
+export function isEncryptedOfficeFile(buffer) {
+    if (!isCfbContainer(buffer)) return false;
+    try {
+        return !!XLSX.CFB.find(XLSX.CFB.read(u8(buffer), {type: 'array'}), '/EncryptionInfo');
+    } catch {
+        return false;
+    }
 }
 
 /* ─── 바이트 유틸 ─────────────────────────────────────── */

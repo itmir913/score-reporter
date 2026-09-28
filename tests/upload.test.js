@@ -2,6 +2,7 @@ import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import ExcelJS from 'exceljs';
+import * as XLSX from 'xlsx';
 import {clearFile, loadSampleData, processFile, ST} from '../src/js/main.js';
 import {showStudentDetail} from '../src/js/report/report-modal.js';
 import {renderSubjectsCharts} from '../src/js/report/report-render-chart-subjects.js';
@@ -32,6 +33,22 @@ describe('processFile', () => {
         const sel = document.getElementById('sheet-select');
         expect(sel.value).toBe('1"반 & 2반');
         expect(ST.wb.getWorksheet(sel.value)).toBeTruthy();
+    });
+
+    // 확장자만 .xlsx 인 옛 .xls 는 OLE2 컨테이너라 예전에는 비밀번호를 물은 뒤
+    // "암호화된 Office 파일이 아닙니다" 로 실패했다. 묻지 않고 .xls 처럼 읽어야 한다.
+    it('확장자만 .xlsx 인 평범한 .xls 는 비밀번호를 묻지 않고 읽는다', async () => {
+        const book = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet([['이름'], ['학생1']]), '성적');
+        const xls = new Uint8Array(XLSX.write(book, {type: 'array', bookType: 'biff8'}));
+        const ask = vi.spyOn(window, 'prompt').mockImplementation(() => null);
+
+        await processFile(fakeFile('성적.xlsx', xls.buffer));
+
+        expect(ask).not.toHaveBeenCalled();
+        ask.mockRestore();
+        expect(ST.wb.worksheets.map(ws => ws.name)).toEqual(['성적']);
+        expect(ST.wb.getWorksheet('성적').getCell('A2').value).toBe('학생1');
     });
 });
 
