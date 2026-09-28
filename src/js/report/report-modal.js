@@ -151,12 +151,12 @@ function _showStudent(s) {
         const d = r.data || {};
         const isAbs = r.isAbs;
 
-        // 공통+선택 점수를 합산하거나, 그냥 raw 점수를 가져옵니다.
+        // 통계와 같은 원점수(raw)를 보여 준다. 원점수가 없을 때만 공통+선택을 더한다
         let totalRaw = '-';
-        if (typeof d.common_raw === 'number' || typeof d.select_raw === 'number') {
-            totalRaw = (d.common_raw || 0) + (d.select_raw || 0);
-        } else if (typeof d.raw === 'number') {
+        if (typeof d.raw === 'number') {
             totalRaw = d.raw;
+        } else if (typeof d.common_raw === 'number' || typeof d.select_raw === 'number') {
+            totalRaw = (d.common_raw || 0) + (d.select_raw || 0);
         }
 
         return `
@@ -271,9 +271,13 @@ export function printStudentDetail() {
     const fmtRaw = (subj) => {
         const d = s[subj];
         if (!d) return '-';
+        // 합계와 한 칸짜리 값은 통계와 같은 원점수(raw)를 쓴다. 원점수가 없을 때만 공통·선택으로 낸다
+        const hasRaw = typeof d.raw === 'number';
         if (typeof d.common_raw === 'number' && typeof d.select_raw === 'number') {
-            return `공통 ${d.common_raw} + 선택 ${d.select_raw}<br><span style="font-size:11px;color:#555">(합계 ${d.common_raw + d.select_raw})</span>`;
+            const total = hasRaw ? d.raw : d.common_raw + d.select_raw;
+            return `공통 ${d.common_raw} + 선택 ${d.select_raw}<br><span style="font-size:11px;color:#555">(합계 ${total})</span>`;
         }
+        if (hasRaw) return String(d.raw);
         if (typeof d.common_raw === 'number') return String(d.common_raw);
         if (typeof d.select_raw === 'number') return String(d.select_raw);
         return typeof d.raw === 'number' ? String(d.raw) : '-';

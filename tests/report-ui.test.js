@@ -164,3 +164,53 @@ describe('표시 인원 선택', () => {
         expect(document.querySelectorAll('#top20-tbody tr')).toHaveLength(20);
     });
 });
+
+describe('성적표의 원점수', () => {
+    // 성적표와 인쇄본은 공통·선택 칸이 하나라도 있으면 원점수 열 대신 둘을 더했다.
+    // 원점수 열이 따로 있는 양식에서 선택 칸이 비면 공통만 원점수로 보였다(통계는 원점수 열을 쓴다).
+    const withParts = (common, select, raw) => {
+        const s = student('가', '1', '1');
+        s.korean = {...s.korean, common_raw: common, select_raw: select, raw};
+        return s;
+    };
+    const printed = () => {
+        let html = '';
+        const open = vi.spyOn(window, 'open').mockImplementation(() => ({
+            document: {
+                write: (h) => {
+                    html += h;
+                },
+                close: () => {
+                }
+            }
+        }));
+        modal.printStudentDetail();
+        open.mockRestore();
+        // 원점수 행의 국어 칸(한국사 다음)
+        const row = new DOMParser().parseFromString(html, 'text/html')
+            .querySelectorAll('table')[1].querySelectorAll('tbody tr')[1];
+        return row.children[2].textContent.trim();
+    };
+
+    it('선택 칸이 비어도 원점수 열 값을 보여 준다', () => {
+        ST.data = [withParts(60, null, 85)];
+        modal.showStudentDetail('가', '1', '1');
+        const korRow = document.querySelector('#modal-score-tbody tr');
+        expect(korRow.children[2].textContent.trim()).toBe('85');
+        expect(printed()).toBe('85');
+    });
+
+    it('공통·선택이 모두 있으면 인쇄본은 나눠 적고 합계는 원점수 열 값이다', () => {
+        ST.data = [withParts(60, 20, 85)];
+        modal.showStudentDetail('가', '1', '1');
+        expect(document.querySelector('#modal-score-tbody tr').children[2].textContent.trim()).toBe('85');
+        expect(printed()).toBe('공통 60 + 선택 20(합계 85)');
+    });
+
+    it('원점수 열 값이 없으면 예전처럼 공통·선택으로 낸다', () => {
+        ST.data = [withParts(60, 20, null)];
+        modal.showStudentDetail('가', '1', '1');
+        expect(document.querySelector('#modal-score-tbody tr').children[2].textContent.trim()).toBe('80');
+        expect(printed()).toBe('공통 60 + 선택 20(합계 80)');
+    });
+});
