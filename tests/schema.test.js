@@ -112,3 +112,23 @@ describe('SCHEMAS: 실제 양식 정의', () => {
         }
     });
 });
+
+describe('꿈꾸GO 탐구영역 분류', () => {
+    const domain = (sub1, sub2) => SCHEMAS.kkumkugo.customGetters.inq_domain(
+        {inquiry1: {subject: sub1}, inquiry2: {subject: sub2}}, '');
+
+    // 공식 과목명은 띄어 쓴다. 붙여 쓴 키워드와만 비교하면 사회탐구로 빠졌다.
+    it('띄어 쓴 직업탐구 과목명도 직업탐구로 본다', () => {
+        expect(domain('성공적인 직업생활', '인간 발달')).toBe('직업탐구');
+        expect(domain('농업 기초 기술', '공업 일반')).toBe('직업탐구');
+        expect(domain('상업 경제', '')).toBe('직업탐구');
+        expect(domain('수산·해운 산업 기초', '')).toBe('직업탐구');
+    });
+
+    it('과학·사회 분류는 그대로다', () => {
+        expect(domain('물리학Ⅰ', '화학Ⅰ')).toBe('과학탐구');
+        expect(domain('생활과 윤리', '지구과학Ⅰ')).toBe('사회과학탐구');
+        expect(domain('생활과 윤리', '사회·문화')).toBe('사회탐구');
+        expect(domain('', '')).toBe('');
+    });
+});

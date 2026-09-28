@@ -415,8 +415,10 @@ export const SCHEMAS = {
         customGetters: {
             // 케이스 A: 아예 새로운 파생 데이터를 만들어야 하는 경우 (inq_domain)
             inq_domain: (s, baseValue) => {
-                const sub1 = s.inquiry1?.subject || '';
-                const sub2 = s.inquiry2?.subject || '';
+                // 공식 과목명은 '성공적인 직업생활'처럼 띄어 쓰지만 아래 키워드는 붙여 쓴다.
+                // 공백을 지우지 않으면 직업탐구가 사회탐구로 잘못 분류된다.
+                const sub1 = (s.inquiry1?.subject || '').replace(/\s+/g, '');
+                const sub2 = (s.inquiry2?.subject || '').replace(/\s+/g, '');
                 if (!sub1 && !sub2) return '';
 
                 // 1. 직업탐구 우선 검사
