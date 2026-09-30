@@ -48,6 +48,18 @@ export const FIELD_LABELS = {
     fl2_grade: '제2외국어 등급'
 };
 
+// 점수 칸 값 → 숫자. 없거나 숫자가 아니면 null.
+// parseFloat 는 앞부분만 읽어 "1,234" 가 1, "85abc" 가 85, "1e2" 가 100 이 되었다.
+// 문자열은 소수 하나(뒤에 '점'·'%' 하나까지)만 받고 나머지는 모두 버린다
+const SCORE_TEXT = /^-?\d+(?:\.\d+)?\s*[점%]?$/;
+
+function toScore(v) {
+    if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+    if (typeof v !== 'string') return null;
+    const t = v.trim();
+    return SCORE_TEXT.test(t) ? parseFloat(t) : null;
+}
+
 /* ───────────────────────────────────────────
        § FormatSchema 클래스
     ─────────────────────────────────────────── */
@@ -97,9 +109,7 @@ export class FormatSchema {
 
     num(row, key) {
         const v = this._raw(row, key);
-        if (v === null) return null;
-        const n = parseFloat(v);
-        return isNaN(n) ? null : n;
+        return v === null ? null : toScore(v);
     }
 
     supportedKeys() {
@@ -475,6 +485,6 @@ export function removeSpaces(s, baseValue) {
 // 이 함수를 0으로 반환하면 교차 포맷 변환 시 null 점수가 0으로 왜곡됨
 export function ensureNumericOrZero(s, baseValue) {
     if (baseValue === null || baseValue === undefined || baseValue === '') return '';
-    const n = parseFloat(baseValue);
-    return isNaN(n) ? '' : n;
+    // 읽을 때(num)와 같은 규칙이다. 숫자로 읽히지 않는 값은 빈 셀로 둔다
+    return toScore(baseValue) ?? '';
 }

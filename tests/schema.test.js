@@ -33,6 +33,40 @@ describe('ensureNumericOrZero: 점수 칸의 빈 값과 0을 구분한다', () =
     it('숫자가 아닌 값은 빈 문자열이다', () => {
         expect(ensureNumericOrZero(S, '결시')).toBe('');
     });
+
+    // 읽을 때(num)와 같은 규칙: 앞부분만 숫자인 값은 숫자가 아니다
+    it('앞부분만 숫자인 값은 빈 문자열이다', () => {
+        expect(ensureNumericOrZero(S, '85abc')).toBe('');
+        expect(ensureNumericOrZero(S, '1,234')).toBe('');
+        expect(ensureNumericOrZero(S, NaN)).toBe('');
+        expect(ensureNumericOrZero(S, '85점')).toBe(85);
+    });
+});
+
+describe('FormatSchema.num: 점수 칸 읽기', () => {
+    const schema = new FormatSchema({id: 't', label: 't', headerRows: 0, fields: {kor_raw: 'A'}});
+    const read = (v) => schema.num([v], 'kor_raw');
+
+    it('소수와 뒤에 붙은 점·% 는 숫자로 읽는다', () => {
+        expect(read('85')).toBe(85);
+        expect(read('85.5')).toBe(85.5);
+        expect(read('-3')).toBe(-3);
+        expect(read(' 85점 ')).toBe(85);
+        expect(read('85 %')).toBe(85);
+        expect(read('0')).toBe(0);
+        expect(read(0)).toBe(0);
+        expect(read(72.5)).toBe(72.5);
+    });
+
+    // parseFloat 는 앞부분만 읽어 "1,234" 가 1점, "85abc" 가 85점, "1e2" 가 100점이 되었다
+    it('그 밖의 글자는 null 이다', () => {
+        for (const v of ['1,234', '85abc', '1e2', 'Infinity', '0x1A', ' ', '결시', '85점점']) {
+            expect(read(v)).toBeNull();
+        }
+        expect(read('')).toBeNull();
+        expect(read(Infinity)).toBeNull();
+        expect(read(NaN)).toBeNull();
+    });
 });
 
 describe('과목명 로마자 변환', () => {
