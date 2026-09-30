@@ -80,6 +80,13 @@ describe('학급 기준 반 선택', () => {
         renderAll();
         expect(classRowNames()).toEqual(['가', '하', '나', '다']);
     });
+
+    // "01" 과 "1" 은 글자가 달라 이름 비교로 넘어가지 못하고, 번호 비교는 같다(0)고 해서 파일 순서로 남았다
+    it('번호가 01 과 1 처럼 표기만 달라도 이름순이다', () => {
+        ST.data = [student('하', '1', '01'), student('가', '1', '1')];
+        renderAll();
+        expect(classRowNames()).toEqual(['가', '하']);
+    });
 });
 
 describe('반 정보가 없는 데이터', () => {

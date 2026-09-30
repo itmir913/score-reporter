@@ -265,7 +265,9 @@ export function renderCsatClassTable(cache) {
             // [핵심 수정] parseInt의 한계를 벗어나 문자/숫자 혼합 데이터를 자연스럽게 정렬
             const numA = String(a.s.number || "");
             const numB = String(b.s.number || "");
-            if (numA !== numB) return numA.localeCompare(numB, undefined, {numeric: true});
+            // "01" 과 "1" 처럼 글자는 달라도 같은 번호면 0 이 나온다. 그때도 이름으로 가른다
+            const c = numA.localeCompare(numB, undefined, {numeric: true});
+            if (c) return c;
 
             // 번호가 같거나 비어 있으면 표 머리글(학번 > 이름 순)대로 이름순이다
             return String(a.s.name || "").localeCompare(String(b.s.name || ""));
