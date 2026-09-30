@@ -69,21 +69,12 @@ export function computeRenderCache(data, basis) {
         if (Number.isFinite(engGrade)) engGrades.push(engGrade);
 
         /* 2. 4과목 합산 (상위N · 분포 공용)
-         *    네 과목 모두 점수가 없으면(전 과목 결시) 0점이 아니라 null 로 두어 순위·분포에서 뺀다 */
-        let sum = 0, hasAny = false;
-        const subjects = ['korean', 'math', 'inquiry1', 'inquiry2'];
+         *    한 과목이라도 이 기준 점수가 없으면(일부 결시) 0점으로 채워 더하지 않고 null 로 두어
+         *    순위·분포에서 뺀다. 수능 최저 전교 석차는 이 합을 쓰지 않는다 (_getScoreSum) */
+        const vals = ['korean', 'math', 'inquiry1', 'inquiry2'].map(subj => s[subj]?.[basis]);
+        const sum = vals.every(Number.isFinite) ? vals.reduce((a, b) => a + b, 0) : null;
 
-        subjects.forEach(subj => {
-            const val = s[subj]?.[basis];
-
-            // 수정된 조건: 타입이 숫자이고, NaN이 아닐 때만 합산
-            if (typeof val === 'number' && !Number.isNaN(val)) {
-                sum += val;
-                hasAny = true;
-            }
-        });
-
-        studentWithSums.push({s, sum: hasAny ? sum : null});
+        studentWithSums.push({s, sum});
 
         /* 3. 선택과목별 집계 */
         accSubject(korSubjectStats, s.korean?.subject, s.korean);

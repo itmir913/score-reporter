@@ -96,9 +96,9 @@ export function showBinStudentsModal(label, students) {
     // 3. tbody 내용 삽입 (td에 border-b만 남겨서 깔끔하게 표시)
     const tbody = document.getElementById('bin-modal-tbody');
     tbody.innerHTML = students.map(s => {
-        // 전 과목 결시면 0 이 아니라 - 를 찍는다 (상위 N명·분포에서도 빠진 학생이다)
-        const vals = ['korean', 'math', 'inquiry1', 'inquiry2'].map(cur => s[cur]?.[basis]).filter(Number.isFinite);
-        const sum = vals.length ? vals.reduce((a, b) => a + b, 0) : null;
+        // 한 과목이라도 결시면 0 을 채운 합이 아니라 - 를 찍는다 (상위 N명·분포에서도 빠진 학생이다)
+        const vals = ['korean', 'math', 'inquiry1', 'inquiry2'].map(cur => s[cur]?.[basis]);
+        const sum = vals.every(Number.isFinite) ? vals.reduce((a, b) => a + b, 0) : null;
         return `
             <tr class="hover:bg-blue-50 cursor-pointer transition-colors group"
                 data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" ${studentIdxAttr(s)} data-action="row-click">
