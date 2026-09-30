@@ -165,16 +165,17 @@ let loadSeq = 0;
 
 // ★ 변경: 비동기(async) 방식으로 ExcelJS 적용 및 비밀번호 프롬프트 추가
 export async function processFile(file) {
-    const seq = ++loadSeq;
-    const superseded = () => seq !== loadSeq;
-    clearFile();
-
     // 끌어다 놓기는 accept 를 거치지 않는다. 다른 형식은 빈 통합 문서가 되어
-    // 시트 0개로 "성공" 을 띄웠다. 읽기 전에 막고 파일 올리기 화면에 머문다
+    // 시트 0개로 "성공" 을 띄웠다. 읽기 전에 막는다. 차례 번호를 올리거나 비우기 전이라
+    // 지금 보던 데이터와 읽고 있던 파일은 그대로 남는다
     const fileExt = file.name.split('.').pop().toLowerCase();
     if (!['xlsx', 'xls', 'csv'].includes(fileExt)) {
         return showToast('지원하지 않는 파일 형식입니다. (.xlsx, .xls, .csv)', true);
     }
+
+    const seq = ++loadSeq;
+    const superseded = () => seq !== loadSeq;
+    clearFile();
 
     // ★ 개선 1: 파일 처리를 시작하기 전에 로딩 안내 띄우기
     showToast("파일을 분석하는 중입니다. 잠시만 기다려주세요...");

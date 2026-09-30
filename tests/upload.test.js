@@ -56,12 +56,49 @@ describe('지원하지 않는 파일 형식', () => {
     // 끌어다 놓기는 accept 를 거치지 않는다. .xlsm 같은 파일이 시트 0개로
     // "데이터를 성공적으로 불러왔습니다." 를 띄웠다.
     it('.xlsm 은 오류를 알리고 파일 올리기 화면에 머문다', async () => {
+        // 이제 잘못된 형식은 상태를 건드리지 않는다. 앞 테스트가 불러온 파일을 먼저 비운다
+        clearFile();
         await processFile(fakeFile('성적.xlsm', new ArrayBuffer(8)));
         expect(document.getElementById('toast-msg').innerText).toBe('지원하지 않는 파일 형식입니다. (.xlsx, .xls, .csv)');
         expect(ST.wb).toBeNull();
         expect(document.getElementById('dropzone').classList.contains('hidden')).toBe(false);
         expect(document.getElementById('file-info').classList.contains('hidden')).toBe(true);
         expect(document.getElementById('format-area').classList.contains('hidden')).toBe(true);
+    });
+
+    // 예전에는 확장자를 보기 전에 clearFile 로 비워, 잘못 끌어다 놓은 파일 하나에
+    // 보던 데이터·리포트와 읽고 있던 파일까지 사라졌다
+    it('지금 불러온 파일과 데이터는 그대로 둔다', async () => {
+        await processFile(fakeFile('성적.xlsx', await xlsxWithSheet('S')));
+        const wb = ST.wb;
+        ST.data = [{name: '가'}];
+        await processFile(fakeFile('성적.xlsm', new ArrayBuffer(8)));
+        expect(document.getElementById('toast-msg').innerText).toBe('지원하지 않는 파일 형식입니다. (.xlsx, .xls, .csv)');
+        expect(ST.wb).toBe(wb);
+        expect(ST.file.name).toBe('성적.xlsx');
+        expect(ST.data).toEqual([{name: '가'}]);
+        expect(document.getElementById('file-info').classList.contains('hidden')).toBe(false);
+        expect(document.getElementById('format-area').classList.contains('hidden')).toBe(false);
+    });
+
+    it('읽고 있던 파일을 끊지 않는다', async () => {
+        let release;
+        const gate = new Promise(r => {
+            release = r;
+        });
+        const slow = {
+            name: 'A.csv', size: 10, arrayBuffer: async () => {
+                await gate;
+                return new TextEncoder().encode('이름\n가\n').buffer;
+            }
+        };
+        const p = processFile(slow);
+        await new Promise(r => setTimeout(r, 60));
+        await processFile(fakeFile('성적.xlsm', new ArrayBuffer(8)));
+        release();
+        await p;
+        expect(ST.file?.name).toBe('A.csv');
+        expect(document.getElementById('toast-msg').innerText).toBe('데이터를 성공적으로 불러왔습니다.');
     });
 });
 
