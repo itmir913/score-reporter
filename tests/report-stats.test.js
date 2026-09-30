@@ -82,6 +82,32 @@ describe('요약 카드: 응시자가 없는 지표', () => {
     });
 });
 
+describe('요약 카드: 총 응시 인원', () => {
+    // 명단에만 있고 점수가 하나도 없는 학생까지 세어, 응시하지 않은 학생이 응시 인원에 들어갔다
+    it('점수가 하나라도 있는 학생만 센다', () => {
+        ST.data = [
+            student('국어만', 1, {korean: score('화법과 작문', 90)}),
+            student('영어등급만', 2, {engGrade: 3}),
+            student('결시', 3),
+        ];
+        ST.data[2].hist = {raw: null, std: null, pct: null, grade: null};
+        renderAll();
+        const card = [...document.querySelectorAll('#stat-cards .stat-card')]
+            .find(el => el.textContent.includes('총 응시 인원'));
+        expect(card.querySelector('.text-3xl').textContent.trim()).toBe('2명');
+    });
+
+    it('한국사·제2외국어 점수만 있어도 응시자다', () => {
+        ST.data = [student('한국사만', 1), student('제2외국어만', 2), student('결시', 3)];
+        ST.data[0].hist = {raw: 40, std: null, pct: null, grade: 2};
+        ST.data[1].fl2 = {subject: '일본어Ⅰ', raw: null, std: null, pct: null, grade: 0};
+        renderAll();
+        const card = [...document.querySelectorAll('#stat-cards .stat-card')]
+            .find(el => el.textContent.includes('총 응시 인원'));
+        expect(card.querySelector('.text-3xl').textContent.trim()).toBe('2명');
+    });
+});
+
 describe('네 과목 모두 결시한 학생', () => {
     const data = () => [
         student('응시', 1, {
