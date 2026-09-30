@@ -61,6 +61,15 @@ export function studentIdxAttr(s) {
     return i === undefined ? '' : `data-idx="${i}"`;
 }
 
+/* 번호 칸에 보일 값. 반이 빈 양식(김영일)은 번호도 비어 학생을 가를 수 없으니 학번을 보인다.
+ * 화면 표시만 바꾼다. data-num·data-idx 와 학생 찾기는 그대로 번호를 쓴다 */
+export function showsStudentId(s) {
+    return !String(s.class ?? '').trim() && !!String(s.student_id ?? '').trim();
+}
+
+export function numberLabel(s) {
+    return showsStudentId(s) ? s.student_id : s.number;
+}
 
 /**
  * 구간별 학생 명단 팝업 (차트 클릭 시 호출)
@@ -103,7 +112,7 @@ export function showBinStudentsModal(label, students) {
             <tr class="hover:bg-blue-50 cursor-pointer transition-colors group"
                 data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" ${studentIdxAttr(s)} data-action="row-click">
                 <td class="border-b border-slate-200 p-3 text-slate-600">${escapeAttr(s.class)}반</td>
-                <td class="border-b border-slate-200 p-3 text-slate-600">${escapeAttr(s.number)}번</td>
+                <td class="border-b border-slate-200 p-3 text-slate-600">${showsStudentId(s) ? escapeAttr(s.student_id) : `${escapeAttr(s.number)}번`}</td>
                 <td class="border-b border-slate-200 p-3 font-bold text-slate-800">${escapeAttr(s.name)}</td>
                 <td class="border-b border-slate-200 p-3 text-blue-600 font-bold">
                     ${sum === null ? '-' : toFixedHalfUp(sum, basis === 'pct' ? 1 : 0)}
@@ -135,7 +144,9 @@ export function showStudentDetail(name, cls, num) {
 function _showStudent(s) {
     _printStudent = s;
 
-    document.getElementById('modal-student-info').innerText = `${s.class}반 ${s.number}번 ${s.name} 성적표`;
+    document.getElementById('modal-student-info').innerText = showsStudentId(s)
+        ? `${s.student_id} ${s.name} 성적표`
+        : `${s.class}반 ${s.number}번 ${s.name} 성적표`;
 
     const rows = [{label: '국어', data: s.korean}, {label: '수학', data: s.math}, {
         label: '영어',
@@ -238,7 +249,7 @@ export function showCsatStudents(n, targetSum) {
             return `
                 <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer group"
                     data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" ${studentIdxAttr(s)} data-action="row-click">
-                    <td class="border border-slate-300 p-3 text-slate-700">${escapeAttr(s.class) || ''}반 ${escapeAttr(s.number) || ''}번</td>
+                    <td class="border border-slate-300 p-3 text-slate-700">${escapeAttr(s.class) || ''}반 ${showsStudentId(s) ? escapeAttr(s.student_id) : `${escapeAttr(s.number) || ''}번`}</td>
                     <td class="border border-slate-300 p-3 font-bold text-slate-800">${escapeAttr(s.name) || ''}</td>
                     <td class="border border-slate-300 p-3 text-blue-600 font-bold">${actualSum}</td>
                     <td class="border border-slate-300 p-3 text-blue-600 font-bold">${escapeAttr(actualSubj || '-')}</td>
@@ -341,7 +352,7 @@ export function printStudentDetail() {
     <tr>
       <td>${escapeAttr(s.grade_year) || '-'}</td>
       <td>${escapeAttr(s.class) || '-'}</td>
-      <td>${escapeAttr(s.number) || '-'}</td>
+      <td>${escapeAttr(numberLabel(s)) || '-'}</td>
       <td style="font-weight:bold;font-size:14px;">${escapeAttr(s.name)}</td>
     </tr>
   </tbody>

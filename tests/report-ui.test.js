@@ -307,3 +307,53 @@ describe('탐구1·탐구2 과목이 같은 학생', () => {
         expect(document.getElementById('toast-msg').innerText).toBe('1명의 데이터를 파싱했습니다.');
     });
 });
+
+describe('반이 빈 양식의 번호 칸', () => {
+    // 김영일 양식은 반·번호가 비고 학번만 있다. 번호 칸이 모두 비어(-) 누가 누구인지 가를 수 없었다
+    const data = () => [
+        {...student('가', '', '', 90), student_id: '30105'},
+        {...student('나', '1', '2', 10), student_id: '10102'}, // 반이 있으면 번호를 그대로 쓴다
+    ];
+    const cells = (sel, i) => [...document.querySelectorAll(`${sel} tr`)]
+        .map(tr => tr.children[i].textContent.replace(/\s+/g, ' ').trim());
+
+    it('상위 N명·전교 석차는 번호 칸에 학번을 보이고 반 칸과 data-* 는 그대로다', () => {
+        ST.data = data();
+        document.getElementById('top-n-count').value = 'all';
+        document.getElementById('csat-top-n-count').value = 'all';
+        renderAll();
+        expect(cells('#top20-tbody', 1)).toEqual(['-', '1']);
+        expect(cells('#top20-tbody', 2)).toEqual(['30105', '2']);
+        expect(cells('#csat-school-tbody', 1)).toEqual(['', '1']);
+        expect(cells('#csat-school-tbody', 2)).toEqual(['30105', '2']);
+        const row = document.querySelector('#top20-tbody tr');
+        expect(row.dataset.num).toBe('');
+        expect(row.dataset.idx).toBe('0');
+    });
+
+    it('구간 명단·수능 최저 명단도 학번을 보인다', () => {
+        ST.data = data();
+        renderAll();
+        modal.showSelectedSubjectStudents('kor', '화법과 작문');
+        expect(cells('#bin-modal-tbody', 1)).toEqual(['30105', '2번']);
+        modal.showCsatStudents(2, 18);
+        expect(cells('#csat-list-modal-tbody', 0)).toEqual(['반 30105', '1반 2번']);
+    });
+
+    it('성적표 제목과 인쇄본 번호 칸도 학번을 보인다', () => {
+        ST.data = data();
+        renderAll();
+        modal.handleRowClick(document.querySelector('#top20-tbody tr'));
+        expect(document.getElementById('modal-student-info').innerText).toBe('30105 가 성적표');
+        let html = '';
+        const open = vi.spyOn(window, 'open').mockImplementation(() => ({
+            document: {write: (h) => { html += h; }, close: () => {}}
+        }));
+        modal.printStudentDetail();
+        open.mockRestore();
+        const info = new DOMParser().parseFromString(html, 'text/html')
+            .querySelector('table tbody tr').children;
+        expect(info[1].textContent).toBe('-');
+        expect(info[2].textContent).toBe('30105');
+    });
+});

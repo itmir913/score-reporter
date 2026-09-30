@@ -3,7 +3,7 @@ import {renderAll} from '../report.js';
 /* 아래 마크업의 on* 속성이 부르는 함수는 모듈 스코프가 아니라 전역에서 찾는다.
  * src/main.js가 window에 올려두므로 여기서 import 하지 않는다. */
 import {escapeAttr, roundHalfUp} from '../utils.js';
-import {studentIdxAttr} from './report-modal.js';
+import {numberLabel, studentIdxAttr} from './report-modal.js';
 
 /* ───────────────────────────────────────────
    § 수능 최저학력기준 분석 로직
@@ -157,7 +157,7 @@ export function renderCsatSchoolTable() {
                     data-action="row-click">
                     <td class="p-3 text-slate-500 font-medium">${rank}</td>
                     <td class="p-3 text-slate-700">${escapeAttr(s.class) || ''}</td>
-                    <td class="p-3 text-slate-700">${escapeAttr(s.number) || ''}</td>
+                    <td class="p-3 text-slate-700">${escapeAttr(numberLabel(s)) || ''}</td>
                     <td class="p-3 text-left font-semibold text-slate-800">${escapeAttr(s.name) || ''}</td>
                     <td class="p-3 bg-blue-50/50 text-blue-700 border-x border-slate-100">${csat.sum2}</td>
                     <td class="p-3 bg-emerald-50/50 text-emerald-700 border-r border-slate-100">${csat.sum3}</td>

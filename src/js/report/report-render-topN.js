@@ -2,7 +2,7 @@ import {labelMap} from '../report.js';
 /* 아래 마크업의 on* 속성이 부르는 함수는 모듈 스코프가 아니라 전역에서 찾는다.
  * src/main.js가 window에 올려두므로 여기서 import 하지 않는다. */
 import {escapeAttr, roundHalfUp, toFixedHalfUp} from '../utils.js';
-import {studentIdxAttr} from './report-modal.js';
+import {numberLabel, studentIdxAttr} from './report-modal.js';
 
 /* ───────────────────────────────────────────
    § 상위 N명 명단 렌더링 (전역 기준 적용)
@@ -75,7 +75,7 @@ export function renderTopN(cache) {
                 data-action="row-click">
                 <td class="px-2 py-2 text-center font-bold text-slate-500">${rank}</td>
                 <td class="px-2 py-2 text-center">${escapeAttr(s.class) || '-'}</td>
-                <td class="px-2 py-2 text-center">${escapeAttr(s.number) || '-'}</td>
+                <td class="px-2 py-2 text-center">${escapeAttr(numberLabel(s)) || '-'}</td>
                 <td class="px-2 py-2 text-center font-semibold text-slate-800 whitespace-nowrap">${escapeAttr(s.name) || '-'}</td>
                 <td class="px-2 py-2 text-center font-bold text-blue-600 bg-blue-50/20">
                     ${displaySum}
