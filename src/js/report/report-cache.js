@@ -1,3 +1,4 @@
+import {sameInquirySubject} from '../utils.js';
 import {_getCsatRawSums} from './report-csat-sum.js';
 
 /* ───────────────────────────────────────────
@@ -80,7 +81,8 @@ export function computeRenderCache(data, basis) {
         accSubject(korSubjectStats, s.korean?.subject, s.korean);
         accSubject(mathSubjectStats, s.math?.subject, s.math);
         accSubject(inqSubjectStats, s.inquiry1?.subject, s.inquiry1);
-        accSubject(inqSubjectStats, s.inquiry2?.subject, s.inquiry2);
+        // 탐구1·탐구2 과목이 같으면 한 학생을 두 번 세지 않는다 (점수는 탐구1 것)
+        if (!sameInquirySubject(s)) accSubject(inqSubjectStats, s.inquiry2?.subject, s.inquiry2);
 
         /* 4. 수능 최저 등급합 */
         csatSums.push(_getCsatRawSums(s));

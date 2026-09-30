@@ -4,7 +4,7 @@ import {GradeExporter} from './exporter.js';
 import {GradeDataParser} from './parser.js';
 import {renderReport} from './report.js';
 import {FIELD_LABELS, SCHEMAS} from './schema.js';
-import {escapeAttr} from './utils.js';
+import {escapeAttr, sameInquirySubject} from './utils.js';
 import {decryptXlsx, isCfbContainer, isEncryptedOfficeFile, WrongPasswordError} from './xlsx-decrypt.js';
 
 /* ───────────────────────────────────────────
@@ -385,7 +385,13 @@ export function parseData() {
         const parser = new GradeDataParser(SCHEMAS[ST.fmtId]);
         ST.data = parser.parse(ST.wb, sheetName);
 
-        showToast(`${ST.data.length}명의 데이터를 파싱했습니다.`);
+        // 알림은 한 번에 하나만 보인다. 경고가 있으면 성공 문구와 합쳐 오류 알림으로 띄운다
+        const sameInq = ST.data.filter(sameInquirySubject).length;
+        if (sameInq > 0) {
+            showToast(`${ST.data.length}명의 데이터를 파싱했습니다. ${sameInq}명의 탐구1·탐구2 과목이 같습니다. 원본 파일을 확인해 주세요.`, true);
+        } else {
+            showToast(`${ST.data.length}명의 데이터를 파싱했습니다.`);
+        }
         document.getElementById('badge-text').innerText = `${ST.data.length}명 로드됨`;
         document.getElementById('data-badge').querySelector('span').className = 'w-2 h-2 rounded-full bg-green-500';
 

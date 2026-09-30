@@ -1,7 +1,7 @@
 import Chart from 'chart.js/auto';
 import {ST} from '../main.js';
 import {showBinStudentsModal} from './report-modal.js';
-import {escapeAttr} from '../utils.js';
+import {escapeAttr, sameInquirySubject} from '../utils.js';
 
 /* ───────────────────────────────────────────
    § 과목별 성적 분포 종합 (등급 or 백분위)
@@ -80,8 +80,8 @@ export function renderSubjectsCharts() {
         // 탐구 1 (과목명이 있고, 점수/등급이 null이 아닐 때)
         if (s.inquiry1?.subject && s.inquiry1[chartBasis] != null) addData(s.inquiry1.subject, s.inquiry1[chartBasis]);
 
-        // 탐구 2
-        if (s.inquiry2?.subject && s.inquiry2[chartBasis] != null) addData(s.inquiry2.subject, s.inquiry2[chartBasis]);
+        // 탐구 2 (탐구1 과 같은 과목이면 한 번만 센다. 막대 명단도 탐구1 점수로 거른다)
+        if (s.inquiry2?.subject && s.inquiry2[chartBasis] != null && !sameInquirySubject(s)) addData(s.inquiry2.subject, s.inquiry2[chartBasis]);
     });
 
     const colors = [{bg: 'rgba(139, 92, 246, 0.7)', border: '#7c3aed'}, {

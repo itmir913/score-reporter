@@ -16,7 +16,10 @@ vi.mock('chart.js/auto', () => ({
     }
 }));
 
-const {ST} = await import('../src/js/main.js');
+const {ST, parseData} = await import('../src/js/main.js');
+const {SCHEMAS} = await import('../src/js/schema.js');
+const {renderSubjectsCharts} = await import('../src/js/report/report-render-chart-subjects.js');
+const ExcelJS = (await import('exceljs')).default;
 const {renderAll} = await import('../src/js/report.js');
 const modal = await import('../src/js/report/report-modal.js');
 const {initActions} = await import('../src/js/actions.js');
@@ -226,5 +229,81 @@ describe('성적표의 원점수', () => {
         modal.showStudentDetail('가', '1', '1');
         expect(document.querySelector('#modal-score-tbody tr').children[2].textContent.trim()).toBe('80');
         expect(printed()).toBe('공통 60 + 선택 20(합계 80)');
+    });
+});
+
+describe('탐구1·탐구2 과목이 같은 학생', () => {
+    // 원본 입력 실수로 두 칸 과목명이 같으면 한 학생이 그 과목을 두 번 고른 것으로 세었다
+    const data = () => {
+        const dup = student('중복', '1', '1');
+        dup.inquiry1 = score('물리학Ⅰ', 40, 1);
+        dup.inquiry2 = score('물리학Ⅰ', 20, 1);
+        const ok = student('정상', '1', '2');
+        ok.inquiry1 = score('물리학Ⅰ', 30, 1);
+        return [dup, ok];
+    };
+
+    it('선택 비율 표·원그래프에서 한 번만 세고 점수는 탐구1 것을 쓴다', () => {
+        ST.data = data();
+        renderAll();
+        const row = [...document.querySelectorAll('#inq-select-stats tbody tr')]
+            .map(tr => [...tr.children].map(td => td.textContent.replace(/\s+/g, ' ').trim()))
+            .find(r => r[0] === '물리학Ⅰ');
+        expect(row[1]).toContain('(2)');
+        expect(row[2]).toBe('35.0'); // (40 + 30) / 2
+        const pie = ST.charts.inqSelectPie.cfg.data;
+        expect(pie.datasets[0].data[pie.labels.indexOf('물리학Ⅰ')]).toBe(2);
+    });
+
+    it('과목별 분포 막대도 한 번만 세고, 막대를 누른 명단 인원과 같다', () => {
+        ST.data = data();
+        document.getElementById('chart-basis').value = 'grade';
+        renderSubjectsCharts();
+        const key = Object.keys(ST.charts).find(k => k.startsWith('chart-subj-') &&
+            document.getElementById(k).closest('div.bg-white').textContent.includes('물리학Ⅰ'));
+        const chart = ST.charts[key].cfg;
+        expect(chart.data.datasets[0].data[0]).toBe(2);
+        chart.options.onClick(null, [{index: 0}]);
+        expect(document.querySelectorAll('#bin-modal-tbody tr')).toHaveLength(2);
+    });
+
+    it('파싱하면 몇 명인지 경고로 알린다', async () => {
+        const schema = SCHEMAS.daegyohyeop;
+        // ExcelJS addRows 는 빈 자리를 건너뛰고 당겨 넣는다. 빈 문자열로 채워 둔다
+        const row = (name, inq1, inq2) => {
+            const r = Array(40).fill('');
+            r[schema._idx.name] = name;
+            r[schema._idx.inq1_subject] = inq1;
+            r[schema._idx.inq2_subject] = inq2;
+            return r;
+        };
+        const wb = new ExcelJS.Workbook();
+        wb.addWorksheet('S').addRows([['머리글'], ['머리글'],
+            row('가', '물리학Ⅰ', '물리학Ⅰ'), row('나', '물리학Ⅰ', '화학Ⅰ')]);
+        ST.wb = wb;
+        ST.fmtId = schema.id;
+        document.getElementById('sheet-select').innerHTML = '<option value="S">S</option>';
+        window.scrollTo = () => {};
+        parseData();
+        expect(ST.data).toHaveLength(2);
+        expect(document.getElementById('toast-msg').innerText)
+            .toBe('2명의 데이터를 파싱했습니다. 1명의 탐구1·탐구2 과목이 같습니다. 원본 파일을 확인해 주세요.');
+        expect(document.getElementById('toast-icon').className).toContain('text-red-400');
+    });
+
+    it('과목이 모두 다르면 성공 알림만 띄운다', () => {
+        const schema = SCHEMAS.daegyohyeop;
+        const r = Array(40).fill('');
+        r[schema._idx.name] = '가';
+        r[schema._idx.inq1_subject] = '물리학Ⅰ';
+        r[schema._idx.inq2_subject] = '화학Ⅰ';
+        const wb = new ExcelJS.Workbook();
+        wb.addWorksheet('S').addRows([['머리글'], ['머리글'], r]);
+        ST.wb = wb;
+        ST.fmtId = schema.id;
+        document.getElementById('sheet-select').innerHTML = '<option value="S">S</option>';
+        window.scrollTo = () => {};
+        parseData();
+        expect(document.getElementById('toast-msg').innerText).toBe('1명의 데이터를 파싱했습니다.');
     });
 });

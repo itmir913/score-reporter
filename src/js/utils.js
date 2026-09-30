@@ -38,6 +38,12 @@ export function dlBlob(blob, name) {
     URL.revokeObjectURL(url);
 }
 
+// 탐구1·탐구2 과목명이 같은가 (원본 입력 실수). 선택 비율·과목 분포에서 한 번만 센다
+export function sameInquirySubject(s) {
+    const a = s?.inquiry1?.subject;
+    return typeof a === 'string' && a.trim() !== '' && a === s?.inquiry2?.subject;
+}
+
 // HTML 속성용 안전한 이스케이프 함수
 export function escapeAttr(str) {
     if (str === null || str === undefined) return '';
