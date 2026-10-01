@@ -71,6 +71,15 @@ export function numberLabel(s) {
     return showsStudentId(s) ? s.student_id : s.number;
 }
 
+/* "1반 2번" 처럼 붙여 쓰는 자리. 빈 반·번호에 "반"·"번" 만 남지 않게 있는 것만 붙인다.
+ * 반이 비고 학번이 있으면 학번만, 아무것도 없으면 '' */
+export function classNumberText(s) {
+    if (showsStudentId(s)) return String(s.student_id);
+    const cls = String(s.class ?? '').trim();
+    const num = String(s.number ?? '').trim();
+    return [cls && `${cls}반`, num && `${num}번`].filter(Boolean).join(' ');
+}
+
 /**
  * 구간별 학생 명단 팝업 (차트 클릭 시 호출)
  */
@@ -111,8 +120,8 @@ export function showBinStudentsModal(label, students) {
         return `
             <tr class="hover:bg-blue-50 cursor-pointer transition-colors group"
                 data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" ${studentIdxAttr(s)} data-action="row-click">
-                <td class="border-b border-slate-200 p-3 text-slate-600">${escapeAttr(s.class)}반</td>
-                <td class="border-b border-slate-200 p-3 text-slate-600">${showsStudentId(s) ? escapeAttr(s.student_id) : `${escapeAttr(s.number)}번`}</td>
+                <td class="border-b border-slate-200 p-3 text-slate-600">${String(s.class ?? '').trim() ? `${escapeAttr(s.class)}반` : '-'}</td>
+                <td class="border-b border-slate-200 p-3 text-slate-600">${showsStudentId(s) ? escapeAttr(s.student_id) : String(s.number ?? '').trim() ? `${escapeAttr(s.number)}번` : '-'}</td>
                 <td class="border-b border-slate-200 p-3 font-bold text-slate-800">${escapeAttr(s.name)}</td>
                 <td class="border-b border-slate-200 p-3 text-blue-600 font-bold">
                     ${sum === null ? '-' : toFixedHalfUp(sum, basis === 'pct' ? 1 : 0)}
@@ -144,9 +153,8 @@ export function showStudentDetail(name, cls, num) {
 function _showStudent(s) {
     _printStudent = s;
 
-    document.getElementById('modal-student-info').innerText = showsStudentId(s)
-        ? `${s.student_id} ${s.name} 성적표`
-        : `${s.class}반 ${s.number}번 ${s.name} 성적표`;
+    const who = classNumberText(s);
+    document.getElementById('modal-student-info').innerText = `${who ? `${who} ` : ''}${s.name} 성적표`;
 
     const rows = [{label: '국어', data: s.korean}, {label: '수학', data: s.math}, {
         label: '영어',
@@ -249,7 +257,7 @@ export function showCsatStudents(n, targetSum) {
             return `
                 <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer group"
                     data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" ${studentIdxAttr(s)} data-action="row-click">
-                    <td class="border border-slate-300 p-3 text-slate-700">${escapeAttr(s.class) || ''}반 ${showsStudentId(s) ? escapeAttr(s.student_id) : `${escapeAttr(s.number) || ''}번`}</td>
+                    <td class="border border-slate-300 p-3 text-slate-700">${escapeAttr(classNumberText(s)) || '-'}</td>
                     <td class="border border-slate-300 p-3 font-bold text-slate-800">${escapeAttr(s.name) || ''}</td>
                     <td class="border border-slate-300 p-3 text-blue-600 font-bold">${actualSum}</td>
                     <td class="border border-slate-300 p-3 text-blue-600 font-bold">${escapeAttr(actualSubj || '-')}</td>

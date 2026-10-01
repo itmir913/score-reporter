@@ -335,9 +335,27 @@ describe('반이 빈 양식의 번호 칸', () => {
         ST.data = data();
         renderAll();
         modal.showSelectedSubjectStudents('kor', '화법과 작문');
+        // 반이 비면 반 칸은 "반" 만 남기지 않고 - 이다
+        expect(cells('#bin-modal-tbody', 0)).toEqual(['-', '1반']);
         expect(cells('#bin-modal-tbody', 1)).toEqual(['30105', '2번']);
         modal.showCsatStudents(2, 18);
-        expect(cells('#csat-list-modal-tbody', 0)).toEqual(['반 30105', '1반 2번']);
+        expect(cells('#csat-list-modal-tbody', 0)).toEqual(['30105', '1반 2번']);
+    });
+
+    // 반·번호·학번이 모두 빈 학생은 "반"·"번" 만 덩그러니 남았다
+    it('반·번호·학번이 모두 비면 반·번 글자를 남기지 않는다', () => {
+        ST.data = [student('다', '', '', 90)];
+        renderAll();
+        modal.showSelectedSubjectStudents('kor', '화법과 작문');
+        expect(cells('#bin-modal-tbody', 0)).toEqual(['-']);
+        expect(cells('#bin-modal-tbody', 1)).toEqual(['-']);
+        modal.showCsatStudents(2, 18);
+        expect(cells('#csat-list-modal-tbody', 0)).toEqual(['-']);
+        modal.handleRowClick(document.querySelector('#top20-tbody tr'));
+        expect(document.getElementById('modal-student-info').innerText).toBe('다 성적표');
+        ST.data[0].number = '7';
+        modal.handleRowClick(document.querySelector('#top20-tbody tr'));
+        expect(document.getElementById('modal-student-info').innerText).toBe('7번 다 성적표');
     });
 
     it('성적표 제목과 인쇄본 번호 칸도 학번을 보인다', () => {
