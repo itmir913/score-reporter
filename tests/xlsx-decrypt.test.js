@@ -1,8 +1,8 @@
-import {beforeAll, describe, expect, it} from 'vitest';
+import {beforeAll, describe, expect, it, vi} from 'vitest';
 import crypto from 'node:crypto';
 import ExcelJS from 'exceljs';
 import * as XLSX from 'xlsx';
-import {decryptXlsx, isCfbContainer, isEncryptedOfficeFile, WrongPasswordError} from '../src/js/xlsx-decrypt.js';
+import {decryptXlsx, isCfbContainer, isEncryptedOfficeFile, readCfb, WrongPasswordError} from '../src/js/xlsx-decrypt.js';
 
 /* 암호가 걸린 진짜 파일을 저장소에 넣어 두는 대신, 테스트에서 규격대로 직접
  * 암호화해 만든다. 모듈이 쓰는 WebCrypto 와 달리 여기서는 node:crypto 를 쓰므로
@@ -188,6 +188,26 @@ describe('xlsx 암호 해제', () => {
     it('비밀번호가 틀리면 WrongPasswordError 를 던진다', async () => {
         const bytes = toContainer(encryptAgile(plain));
         await expect(decryptXlsx(bytes, '틀린암호')).rejects.toThrow(WrongPasswordError);
+    });
+
+    // 업로드 한 번에 암호 확인과 해제가 각자 컨테이너를 다시 읽었다
+    it('미리 읽은 컨테이너를 넘기면 다시 읽지 않는다', async () => {
+        const bytes = toContainer(encryptAgile(plain));
+        const cfb = readCfb(new Uint8Array(bytes).buffer);
+        const read = vi.spyOn(XLSX.CFB, 'read');
+        try {
+            expect(isEncryptedOfficeFile(bytes, cfb)).toBe(true);
+            const out = await decryptXlsx(bytes, PASSWORD, cfb);
+            expect(Buffer.from(out).equals(plain)).toBe(true);
+            expect(read).not.toHaveBeenCalled();
+        } finally {
+            read.mockRestore();
+        }
+    });
+
+    it('readCfb 는 컨테이너가 아니면 null 이다', () => {
+        expect(readCfb(new Uint8Array([0x50, 0x4b, 3, 4, 0, 0, 0, 0]).buffer)).toBeNull();
+        expect(readCfb(new Uint8Array([0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1, 1]).buffer)).toBeNull();
     });
 
     it('지원하지 않는 버전은 그렇다고 알린다', async () => {

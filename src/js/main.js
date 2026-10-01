@@ -8,8 +8,8 @@ import {escapeAttr, sameInquirySubject} from './utils.js';
 import {
     decryptXlsx,
     EncryptedLegacyXlsError,
-    isCfbContainer,
     isEncryptedOfficeFile,
+    readCfb,
     WrongPasswordError
 } from './xlsx-decrypt.js';
 
@@ -198,7 +198,10 @@ export async function processFile(file) {
 
         // 확장자는 .xlsx 인데 속은 옛 .xls(OLE2) 인 파일이 있다. 암호 정보가 없으면
         // 비밀번호를 묻지 않고 .xls 처럼 SheetJS 로 읽는다.
-        const isLegacyXls = fileExt === 'xlsx' && isCfbContainer(arrayBuffer) && !isEncryptedOfficeFile(arrayBuffer);
+        // 컨테이너는 한 번만 읽어 암호 확인과 해제가 함께 쓴다
+        const cfb = fileExt === 'xlsx' ? readCfb(arrayBuffer) : null;
+        const isEncrypted = !!cfb && isEncryptedOfficeFile(arrayBuffer, cfb);
+        const isLegacyXls = !!cfb && !isEncrypted;
 
         if (fileExt === 'xls' || fileExt === 'csv' || isLegacyXls) {
             // [최적화 2] .xls와 .csv는 SheetJS가 훨씬 빠릅니다.
@@ -217,7 +220,7 @@ export async function processFile(file) {
                 } catch (e) {
                     // 암호가 걸린 옛 .xls 는 "손상된 파일" 이 아니다. 무엇을 하면 되는지 알린다.
                     // 암호 정보(/EncryptionInfo)가 있는 것은 새 형식이 이름만 .xls 인 파일이라 뺀다
-                    if (/password-protected/i.test(e?.message) && !isEncryptedOfficeFile(arrayBuffer)) {
+                    if (/password-protected/i.test(e?.message) && (isLegacyXls || !isEncryptedOfficeFile(arrayBuffer))) {
                         throw new EncryptedLegacyXlsError();
                     }
                     throw e;
@@ -234,7 +237,7 @@ export async function processFile(file) {
             /* 암호가 걸린 xlsx 는 zip 이 아니라 OLE2 컨테이너로 저장된다. ExcelJS 는
              * 그걸 그대로 zip 으로 읽으려다 실패하므로, 먼저 우리가 풀어서 넘긴다. */
             let data = arrayBuffer;
-            if (isEncryptedOfficeFile(arrayBuffer)) {
+            if (isEncrypted) {
                 const pwd = prompt("암호가 걸려있는 엑셀 파일입니다.\n비밀번호를 입력해주세요.");
                 if (superseded()) return;
                 if (pwd === null) return showToast("취소되었습니다.", true);
@@ -242,7 +245,7 @@ export async function processFile(file) {
                 showToast("암호를 해제하는 중입니다. 잠시만 기다려주세요...");
                 await new Promise(r => setTimeout(r, 50));
                 if (superseded()) return;
-                data = await decryptXlsx(arrayBuffer, pwd);
+                data = await decryptXlsx(arrayBuffer, pwd, cfb);
                 if (superseded()) return;
             }
             await wb.xlsx.load(data);

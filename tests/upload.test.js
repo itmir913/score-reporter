@@ -91,8 +91,9 @@ describe('암호가 걸린 옛 .xls', () => {
         });
         const ask = vi.spyOn(window, 'prompt').mockImplementation(() => null);
         await processFile(fakeFile('성적.xlsx', encryptedXls().buffer));
-        expect(ask).not.toHaveBeenCalled();
+        const asked = ask.mock.calls.length; // restoreAllMocks 가 호출 기록도 지운다
         vi.restoreAllMocks();
+        expect(asked).toBe(0);
         expect(document.getElementById('toast-msg').innerText).toBe(MSG);
     });
 
@@ -101,6 +102,28 @@ describe('암호가 걸린 옛 .xls', () => {
         });
         await processFile(fakeFile('성적.xls', new Uint8Array([0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1, 1, 2, 3]).buffer));
         vi.restoreAllMocks();
+        expect(document.getElementById('toast-msg').innerText).toBe('파일을 읽는 데 실패했습니다. 파일이 손상되었을 수 있습니다.');
+    });
+});
+
+describe('암호가 걸린 .xlsx 컨테이너', () => {
+    // 암호 확인(두 번)과 해제가 각자 CFB 를 다시 읽어, 큰 파일을 세 번 읽었다
+    it('업로드 한 번에 한 번만 읽는다', async () => {
+        const cfb = XLSX.CFB.utils.cfb_new();
+        // 지원하지 않는 버전(4.3)이라 해제 단계에서 멈춘다. 컨테이너를 읽은 횟수만 본다
+        XLSX.CFB.utils.cfb_add(cfb, '/EncryptionInfo', new Uint8Array([0x04, 0x00, 0x03, 0x00, 0, 0, 0, 0]));
+        XLSX.CFB.utils.cfb_add(cfb, '/EncryptedPackage', new Uint8Array(16));
+        const bytes = new Uint8Array(XLSX.CFB.write(cfb, {type: 'array'}));
+        vi.spyOn(console, 'error').mockImplementation(() => {
+        });
+        const ask = vi.spyOn(window, 'prompt').mockImplementation(() => 'pw');
+        const read = vi.spyOn(XLSX.CFB, 'read');
+        await processFile(fakeFile('성적.xlsx', bytes.buffer));
+        const calls = read.mock.calls.length;
+        const asked = ask.mock.calls.length;
+        vi.restoreAllMocks();
+        expect(asked).toBe(1);
+        expect(calls).toBe(1);
         expect(document.getElementById('toast-msg').innerText).toBe('파일을 읽는 데 실패했습니다. 파일이 손상되었을 수 있습니다.');
     });
 });
@@ -206,7 +229,7 @@ describe('clearFile', () => {
         expect(document.getElementById('report-empty').classList.contains('hidden')).toBe(false);
         expect(document.getElementById('export-cards').innerHTML).toBe('');
         expect(document.getElementById('export-summary').textContent).toContain('불러온 데이터가 없습니다');
-    });
+    }, 20000); // 샘플 100명으로 리포트 전체를 그려 기본 5초를 넘길 때가 있다
 
     it('데이터가 비어 있을 때 리포트 핸들러가 오류를 내지 않는다', () => {
         clearFile();

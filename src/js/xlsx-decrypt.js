@@ -34,16 +34,22 @@ export function isCfbContainer(buffer) {
     return CFB_MAGIC.every((b, i) => head[i] === b);
 }
 
+/** OLE2(CFB) 컨테이너를 한 번 읽어 둔다. 컨테이너가 아니거나 읽지 못하면 null.
+ *  업로드 한 번에 암호 여부 확인과 해제가 같은 결과를 나눠 쓴다 (큰 파일을 여러 번 읽지 않는다) */
+export function readCfb(buffer) {
+    if (!isCfbContainer(buffer)) return null;
+    try {
+        return XLSX.CFB.read(u8(buffer), {type: 'array'});
+    } catch {
+        return null;
+    }
+}
+
 /* 암호가 걸린 Office 파일인지 본다. 옛 .xls 도 같은 OLE2 컨테이너라서 시그니처만
  * 보면 확장자만 .xlsx 로 바뀐 평범한 .xls 에도 비밀번호를 물었다. 컨테이너 안에
- * /EncryptionInfo 스트림이 있어야 암호 파일로 본다. */
-export function isEncryptedOfficeFile(buffer) {
-    if (!isCfbContainer(buffer)) return false;
-    try {
-        return !!XLSX.CFB.find(XLSX.CFB.read(u8(buffer), {type: 'array'}), '/EncryptionInfo');
-    } catch {
-        return false;
-    }
+ * /EncryptionInfo 스트림이 있어야 암호 파일로 본다. cfb 는 readCfb 로 미리 읽은 것 */
+export function isEncryptedOfficeFile(buffer, cfb = readCfb(buffer)) {
+    return !!cfb && !!XLSX.CFB.find(cfb, '/EncryptionInfo');
 }
 
 /* ─── 바이트 유틸 ─────────────────────────────────────── */
@@ -279,10 +285,10 @@ export class EncryptedLegacyXlsError extends Error {
  *
  * @param {ArrayBuffer|Uint8Array} buffer 사용자가 올린 파일 그대로
  * @param {string} password 사용자가 입력한 비밀번호
+ * @param {object} [cfb] readCfb 로 미리 읽은 컨테이너. 없으면 buffer 를 읽는다
  * @returns {Promise<Uint8Array>}
  */
-export async function decryptXlsx(buffer, password) {
-    const cfb = XLSX.CFB.read(u8(buffer), {type: 'array'});
+export async function decryptXlsx(buffer, password, cfb = XLSX.CFB.read(u8(buffer), {type: 'array'})) {
     const info = XLSX.CFB.find(cfb, '/EncryptionInfo');
     const pkg = XLSX.CFB.find(cfb, '/EncryptedPackage');
     if (!info || !pkg) throw new Error('암호화된 Office 파일이 아닙니다.');

@@ -291,7 +291,7 @@ export function printStudentDetail() {
         if (hasRaw) return String(d.raw);
         if (typeof d.common_raw === 'number') return String(d.common_raw);
         if (typeof d.select_raw === 'number') return String(d.select_raw);
-        return typeof d.raw === 'number' ? String(d.raw) : '-';
+        return '-';
     };
     const fmtNum = (v) => (typeof v === 'number') ? String(v) : '-';
     const fmtSubj = (subj) => {
