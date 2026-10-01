@@ -181,7 +181,10 @@ export const SCHEMAS = {
                 const now = new Date();
                 return now.getFullYear() + 1;
             },
-            // 과목명은 대교협 파일에 적힌 대로 로마자(물리학Ⅰ)로 내보낸다
+            // 과목명은 대교협 파일처럼 로마자(물리학Ⅰ)로 내보낸다. 띄어쓰기는 그대로 둔다
+            inq1_subject: numberToRomanKeepSpaces,
+            inq2_subject: numberToRomanKeepSpaces,
+            fl2_subject: numberToRomanKeepSpaces,
         },
     }),
 
@@ -222,7 +225,10 @@ export const SCHEMAS = {
                 const now = new Date();
                 return now.getFullYear() + 1;
             },
-            // 과목명은 대교협 파일에 적힌 대로 로마자(물리학Ⅰ)로 내보낸다
+            // 과목명은 대교협 파일처럼 로마자(물리학Ⅰ)로 내보낸다. 띄어쓰기는 그대로 둔다
+            inq1_subject: numberToRomanKeepSpaces,
+            inq2_subject: numberToRomanKeepSpaces,
+            fl2_subject: numberToRomanKeepSpaces,
         },
     }),
 
@@ -461,6 +467,13 @@ export function convertNumberToRoman(s, baseValue) {
     if (!baseValue) return '';
     let val = baseValue.replace(/\s+/g, '');
     return val.replace(/(\D)1$/, '$1Ⅰ').replace(/(\D)2$/, '$1Ⅱ');
+}
+
+// convertNumberToRoman 과 같지만 공백을 지우지 않는다 ("생활과 윤리" 는 그대로, "물리학1" → "물리학Ⅰ").
+// 라틴 문자 I·II 는 바꾸지 않는다
+export function numberToRomanKeepSpaces(s, baseValue) {
+    if (!baseValue) return '';
+    return String(baseValue).replace(/(\D)1$/, '$1Ⅰ').replace(/(\D)2$/, '$1Ⅱ');
 }
 
 // 로마자를 숫자로 변환 (Ⅰ -> 1)

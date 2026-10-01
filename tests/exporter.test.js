@@ -149,6 +149,55 @@ describe('탐구·제2외국어 과목명', () => {
         const rows = await exportAndRead([withSubjects()], schema);
         expect(subjects(rows[schema.headerRows], schema)).toEqual(['물리학1', '생명과학2', '일본어1']);
     });
+
+    // 다른 양식(유니브 등)에서 읽은 숫자 과목명이 대교협으로 나갈 때 물리학1 로 남았다
+    it.each(['daegyohyeop', 'daegyohyeop_preview'])('%s 는 끝의 숫자 1·2 를 로마자로 바꾸고 띄어쓰기는 둔다', async (id) => {
+        const schema = SCHEMAS[id];
+        const s = student({name: '홍길동'});
+        s.inquiry1.subject = '물리학1';
+        s.inquiry2.subject = '생활과 윤리';
+        s.fl2.subject = '중국어 2';
+        const rows = await exportAndRead([s], schema);
+        expect(subjects(rows[schema.headerRows], schema)).toEqual(['물리학Ⅰ', '생활과 윤리', '중국어 Ⅱ']);
+
+        // 앞이 숫자인 끝자리(탐구11)와 라틴 문자 I 는 그대로다
+        s.inquiry1.subject = '탐구11';
+        s.inquiry2.subject = '물리학I';
+        const again = await exportAndRead([s], schema);
+        expect(subjects(again[schema.headerRows], schema).slice(0, 2)).toEqual(['탐구11', '물리학I']);
+    });
+
+    it('유니브에서 읽은 숫자 과목명은 대교협으로 내보내면 로마자다', async () => {
+        const univ = SCHEMAS.univcoop;
+        const r = Array(60).fill('');
+        r[univ._idx.name] = '홍길동';
+        r[univ._idx.inq1_subject] = '물리학1';
+        r[univ._idx.inq2_subject] = '생활과 윤리';
+        r[univ._idx.fl2_subject] = '일본어1';
+        const wb = new ExcelJS.Workbook();
+        wb.addWorksheet('S').addRows([...Array(univ.headerRows).fill(['머리글']), r]);
+        const [back] = new GradeDataParser(univ).parse(wb, 'S');
+        expect(back.inquiry1.subject).toBe('물리학1');
+
+        const dg = SCHEMAS.daegyohyeop;
+        const rows = await exportAndRead([back], dg);
+        expect(subjects(rows[dg.headerRows], dg)).toEqual(['물리학Ⅰ', '생활과 윤리', '일본어Ⅰ']);
+    });
+
+    // 대교협만 바꾼다. 다른 양식의 과목명 변환은 예전 그대로다
+    it.each([
+        ['univcoop', ['물리학1', '생활과윤리', '일본어1']],
+        ['kkumkugo', ['물리학Ⅰ', '생활과윤리', '일본어Ⅰ']],
+        ['kimyoungil', ['물리학Ⅰ', '생활과윤리', '일본어1']],
+    ])('%s 의 과목명 변환은 그대로다', async (id, expected) => {
+        const schema = SCHEMAS[id];
+        const s = student({name: '홍길동'});
+        s.inquiry1.subject = '물리학Ⅰ';
+        s.inquiry2.subject = '생활과 윤리';
+        s.fl2.subject = '일본어 1';
+        const rows = await exportAndRead([s], schema);
+        expect(subjects(rows[schema.headerRows], schema)).toEqual(expected);
+    });
 });
 
 describe('내보낸 파일을 다시 읽어도 성적이 그대로다', () => {

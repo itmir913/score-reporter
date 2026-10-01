@@ -4,6 +4,7 @@ import {
     convertRomanToNumber,
     ensureNumericOrZero,
     FormatSchema,
+    numberToRomanKeepSpaces,
     removeSpaces,
     SCHEMAS,
 } from '../src/js/schema.js';
@@ -66,6 +67,24 @@ describe('FormatSchema.num: 점수 칸 읽기', () => {
         expect(read('')).toBeNull();
         expect(read(Infinity)).toBeNull();
         expect(read(NaN)).toBeNull();
+    });
+});
+
+describe('numberToRomanKeepSpaces: 대교협 과목명', () => {
+    it('끝의 숫자 1·2 만 로마자로 바꾸고 나머지는 그대로 둔다', () => {
+        expect(numberToRomanKeepSpaces(S, '물리학1')).toBe('물리학Ⅰ');
+        expect(numberToRomanKeepSpaces(S, '생명과학2')).toBe('생명과학Ⅱ');
+        expect(numberToRomanKeepSpaces(S, '생활과 윤리')).toBe('생활과 윤리');
+        expect(numberToRomanKeepSpaces(S, '물리학Ⅰ')).toBe('물리학Ⅰ');
+        expect(numberToRomanKeepSpaces(S, '탐구11')).toBe('탐구11');
+        expect(numberToRomanKeepSpaces(S, '물리학I')).toBe('물리학I');
+        expect(numberToRomanKeepSpaces(S, '')).toBe('');
+        expect(numberToRomanKeepSpaces(S, null)).toBe('');
+    });
+
+    // convertNumberToRoman 은 공백까지 지운다. 그 동작은 꿈꾸GO 가 쓰므로 바꾸지 않는다
+    it('convertNumberToRoman 은 예전처럼 공백을 지운다', () => {
+        expect(convertNumberToRoman(S, '생활과 윤리')).toBe('생활과윤리');
     });
 });
 
