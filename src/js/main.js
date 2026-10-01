@@ -2,7 +2,7 @@ import ExcelJS from 'exceljs';
 import * as XLSX from 'xlsx';
 import {GradeExporter} from './exporter.js';
 import {GradeDataParser} from './parser.js';
-import {renderReport} from './report.js';
+import {renderReport, setGlobalBasis} from './report.js';
 import {FIELD_LABELS, SCHEMAS} from './schema.js';
 import {escapeAttr, sameInquirySubject} from './utils.js';
 import {
@@ -409,17 +409,23 @@ export function parseData() {
         const parser = new GradeDataParser(SCHEMAS[ST.fmtId]);
         ST.data = parser.parse(ST.wb, sheetName);
 
-        // 알림은 한 번에 하나만 보인다. 경고가 있으면 성공 문구와 합쳐 오류 알림으로 띄운다
+        // 원점수 열이 비어 있는 파일(대교협 실채점 등)은 원점수 기준이면 표·분포가 모두 빈다.
+        // 국어·수학·탐구 원점수가 아무에게도 없으면 표준점수 기준으로 바꿔 보여 준다.
+        // 원점수가 있으면 사용자가 고른 기준을 그대로 둔다
+        const noRaw = ST.data.length > 0 && !ST.data.some(s =>
+            ['korean', 'math', 'inquiry1', 'inquiry2'].some(subj => Number.isFinite(s[subj]?.raw)));
+
+        // 알림은 한 번에 하나만 보인다. 안내와 경고를 성공 문구에 합치고, 경고가 있으면 오류 알림으로 띄운다
         const sameInq = ST.data.filter(sameInquirySubject).length;
-        if (sameInq > 0) {
-            showToast(`${ST.data.length}명의 데이터를 파싱했습니다. ${sameInq}명의 탐구1·탐구2 과목이 같습니다. 원본 파일을 확인해 주세요.`, true);
-        } else {
-            showToast(`${ST.data.length}명의 데이터를 파싱했습니다.`);
-        }
+        const msg = [`${ST.data.length}명의 데이터를 파싱했습니다.`];
+        if (sameInq > 0) msg.push(`${sameInq}명의 탐구1·탐구2 과목이 같습니다. 원본 파일을 확인해 주세요.`);
+        if (noRaw) msg.push('원점수가 없는 파일이라 표준점수 기준으로 보여 줍니다.');
+        showToast(msg.join(' '), sameInq > 0);
         document.getElementById('badge-text').innerText = `${ST.data.length}명 로드됨`;
         document.getElementById('data-badge').querySelector('span').className = 'w-2 h-2 rounded-full bg-green-500';
 
         renderReport();
+        if (noRaw) setGlobalBasis('std'); // 버튼 모양도 함께 바꾼다
         renderExportCards();
         switchTab('report');
         window.scrollTo({top: 0, behavior: 'smooth'});

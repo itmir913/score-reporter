@@ -20,7 +20,8 @@ const {ST, parseData} = await import('../src/js/main.js');
 const {SCHEMAS} = await import('../src/js/schema.js');
 const {renderSubjectsCharts} = await import('../src/js/report/report-render-chart-subjects.js');
 const ExcelJS = (await import('exceljs')).default;
-const {renderAll} = await import('../src/js/report.js');
+const report = await import('../src/js/report.js');
+const {renderAll} = report;
 const modal = await import('../src/js/report/report-modal.js');
 const {initActions} = await import('../src/js/actions.js');
 
@@ -275,6 +276,7 @@ describe('탐구1·탐구2 과목이 같은 학생', () => {
             r[schema._idx.name] = name;
             r[schema._idx.inq1_subject] = inq1;
             r[schema._idx.inq2_subject] = inq2;
+            r[schema._idx.kor_raw] = 80; // 원점수가 있어야 기준 전환 안내가 붙지 않는다
             return r;
         };
         const wb = new ExcelJS.Workbook();
@@ -297,6 +299,7 @@ describe('탐구1·탐구2 과목이 같은 학생', () => {
         r[schema._idx.name] = '가';
         r[schema._idx.inq1_subject] = '물리학Ⅰ';
         r[schema._idx.inq2_subject] = '화학Ⅰ';
+        r[schema._idx.kor_raw] = 80;
         const wb = new ExcelJS.Workbook();
         wb.addWorksheet('S').addRows([['머리글'], ['머리글'], r]);
         ST.wb = wb;
@@ -373,5 +376,59 @@ describe('반이 빈 양식의 번호 칸', () => {
             .querySelector('table tbody tr').children;
         expect(info[1].textContent).toBe('-');
         expect(info[2].textContent).toBe('30105');
+    });
+});
+
+describe('원점수가 없는 파일', () => {
+    // 대교협 실채점처럼 원점수 열이 비어 있으면 원점수 기준의 표·분포가 모두 비어 보였다
+    const schema = SCHEMAS.daegyohyeop;
+    const load = (rows) => {
+        const wb = new ExcelJS.Workbook();
+        wb.addWorksheet('S').addRows([['머리글'], ['머리글'], ...rows]);
+        ST.wb = wb;
+        ST.fmtId = schema.id;
+        document.getElementById('sheet-select').innerHTML = '<option value="S">S</option>';
+        window.scrollTo = () => {};
+        parseData();
+    };
+    const row = ({raw = '', std = 130, inq1 = '물리학Ⅰ', inq2 = '화학Ⅰ'} = {}) => {
+        const r = Array(40).fill('');
+        r[schema._idx.name] = '가';
+        r[schema._idx.kor_raw] = raw;
+        r[schema._idx.kor_std] = std;
+        r[schema._idx.inq1_subject] = inq1;
+        r[schema._idx.inq2_subject] = inq2;
+        return r;
+    };
+    const toast = () => document.getElementById('toast-msg').innerText;
+
+    it('표준점수 기준으로 바꾸고 한 번 알린다', () => {
+        report.setGlobalBasis('raw');
+        load([row()]);
+        expect(report.globalReportBasis).toBe('std');
+        expect(document.getElementById('btn-basis-std').className).toContain('font-bold');
+        expect(toast()).toBe('1명의 데이터를 파싱했습니다. 원점수가 없는 파일이라 표준점수 기준으로 보여 줍니다.');
+        expect(document.getElementById('toast-icon').className).toContain('text-green-400');
+        report.setGlobalBasis('raw');
+    });
+
+    it('탐구 과목이 같다는 경고와 함께 알린다', () => {
+        report.setGlobalBasis('raw');
+        load([row({inq2: '물리학Ⅰ'})]);
+        expect(report.globalReportBasis).toBe('std');
+        expect(toast()).toBe('1명의 데이터를 파싱했습니다. 1명의 탐구1·탐구2 과목이 같습니다. 원본 파일을 확인해 주세요. ' +
+            '원점수가 없는 파일이라 표준점수 기준으로 보여 줍니다.');
+        expect(document.getElementById('toast-icon').className).toContain('text-red-400');
+        report.setGlobalBasis('raw');
+    });
+
+    it('원점수가 있으면 사용자가 고른 기준을 그대로 둔다', () => {
+        report.setGlobalBasis('pct');
+        load([row({raw: 80})]);
+        expect(report.globalReportBasis).toBe('pct');
+        expect(toast()).toBe('1명의 데이터를 파싱했습니다.');
+        report.setGlobalBasis('raw');
+        load([row({raw: 80})]);
+        expect(report.globalReportBasis).toBe('raw');
     });
 });
