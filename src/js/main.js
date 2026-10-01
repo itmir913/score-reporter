@@ -5,7 +5,13 @@ import {GradeDataParser} from './parser.js';
 import {renderReport} from './report.js';
 import {FIELD_LABELS, SCHEMAS} from './schema.js';
 import {escapeAttr, sameInquirySubject} from './utils.js';
-import {decryptXlsx, isCfbContainer, isEncryptedOfficeFile, WrongPasswordError} from './xlsx-decrypt.js';
+import {
+    decryptXlsx,
+    EncryptedLegacyXlsError,
+    isCfbContainer,
+    isEncryptedOfficeFile,
+    WrongPasswordError
+} from './xlsx-decrypt.js';
 
 /* ───────────────────────────────────────────
        § 애플리케이션 상태 (ST) 및 로직
@@ -206,7 +212,16 @@ export async function processFile(file) {
                 }
                 xlsWorkbook = XLSX.read(csvText, {type: 'string'});
             } else {
-                xlsWorkbook = XLSX.read(arrayBuffer, {type: 'array'});
+                try {
+                    xlsWorkbook = XLSX.read(arrayBuffer, {type: 'array'});
+                } catch (e) {
+                    // 암호가 걸린 옛 .xls 는 "손상된 파일" 이 아니다. 무엇을 하면 되는지 알린다.
+                    // 암호 정보(/EncryptionInfo)가 있는 것은 새 형식이 이름만 .xls 인 파일이라 뺀다
+                    if (/password-protected/i.test(e?.message) && !isEncryptedOfficeFile(arrayBuffer)) {
+                        throw new EncryptedLegacyXlsError();
+                    }
+                    throw e;
+                }
             }
 
             // [최적화 3] addRow 반복문 대신 addRows 일괄 처리
@@ -258,7 +273,9 @@ export async function processFile(file) {
         console.error("파일 처리 에러:", err);
         showToast(err instanceof WrongPasswordError
             ? '비밀번호가 올바르지 않습니다. 파일을 다시 올려 주세요.'
-            : '파일을 읽는 데 실패했습니다. 파일이 손상되었을 수 있습니다.', true);
+            : err instanceof EncryptedLegacyXlsError
+                ? '암호가 걸린 옛 형식(.xls) 파일은 지원하지 않습니다. 엑셀에서 암호를 풀거나 .xlsx 로 저장해 주세요.'
+                : '파일을 읽는 데 실패했습니다. 파일이 손상되었을 수 있습니다.', true);
     }
 }
 

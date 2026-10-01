@@ -265,6 +265,15 @@ export class WrongPasswordError extends Error {
     }
 }
 
+/* 옛 .xls(BIFF8) 의 암호는 컨테이너가 아니라 Workbook 스트림 안의 FILEPASS 레코드다.
+ * /EncryptionInfo 가 없어 위 해제로는 풀 수 없고, SheetJS 는 "File is password-protected" 를 던진다 */
+export class EncryptedLegacyXlsError extends Error {
+    constructor() {
+        super('암호가 걸린 옛 형식(.xls) 파일입니다.');
+        this.name = 'EncryptedLegacyXlsError';
+    }
+}
+
 /**
  * 암호가 걸린 xlsx 를 풀어 원래의 xlsx(zip) 바이트로 돌려준다.
  *

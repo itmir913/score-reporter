@@ -52,6 +52,59 @@ describe('processFile', () => {
     });
 });
 
+// 암호가 걸린 옛 .xls: SheetJS 가 쓴 BIFF8 의 Workbook 스트림 첫 BOF 뒤에 FILEPASS(0x002F,
+// RC4) 레코드를 끼워 넣는다. Excel 이 암호를 걸면 이 레코드가 생기고 뒤 레코드가 암호화된다.
+// SheetJS 는 password 옵션이 없으면 레코드 내용을 보기 전에 "File is password-protected" 를 던진다
+function encryptedXls() {
+    const book = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet([['이름'], ['학생1']]), '성적');
+    const cfb = XLSX.CFB.read(new Uint8Array(XLSX.write(book, {type: 'array', bookType: 'biff8'})), {type: 'array'});
+    const entry = XLSX.CFB.find(cfb, '/Workbook');
+    const wbStream = Uint8Array.from(entry.content);
+    const bofEnd = 4 + (wbStream[2] | (wbStream[3] << 8));
+    const body = [0x01, 0x00, 0x01, 0x00, 0x01, 0x00, ...Array(48).fill(0x11)]; // 형식 RC4, 버전 1.1, salt·검증값
+    const filePass = [0x2F, 0x00, body.length, 0x00, ...body];
+    entry.content = Uint8Array.from([...wbStream.subarray(0, bofEnd), ...filePass, ...wbStream.subarray(bofEnd)]);
+    entry.size = entry.content.length;
+    return new Uint8Array(XLSX.CFB.write(cfb, {type: 'array'}));
+}
+
+describe('암호가 걸린 옛 .xls', () => {
+    const MSG = '암호가 걸린 옛 형식(.xls) 파일은 지원하지 않습니다. 엑셀에서 암호를 풀거나 .xlsx 로 저장해 주세요.';
+
+    it('SheetJS 는 암호 파일이라고 알린다 (재료 확인)', () => {
+        expect(() => XLSX.read(encryptedXls(), {type: 'array'})).toThrow(/password-protected/);
+    });
+
+    // 예전에는 "파일이 손상되었을 수 있습니다" 로 끝나 무엇을 해야 할지 알 수 없었다
+    it('.xls 는 암호를 풀거나 .xlsx 로 저장하라고 알린다', async () => {
+        vi.spyOn(console, 'error').mockImplementation(() => {
+        });
+        await processFile(fakeFile('성적.xls', encryptedXls().buffer));
+        vi.restoreAllMocks();
+        expect(document.getElementById('toast-msg').innerText).toBe(MSG);
+        expect(ST.wb).toBeNull();
+    });
+
+    it('확장자만 .xlsx 여도 비밀번호를 묻지 않고 같은 안내를 한다', async () => {
+        vi.spyOn(console, 'error').mockImplementation(() => {
+        });
+        const ask = vi.spyOn(window, 'prompt').mockImplementation(() => null);
+        await processFile(fakeFile('성적.xlsx', encryptedXls().buffer));
+        expect(ask).not.toHaveBeenCalled();
+        vi.restoreAllMocks();
+        expect(document.getElementById('toast-msg').innerText).toBe(MSG);
+    });
+
+    it('다른 읽기 오류는 예전처럼 손상 안내다', async () => {
+        vi.spyOn(console, 'error').mockImplementation(() => {
+        });
+        await processFile(fakeFile('성적.xls', new Uint8Array([0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1, 1, 2, 3]).buffer));
+        vi.restoreAllMocks();
+        expect(document.getElementById('toast-msg').innerText).toBe('파일을 읽는 데 실패했습니다. 파일이 손상되었을 수 있습니다.');
+    });
+});
+
 describe('지원하지 않는 파일 형식', () => {
     // 끌어다 놓기는 accept 를 거치지 않는다. .xlsm 같은 파일이 시트 0개로
     // "데이터를 성공적으로 불러왔습니다." 를 띄웠다.
