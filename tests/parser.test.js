@@ -113,3 +113,44 @@ describe('GradeDataParser.parse', () => {
         expect(s.korean.raw).toBeNull();
     });
 });
+
+describe('점수가 모두 0인 학생', () => {
+    // 대교협 실채점은 결시생의 탐구 원점수를 0으로 적는다. 0점으로 읽으면 평균·분포·순위에 0점이 들어갔다
+    it('값이 있는 점수 칸이 모두 0이면 모두 빈칸이다', async () => {
+        const [s] = await parse([[3, 1, 1, '결시', '언어와 매체', 0, 0, 0, 0, 0, 0, 0]]);
+        expect(s.korean).toMatchObject({common_raw: null, select_raw: null, raw: null, std: null, pct: null, grade: null});
+        expect(s.math.raw).toBeNull();
+        expect(s.english.grade).toBeNull();
+        expect(s.korean.subject).toBe('언어와 매체'); // 점수가 아닌 값은 그대로다
+    });
+
+    it('빈칸과 0만 있어도 미응시다', async () => {
+        const [s] = await parse([[3, 1, 1, '결시', '', 0, '', '', '', '', '', 0]]);
+        expect(s.korean.common_raw).toBeNull();
+        expect(s.korean.raw).toBeNull(); // 공통 0 + 선택 빈칸으로 만든 0 도 비운다
+        expect(s.english.grade).toBeNull();
+    });
+
+    // 0 하나는 실제 0점일 수 있다
+    it('0이 아닌 점수가 하나라도 있으면 0은 0점으로 둔다', async () => {
+        const [s] = await parse([[3, 1, 1, '응시', '언어와 매체', 0, 0, 0, 0, 0, 0, 9]]);
+        expect(s.korean.raw).toBe(0);
+        expect(s.math.raw).toBe(0);
+        expect(s.english.grade).toBe(9);
+    });
+
+    // 열 전체가 0이어도 학생마다 따로 본다
+    it('열 전체가 0이어도 다른 점수가 있는 학생은 바꾸지 않는다', async () => {
+        const rows = await parse([
+            [3, 1, 1, '가', '언어와 매체', 60, 25, 130, 95, 2, 0, 1],
+            [3, 1, 2, '나', '언어와 매체', 50, 20, 120, 80, 4, 0, 3],
+        ]);
+        expect(rows.map(s => s.math.raw)).toEqual([0, 0]);
+    });
+
+    it('점수 칸이 모두 비면 그대로 빈칸이다', async () => {
+        const [s] = await parse([[3, 1, 1, '빈칸', '언어와 매체', '', '', '', '', '', '', '']]);
+        expect(s.korean.raw).toBeNull();
+        expect(s.english.grade).toBeNull();
+    });
+});

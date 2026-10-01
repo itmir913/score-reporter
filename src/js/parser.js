@@ -1,5 +1,20 @@
 import {exceljsTo2DArray} from './main.js';
 
+/* 값이 있는 점수 칸이 모두 0인 학생은 미응시로 보고 점수를 모두 비운다.
+ * (대교협 실채점은 결시생의 탐구 원점수를 0으로 적는다.) 0이 하나라도 아닌 값과 섞여
+ * 있으면 0점으로 둔다. 0 하나만으로는 실제 0점과 미응시를 가를 수 없기 때문이다 */
+const SCORE_SUBJECTS = ['korean', 'math', 'english', 'inquiry1', 'inquiry2', 'hist', 'fl2'];
+const SCORE_KEYS = ['common_raw', 'select_raw', 'raw', 'std', 'pct', 'grade'];
+
+function blankIfAllZero(rec) {
+    const vals = SCORE_SUBJECTS.flatMap(subj => SCORE_KEYS.map(k => rec[subj]?.[k])).filter(Number.isFinite);
+    if (vals.length === 0 || vals.some(v => v !== 0)) return rec;
+    SCORE_SUBJECTS.forEach(subj => SCORE_KEYS.forEach(k => {
+        if (Number.isFinite(rec[subj]?.[k])) rec[subj][k] = null;
+    }));
+    return rec;
+}
+
 /* ───────────────────────────────────────────
    § GradeDataParser 클래스
 ─────────────────────────────────────────── */
@@ -13,7 +28,7 @@ export class GradeDataParser {
         const ws = wb.getWorksheet(sheetName);
         const rows = exceljsTo2DArray(ws).slice(this.s.headerRows);
 
-        return rows.filter(row => this.s.str(row, 'name')).map(row => this._row(row));
+        return rows.filter(row => this.s.str(row, 'name')).map(row => blankIfAllZero(this._row(row)));
     }
 
     _row(r) {
