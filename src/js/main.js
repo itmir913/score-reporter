@@ -176,6 +176,9 @@ export async function processFile(file) {
     // 지금 보던 데이터와 읽고 있던 파일은 그대로 남는다
     const fileExt = file.name.split('.').pop().toLowerCase();
     if (!['xlsx', 'xls', 'csv'].includes(fileExt)) {
+        // 파일 선택 칸만 비운다. 남겨 두면 같은 파일을 다시 골라도 change 가 일지 않아 알림이 없다
+        const input = document.getElementById('fileInput');
+        if (input) input.value = '';
         return showToast('지원하지 않는 파일 형식입니다. (.xlsx, .xls, .csv)', true);
     }
 

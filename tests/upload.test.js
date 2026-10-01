@@ -157,6 +157,26 @@ describe('지원하지 않는 파일 형식', () => {
         expect(document.getElementById('format-area').classList.contains('hidden')).toBe(false);
     });
 
+    // 0.1.34 부터 clearFile 을 부르지 않아 파일 선택 칸 값이 남았다. 같은 파일을 다시
+    // 고르면 change 가 일지 않아 아무 알림도 없었다. 선택 칸만 비우고 나머지는 그대로 둔다
+    it('파일 선택 칸만 비워 같은 파일을 다시 고를 수 있게 한다', async () => {
+        await processFile(fakeFile('성적.xlsx', await xlsxWithSheet('S')));
+        const wb = ST.wb;
+        ST.data = [{name: '가'}];
+        // jsdom 의 파일 칸에는 글자 값을 넣을 수 없어, 값을 흉내 내는 속성을 씌운다
+        const input = document.getElementById('fileInput');
+        let value = 'C:\\fakepath\\성적.xlsm';
+        Object.defineProperty(input, 'value', {configurable: true, get: () => value, set: v => {
+            value = v;
+        }});
+        await processFile(fakeFile('성적.xlsm', new ArrayBuffer(8)));
+        expect(input.value).toBe('');
+        expect(document.getElementById('toast-msg').innerText).toBe('지원하지 않는 파일 형식입니다. (.xlsx, .xls, .csv)');
+        expect(ST.wb).toBe(wb);
+        expect(ST.data).toEqual([{name: '가'}]);
+        expect(document.getElementById('file-info').classList.contains('hidden')).toBe(false);
+    });
+
     it('읽고 있던 파일을 끊지 않는다', async () => {
         let release;
         const gate = new Promise(r => {
