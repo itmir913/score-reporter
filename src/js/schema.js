@@ -181,9 +181,7 @@ export const SCHEMAS = {
                 const now = new Date();
                 return now.getFullYear() + 1;
             },
-            inq1_subject: convertRomanToNumber,
-            inq2_subject: convertRomanToNumber,
-            fl2_subject: convertRomanToNumber,
+            // 과목명은 대교협 파일에 적힌 대로 로마자(물리학Ⅰ)로 내보낸다
         },
     }),
 
@@ -224,9 +222,7 @@ export const SCHEMAS = {
                 const now = new Date();
                 return now.getFullYear() + 1;
             },
-            inq1_subject: convertRomanToNumber,
-            inq2_subject: convertRomanToNumber,
-            fl2_subject: convertRomanToNumber,
+            // 과목명은 대교협 파일에 적힌 대로 로마자(물리학Ⅰ)로 내보낸다
         },
     }),
 

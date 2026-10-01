@@ -126,6 +126,31 @@ describe('GradeExporter.toXlsx', () => {
     });
 });
 
+describe('탐구·제2외국어 과목명', () => {
+    const withSubjects = () => {
+        const s = student({name: '홍길동'});
+        s.inquiry1.subject = '물리학Ⅰ';
+        s.inquiry2.subject = '생명과학Ⅱ';
+        s.fl2.subject = '일본어Ⅰ';
+        return s;
+    };
+    const subjects = (row, schema) =>
+        ['inq1_subject', 'inq2_subject', 'fl2_subject'].map(k => row[schema._idx[k]]);
+
+    // 대교협 파일은 과목명을 로마자로 적는다. 숫자(물리학1)로 바꿔 내보내면 원래 양식과 달랐다
+    it.each(['daegyohyeop', 'daegyohyeop_preview'])('%s 는 로마자 그대로 내보낸다', async (id) => {
+        const schema = SCHEMAS[id];
+        const rows = await exportAndRead([withSubjects()], schema);
+        expect(subjects(rows[schema.headerRows], schema)).toEqual(['물리학Ⅰ', '생명과학Ⅱ', '일본어Ⅰ']);
+    });
+
+    it('유니브는 예전처럼 숫자로 바꾼다', async () => {
+        const schema = SCHEMAS.univcoop;
+        const rows = await exportAndRead([withSubjects()], schema);
+        expect(subjects(rows[schema.headerRows], schema)).toEqual(['물리학1', '생명과학2', '일본어1']);
+    });
+});
+
 describe('내보낸 파일을 다시 읽어도 성적이 그대로다', () => {
     // 실제 양식으로 내보내고, 같은 양식으로 다시 불러온다.
     // 열 배치와 머리글 줄 수가 서로 맞물려야만 통과한다.
