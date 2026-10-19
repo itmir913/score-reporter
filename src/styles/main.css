@@ -8,7 +8,7 @@
  * @import 는 CSS 명세상 다른 규칙보다 앞에 와야 하므로 @tailwind 지시어는
  * tailwind.css로 따로 빼서 import 한다.
  */
-@import 'pretendard/dist/web/variable/pretendardvariable.css';
+@import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
 @import './style.css';
 @import './tailwind.css';
 @import '@fortawesome/fontawesome-free/css/all.min.css';

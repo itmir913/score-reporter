@@ -10,7 +10,7 @@ import tailwindcss from 'tailwindcss';
  * 폴백 선언을 지우면 CSS가 ttf를 참조하지 않게 되고, 그러면 Vite가 그 파일들을
  * 아예 내보내지 않는다. 산출물에서 지우는 게 아니라 참조를 끊어 안 만들게 하는 것이다.
  *
- * Pretendard는 woff2 하나뿐이라 이 플러그인이 건드리지 않는다.
+ * Pretendard는 woff2 서브셋 조각뿐이라 이 플러그인이 건드리지 않는다.
  */
 const dropTrueTypeFallback = () => ({
     postcssPlugin: 'drop-truetype-fallback',
