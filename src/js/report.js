@@ -92,7 +92,7 @@ export function renderAll() {
 
         ST.cache = cache;
 
-        // 고른 기준의 값이 이 회차에 없으면 알리고, 각 표는 숫자 자리를 — 로 둔다(다른 기준으로 바꾸지 않는다)
+        // 선택한 기준의 값이 이 회차에 없으면 알리고, 각 표는 숫자 자리를 — 로 둔다(다른 기준으로 바꾸지 않는다)
         const missingNote = document.getElementById('basis-missing-note');
         if (missingNote) missingNote.textContent = cache.basisMissing ? missingBasisMessage(cache.basis) : '';
 

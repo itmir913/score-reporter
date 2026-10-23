@@ -5,7 +5,7 @@ import {exceljsTo2DArray} from '../main.js';
    양식의 정본은 schema.js 하나다. 지문의 원천은 그 양식의 exportHeaders(실제 헤더 블록 그대로)이고,
    저장하지 않고 쓸 때마다 계산한다. 그래서 헤더를 고치면 지문도 저절로 따라온다.
    - 헤더 줄 수와 모든 열의 위치·이름이 (정리 후) 같아야 맞는다.
-   - 정확히 한 양식만 맞을 때만 자동으로 고른다. 둘 이상이거나 없으면 사람이 고른다.
+   - 정확히 한 양식만 맞을 때만 자동으로 선택한다. 둘 이상이거나 없으면 사람이 선택한다.
    - 자동으로 골랐어도 사람이 미리보기를 보고 바꿀 수 있다.
    정리 규칙은 admission-outcomes 의 headerHash.js 와 같다.
 ─────────────────────────────────────────── */
@@ -76,7 +76,7 @@ export function matchFormats(ws, schemas) {
     return {candidates, autoId: candidates.length === 1 ? candidates[0] : null};
 }
 
-/* 값 범위 교차검증. 자동으로 고른 양식이라도 열이 엉뚱하면 값이 범위를 벗어난다 */
+/* 값 범위 교차검증. 자동으로 선택한 양식이라도 열이 엉뚱하면 값이 범위를 벗어난다 */
 const RANGES = {
     pct: [0, 100],
     grade: [1, 9],

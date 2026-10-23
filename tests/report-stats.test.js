@@ -387,7 +387,7 @@ describe('소수 합의 2진 오차', () => {
     });
 });
 
-describe('고른 기준의 값이 이 회차에 없을 때 (원점수만 있는 가채점 등)', () => {
+describe('선택한 기준의 값이 이 회차에 없을 때 (원점수만 있는 가채점 등)', () => {
     const rawOnly = (subject, raw) => ({...score(subject, raw), std: null, pct: null});
     const data = () => [1, 2, 3].map(i => student(`학생${i}`, i, {
         korean: rawOnly('화법과 작문', 80 + i), math: rawOnly('미적분', 70), inquiry1: rawOnly('물리학Ⅰ', 40),

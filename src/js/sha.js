@@ -299,7 +299,7 @@ export const sha384 = (msg) => sha512Core(msg, H384, 48);
 
 const BY_NAME = {'SHA-1': sha1, 'SHA-256': sha256, 'SHA-384': sha384, 'SHA-512': sha512};
 
-/** WebCrypto 와 같은 이름('SHA-512' 등)으로 해시 함수를 고른다. */
+/** WebCrypto 와 같은 이름('SHA-512' 등)으로 해시 함수를 선택한다. */
 export function hashFn(name) {
     const fn = BY_NAME[name];
     if (!fn) throw new Error(`지원하지 않는 해시 알고리즘입니다: ${name}`);

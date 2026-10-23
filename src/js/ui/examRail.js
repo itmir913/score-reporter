@@ -89,14 +89,14 @@ function removeAsk(key) {
     renderExportCards();
 }
 
-/* ── 프로젝트 저장·불러오기 ── */
+/* ── 성적 모음 파일 저장·열기 ── */
 
 export function saveProject() {
     if (!ST.exams.length) return showToast('저장할 회차가 없습니다.', true);
     if (!confirm(`${PRIVACY_WARNING}\n\n저장할까요?`)) return;
     const text = serializeProject({exams: ST.exams, options: {basis: globalReportBasis, includeNoInquiry: includeNoInquiry()}});
     const stamp = new Date().toISOString().slice(0, 10);
-    dlBlob(new Blob([text], {type: 'application/json'}), `모의고사-분석-${stamp}${PROJECT_EXTENSION}`);
+    dlBlob(new Blob([text], {type: 'application/json'}), `모의고사-성적모음-${stamp}${PROJECT_EXTENSION}`);
     showToast(`${ST.exams.length}개 회차를 저장했습니다.`);
 }
 
@@ -104,7 +104,7 @@ export async function openProject(file) {
     if (!file) return;
     try {
         const {exams, options} = parseProject(await file.text());
-        if (ST.exams.length && !confirm('지금 불러온 회차를 모두 지우고 프로젝트 파일로 바꿀까요?')) return;
+        if (ST.exams.length && !confirm('지금 불러온 회차를 모두 지우고 성적 모음 파일로 바꿀까요?')) return;
         ST.exams = exams;
         ST.activeExamKey = null;
         afterExamsChanged();

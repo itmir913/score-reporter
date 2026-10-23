@@ -156,7 +156,7 @@ describe('동일인 연결', () => {
     });
 });
 
-describe('프로젝트 파일', () => {
+describe('성적 모음 파일', () => {
     const students = [st({class: '1', number: '1', name: '가상', korean: {raw: 80}})];
 
     it('저장한 것을 다시 읽으면 회차·순서·학생·옵션이 같다', () => {
@@ -176,7 +176,7 @@ describe('프로젝트 파일', () => {
 
     it.each([
         ['깨진 파일', '{', '읽을 수 없습니다'],
-        ['다른 파일', '{"format":"x"}', '프로젝트 파일이 아닙니다'],
+        ['다른 파일', '{"format":"x"}', '성적 모음 파일이 아닙니다'],
         ['다른 버전', '{"format":"score-reporter-project","version":99,"exams":[]}', '버전 99'],
         ['키 중복', '{"format":"score-reporter-project","version":1,"exams":[{"key":"3","students":[]},{"key":" 3","students":[]}]}', '두 번'],
         ['학생 없음', '{"format":"score-reporter-project","version":1,"exams":[{"key":"3"}]}', '학생 목록'],

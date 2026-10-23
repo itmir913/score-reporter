@@ -39,7 +39,7 @@ describe('sha', () => {
         expect(hex(mine)).toBe(ref.toString('hex'));
     });
 
-    it('WebCrypto 와 같은 이름으로 함수를 고른다', () => {
+    it('WebCrypto 와 같은 이름으로 함수를 선택한다', () => {
         expect(hashFn('SHA-512')).toBe(sha512);
         expect(() => hashFn('MD5')).toThrow('지원하지 않는 해시');
     });

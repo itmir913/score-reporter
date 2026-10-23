@@ -64,8 +64,8 @@ const classRowNames = () => [...document.querySelectorAll('#csat-class-tbody tr'
 
 describe('학급 기준 반 선택', () => {
     // renderAll 이 반 목록을 매번 새로 만들어, 표시 인원·기준을 바꾸거나 창 크기만
-    // 바꿔도 고른 반이 첫 반으로 돌아갔다.
-    it('다시 그려도 고른 반을 유지한다', () => {
+    // 바꿔도 선택한 반이 첫 반으로 돌아갔다.
+    it('다시 그려도 선택한 반을 유지한다', () => {
         ST.data = [student('가', '1', '1'), student('나', '2', '1'), student('다', '3', '1')];
         renderAll();
         document.getElementById('class-select').value = '3';
@@ -74,7 +74,7 @@ describe('학급 기준 반 선택', () => {
         expect(classRowNames()).toEqual(['다']);
     });
 
-    it('고른 반이 새 데이터에 없으면 첫 반을 보여 준다', () => {
+    it('선택한 반이 새 데이터에 없으면 첫 반을 보여 준다', () => {
         ST.data = [student('가', '1', '1'), student('다', '3', '1')];
         renderAll();
         document.getElementById('class-select').value = '3';
@@ -240,7 +240,7 @@ describe('성적표의 원점수', () => {
 });
 
 describe('탐구1·탐구2 과목이 같은 학생', () => {
-    // 원본 입력 실수로 두 칸 과목명이 같으면 한 학생이 그 과목을 두 번 고른 것으로 세었다
+    // 원본 입력 실수로 두 칸 과목명이 같으면 한 학생이 그 과목을 두 번 선택한 것으로 세었다
     const data = () => {
         const dup = student('중복', '1', '1');
         dup.inquiry1 = score('물리학Ⅰ', 40, 1);
@@ -421,7 +421,7 @@ describe('원점수가 없는 파일', () => {
         report.setGlobalBasis('raw');
     });
 
-    it('원점수가 있으면 사용자가 고른 기준을 그대로 둔다', () => {
+    it('원점수가 있으면 사용자가 선택한 기준을 그대로 둔다', () => {
         report.setGlobalBasis('pct');
         load([row({raw: 80})]);
         expect(report.globalReportBasis).toBe('pct');

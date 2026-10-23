@@ -46,7 +46,7 @@ export function basisAvailable(data, basis) {
     return (data || []).some(s => ['korean', 'math', 'inquiry1', 'inquiry2'].some(subj => Number.isFinite(s?.[subj]?.[basis])));
 }
 
-/** 고른 기준의 값이 이 회차에 없을 때의 안내. 숫자 자리는 모두 DASH 로 가리고 다른 기준 값으로 대신하지 않는다 */
+/** 선택한 기준의 값이 이 회차에 없을 때의 안내. 숫자 자리는 모두 DASH 로 가리고 다른 기준 값으로 대신하지 않는다 */
 export function missingBasisMessage(basis) {
     return `이 회차에는 ${BASIS_LABEL[basis]}가 없어 표시할 수 없습니다.`;
 }

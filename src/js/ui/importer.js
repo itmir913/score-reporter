@@ -14,7 +14,7 @@ import {clear, el} from './dom.js';
    줄마다 암호·회차 이름·양식·시트를 확인하고, 「불러오기」 한 번으로 모두 회차로 넣는다.
    회차가 100개여도 단추는 한 번이다.
    - 암호 걸린 파일은 그 줄에 암호 칸을 띄운다. 같은 암호를 모든 파일에 한 번에 넣을 수도 있다.
-   - 양식은 머리글 지문이 정확히 한 양식과 맞을 때만 미리 고른다. 언제든 바꿀 수 있고,
+   - 양식은 머리글 지문이 정확히 한 양식과 맞을 때만 미리 선택한다. 언제든 바꿀 수 있고,
      「미리보기」로 앞 5줄과 열 이름을 나란히 본다.
 ─────────────────────────────────────────── */
 
@@ -61,7 +61,7 @@ function fail(row, err) {
         : '파일을 읽지 못했습니다. 손상되었거나 엑셀 파일이 아닙니다.';
 }
 
-/** 읽은 통합 문서를 줄에 붙인다. 머리글이 한 양식과 맞는 첫 시트를 고른다 */
+/** 읽은 통합 문서를 줄에 붙인다. 머리글이 한 양식과 맞는 첫 시트를 선택한다 */
 function attach(row, wb) {
     row.wb = wb;
     row.bytes = null; // 열었으면 원본 바이트는 더 쓰지 않는다. 파일이 100개여도 메모리를 아낀다
@@ -71,7 +71,7 @@ function attach(row, wb) {
     selectSheet(row, (found?.ws ?? wb.worksheets[0])?.name ?? '');
 }
 
-/** 시트를 바꾸면 그 시트의 머리글로 양식을 다시 맞춘다. 맞는 양식이 없으면 고른 양식을 비운다 */
+/** 시트를 바꾸면 그 시트의 머리글로 양식을 다시 맞춘다. 맞는 양식이 없으면 선택한 양식을 비운다 */
 export function selectSheet(row, sheetName) {
     row.sheet = sheetName;
     const ws = row.wb?.getWorksheet(sheetName);
@@ -83,7 +83,7 @@ export function selectSheet(row, sheetName) {
 
 /** 비밀번호로 연다. 틀리면 그 줄에 알린다 */
 export async function unlock(row, password) {
-    // 여는 중에 또 누르면 같은 줄을 두 번 해제해, 늦게 끝난 쪽이 사람이 고른 시트·양식을 덮었다
+    // 여는 중에 또 누르면 같은 줄을 두 번 해제해, 늦게 끝난 쪽이 사람이 선택한 시트·양식을 덮었다
     if (row.status !== 'locked' || !password || row.busy) return false;
     row.busy = true;
     try {
@@ -101,7 +101,7 @@ export async function unlock(row, password) {
     }
 }
 
-/** 고른 양식으로 읽었을 때 범위를 벗어나는 점수 개수. 불러오기 전에 표에서 알린다(§1-B 3번) */
+/** 선택한 양식으로 읽었을 때 범위를 벗어나는 점수 개수. 불러오기 전에 표에서 알린다(§1-B 3번) */
 export function rowOutOfRange(row) {
     if (row.status !== 'ready' || !row.formatId) return 0;
     const memo = `${row.sheet}|${row.formatId}`;
@@ -130,7 +130,7 @@ export function blockers(rows, existing = []) {
     return problems;
 }
 
-/** 고른 줄들을 회차로 넣는다. 돌려주는 것: 새 회차 목록과 회차마다의 주의 사항 */
+/** 선택한 줄들을 회차로 넣는다. 돌려주는 것: 새 회차 목록과 회차마다의 주의 사항 */
 export function commitRows(rows, exams) {
     let list = exams;
     const notes = [];
@@ -267,7 +267,8 @@ export function renderImportTable(root, state, options) {
                     on: {change: (e) => { row.key = e.target.value; redraw(); }},
                 })], 'min-w-40'),
                 td([el('select', {class: 'field', attrs: {'aria-label': `${row.name} 양식`}, on: {change: (e) => { row.formatId = e.target.value || null; redraw(); }}}, [
-                    el('option', {text: '양식 고르기', attrs: {value: '', selected: !row.formatId}}),
+                    // 안내용 첫 항목은 고를 수 없다. 고를 수 있으면 인식된 양식이 빈 값으로 풀려 버린다
+                    el('option', {text: '양식 선택', attrs: {value: '', disabled: true, selected: !row.formatId}}),
                     ...Object.values(SCHEMAS).map(s => el('option', {
                         text: `${s.label}${s.id === row.autoId ? ' ✓' : ''}`, attrs: {value: s.id, selected: s.id === row.formatId},
                     })),

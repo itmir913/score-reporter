@@ -161,7 +161,7 @@ describe('양식', () => {
         expect(document.getElementById('import-commit').disabled).toBe(false);
     });
 
-    it('자동으로 고른 양식도 바꿀 수 있고, 미리보기는 앞 5줄과 읽는 열 이름을 보인다', async () => {
+    it('자동으로 선택한 양식도 바꿀 수 있고, 미리보기는 앞 5줄과 읽는 열 이름을 보인다', async () => {
         await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop))]);
         document.querySelector('[aria-label="3월.xlsx 미리보기"]').click();
         const preview = document.querySelector('#import-area tbody tr:not([data-import]) table');
@@ -172,6 +172,13 @@ describe('양식', () => {
         sel.dispatchEvent(new Event('change'));
         expect(row().formatId).toBe('kkumkugo');
     });
+});
+
+it('양식 칸의 안내용 첫 항목은 고를 수 없다', async () => {
+    await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop))]);
+    const first = document.querySelector('[aria-label="3월.xlsx 양식"]').options[0];
+    expect(first.textContent).toBe('양식 선택');
+    expect(first.disabled).toBe(true);
 });
 
 describe('회차 이름', () => {

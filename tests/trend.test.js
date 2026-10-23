@@ -93,7 +93,7 @@ describe('통계 화면', () => {
         expect(cells[1]).toEqual(['4', '이 회차에는 없습니다']);
     });
 
-    it('성적표의 「회차별 통계」는 그 학생을 고른 채 통계 화면을 연다', () => {
+    it('성적표의 「회차별 통계」는 그 학생을 선택한 채 통계 화면을 연다', () => {
         view.choosePersonAt('3', 0);
         main.switchTab('trend');
         view.renderTrend();
@@ -101,7 +101,7 @@ describe('통계 화면', () => {
         expect(document.getElementById('tab-trend').classList.contains('hidden')).toBe(false);
     });
 
-    it('학생을 고른 뒤 회차 순서·이름을 바꿔도 그 학생이 남는다', async () => {
+    it('학생을 선택한 뒤 회차 순서·이름을 바꿔도 그 학생이 남는다', async () => {
         const {moveExam, renameExam} = await import('../src/js/exams/examStore.js');
         view.choosePersonAt('3', 0);
         view.renderTrend();

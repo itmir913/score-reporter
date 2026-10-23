@@ -77,7 +77,7 @@ describe('회차 레일', () => {
     }, 20000);
 });
 
-describe('프로젝트 파일', () => {
+describe('성적 모음 파일', () => {
     it('저장한 파일을 열면 모든 회차와 순서·옵션이 돌아온다', async () => {
         await importFiles(fakeFile('2026-03.xlsx', await bytesOf(SCHEMAS.univcoop)), fakeFile('사설.xlsx', await bytesOf(SCHEMAS.kimyoungil)));
         document.getElementById('include-no-inquiry').checked = true;

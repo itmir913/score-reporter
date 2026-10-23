@@ -17,7 +17,7 @@ export const ST = {
     charts: {}
 };
 
-/* ST.data 는 지금 고른 회차의 학생 목록이다. 리포트 모듈들은 예전처럼 ST.data 만 읽는다.
+/* ST.data 는 지금 선택한 회차의 학생 목록이다. 리포트 모듈들은 예전처럼 ST.data 만 읽는다.
  * 대입하면 지금 회차의 학생을 바꾸고, 회차가 없으면 「현재」 회차를 만든다. null 이면 모든 회차를 비운다 */
 Object.defineProperty(ST, 'data', {
     enumerable: true,
@@ -153,7 +153,7 @@ export async function addUploads(files) {
     showToast(rows.length ? `${rows.length}개 파일을 목록에 추가했습니다.` : '읽을 수 있는 엑셀 파일이 없습니다.', !rows.length);
 }
 
-/** 표에서 고른 파일들을 회차로 넣는다 */
+/** 표에서 선택한 파일들을 회차로 넣는다 */
 export function commitImports() {
     if (blockers(IMPORT.rows, ST.exams).length) return;
     let result;

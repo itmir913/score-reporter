@@ -27,7 +27,7 @@ export function renderSubjectsCharts() {
     }
 
     Object.keys(ST.charts).forEach(key => {
-        // 'chart-subj-' 로 시작하는 하단 바 차트들만 골라서 삭제
+        // 'chart-subj-' 로 시작하는 하단 바 차트들만 선택해서 삭제
         if (key.startsWith('chart-subj-') && ST.charts[key]) {
             ST.charts[key].destroy();
             delete ST.charts[key];

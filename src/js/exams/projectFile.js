@@ -1,7 +1,7 @@
 import {normalizeExamKey, sortedExams} from './examStore.js';
 
 /* ───────────────────────────────────────────
-   § 프로젝트 파일(.json) 저장·불러오기
+   § 성적 모음 파일(.scores.json) 저장·불러오기
    모든 회차를 파일 하나에 담는다. 브라우저 저장소(IndexedDB 등)에는 남기지 않는다 —
    학교 공용 PC 에 성적이 남지 않게 하려는 것이다. 원본 엑셀은 담지 않는다.
 ─────────────────────────────────────────── */
@@ -9,7 +9,7 @@ import {normalizeExamKey, sortedExams} from './examStore.js';
 export const PROJECT_FORMAT = 'score-reporter-project';
 export const PROJECT_VERSION = 1;
 /** .gitignore 에도 이 꼬리를 걸어 둔다 */
-export const PROJECT_EXTENSION = '.score.json';
+export const PROJECT_EXTENSION = '.scores.json';
 
 export const PRIVACY_WARNING =
     '이 파일에는 학생 이름과 성적이 그대로 들어 있습니다. 공용 PC·메신저·공개 폴더에 두지 말고, 다 쓰면 지우세요.';
@@ -30,7 +30,7 @@ export function serializeProject({exams, options = {}}) {
 }
 
 /**
- * 읽은 글을 검사해 프로젝트로 돌려준다. 이상하면 사람이 읽을 Error.
+ * 읽은 글을 검사해 회차 목록과 옵션으로 돌려준다. 이상하면 사람이 읽을 Error.
  * @param {string} text
  * @returns {{exams: object[], options: object}}
  */
@@ -39,13 +39,13 @@ export function parseProject(text) {
     try {
         data = JSON.parse(text);
     } catch {
-        throw new Error('프로젝트 파일을 읽을 수 없습니다. 손상되었거나 다른 파일입니다.');
+        throw new Error('성적 모음 파일을 읽을 수 없습니다. 손상되었거나 다른 파일입니다.');
     }
-    if (data?.format !== PROJECT_FORMAT) throw new Error('모의고사 분석 프로젝트 파일이 아닙니다.');
+    if (data?.format !== PROJECT_FORMAT) throw new Error('모의고사 성적 모음 파일이 아닙니다.');
     if (data.version !== PROJECT_VERSION) {
-        throw new Error(`이 프로젝트 파일은 버전 ${data.version} 형식이라 읽을 수 없습니다(지원: ${PROJECT_VERSION}).`);
+        throw new Error(`이 성적 모음 파일은 버전 ${data.version} 형식이라 읽을 수 없습니다(지원: ${PROJECT_VERSION}).`);
     }
-    if (!Array.isArray(data.exams)) throw new Error('프로젝트 파일에 회차 목록이 없습니다.');
+    if (!Array.isArray(data.exams)) throw new Error('성적 모음 파일에 회차 목록이 없습니다.');
 
     const keys = new Set();
     const exams = data.exams.map((e, i) => {

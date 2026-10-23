@@ -27,7 +27,7 @@
     <nav id="exam-rail" class="scroll-stable flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-1" aria-label="회차"></nav>
     <!-- 화면 전환 탭. 단추처럼 보이지 않게 한 묶음으로 둔다(자료를 다루는 단추는 각 화면 안에 있다) -->
     <nav class="flex shrink-0 items-center gap-1 rounded-lg bg-canvas p-1" aria-label="화면">
-        <button type="button" class="tab-btn active" data-action="switch-tab" data-tab="upload" title="엑셀·zip 불러오기, 프로젝트 파일">
+        <button type="button" class="tab-btn active" data-action="switch-tab" data-tab="upload" title="엑셀·zip 불러오기, 성적 모음 파일">
             <i class="fa-solid fa-file-arrow-up"></i><span class="hidden sm:inline">파일 추가</span>
         </button>
         <button type="button" class="tab-btn" data-action="switch-tab" data-tab="report">
@@ -71,16 +71,16 @@
                 </div>
 
                 <section class="card flex flex-col gap-3 px-6 py-5" aria-labelledby="project-title">
-                    <h3 id="project-title" class="text-lg font-semibold">프로젝트 파일</h3>
+                    <h3 id="project-title" class="text-lg font-semibold">성적 모음 파일</h3>
                     <p class="text-pretty text-base text-ink-soft">
-                        불러온 회차 전체를 <span class="font-semibold text-ink">.score.json</span> 파일 하나로 저장하고 다시 열 수 있습니다.
+                        불러온 모의고사 회차 전체를 파일 하나에 담아 두고, 다음에 그대로 엽니다.
                     </p>
-                    <div class="flex flex-wrap gap-2">
-                        <button type="button" class="btn btn-brand" data-action="open-project">
-                            <i class="fa-solid fa-folder-open"></i>프로젝트 열기
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" class="btn btn-brand w-full" data-action="open-project">
+                            <i class="fa-solid fa-folder-open"></i>열기
                         </button>
-                        <button type="button" class="btn" data-action="save-project">
-                            <i class="fa-solid fa-floppy-disk"></i>지금 회차 저장
+                        <button type="button" class="btn w-full" data-action="save-project">
+                            <i class="fa-solid fa-floppy-disk"></i>저장
                         </button>
                         <input type="file" id="projectInput" accept=".json,application/json" class="hidden" data-change="project-select"/>
                     </div>
@@ -109,8 +109,8 @@
                     <h3 class="text-lg font-semibold">개인정보</h3>
                     <ul class="list-disc space-y-1 pl-5 text-base text-ink-soft">
                         <li><strong class="text-ink">서버로 아무것도 보내지 않습니다.</strong> 모두 이 브라우저 안에서 처리합니다.</li>
-                        <li>브라우저를 닫으면 불러온 회차가 사라집니다. 남기려면 프로젝트 파일로 저장하세요.</li>
-                        <li>프로젝트 파일에는 학생 이름과 성적이 들어 있습니다. 공용 PC·메신저에 두지 마세요.</li>
+                        <li>브라우저를 닫으면 불러온 회차가 사라집니다. 남기려면 성적 모음 파일로 저장하세요.</li>
+                        <li>성적 모음 파일에는 학생 이름과 성적이 들어 있습니다. 공용 PC·메신저에 두지 마세요.</li>
                     </ul>
                     <div class="mt-auto flex flex-wrap gap-2">
                         <a class="btn btn-sm" href="https://github.com/itmir913/score-reporter/releases/download/latest/score-reporter.zip">
@@ -153,7 +153,7 @@
         <div class="no-print flex flex-wrap items-end justify-between gap-3">
             <div class="min-w-0">
                 <h2 class="text-3xl font-bold tracking-tight">보고서</h2>
-                <p id="report-subtitle" class="mt-2 text-pretty text-lg text-ink-soft">고른 회차의 과목별 통계·석차·분포를 봅니다.</p>
+                <p id="report-subtitle" class="mt-2 text-pretty text-lg text-ink-soft">선택한 회차의 과목별 통계·석차·분포를 봅니다.</p>
             </div>
             <button type="button" id="report-print" class="btn btn-primary hidden" data-action="print-page">
                 <i class="fa-solid fa-print"></i>보고서 PDF 인쇄
@@ -163,7 +163,7 @@
             <div id="report-empty" class="flex flex-col items-center justify-center py-24 text-center">
                 <i class="fa-solid fa-chart-pie mb-4 text-5xl text-line" aria-hidden="true"></i>
                 <p class="text-lg font-semibold text-ink-soft">아직 불러온 회차가 없습니다</p>
-                <p class="mt-1 text-base text-ink-soft">「파일 추가」에서 성적 파일을 올리거나 저장해 둔 프로젝트 파일을 여세요.</p>
+                <p class="mt-1 text-base text-ink-soft">「파일 추가」에서 성적 파일을 올리거나 저장해 둔 성적 모음 파일을 여세요.</p>
                 <button type="button" class="btn btn-primary no-print mt-5" data-action="switch-tab" data-tab="upload">파일 추가로 이동</button>
             </div>
 
@@ -513,7 +513,7 @@
             <div id="trend-empty" class="hidden flex flex-col items-center justify-center py-24 text-center">
                 <i class="fa-solid fa-chart-line mb-4 text-5xl text-line" aria-hidden="true"></i>
                 <p class="text-lg font-semibold text-ink-soft">아직 불러온 회차가 없습니다</p>
-                <p class="mt-1 text-base text-ink-soft">「파일 추가」에서 성적 파일을 올리거나 저장해 둔 프로젝트 파일을 여세요.</p>
+                <p class="mt-1 text-base text-ink-soft">「파일 추가」에서 성적 파일을 올리거나 저장해 둔 성적 모음 파일을 여세요.</p>
                 <button type="button" class="btn btn-primary no-print mt-5" data-action="switch-tab" data-tab="upload">파일 추가로 이동</button>
             </div>
             <div id="trend-content" class="flex flex-col gap-gutter"></div>
@@ -528,13 +528,13 @@
         <div class="no-print flex flex-wrap items-end justify-between gap-3">
             <div class="min-w-0">
                 <h2 class="text-3xl font-bold tracking-tight">내보내기</h2>
-                <p class="mt-2 text-pretty text-lg text-ink-soft">고른 회차를 다른 프로그램 양식의 엑셀로 내려받습니다.</p>
+                <p class="mt-2 text-pretty text-lg text-ink-soft">선택한 회차를 다른 프로그램 양식의 엑셀로 내려받습니다.</p>
             </div>
         </div>
             <div id="export-empty" class="flex flex-col items-center justify-center py-24 text-center">
                 <i class="fa-solid fa-download mb-4 text-5xl text-line" aria-hidden="true"></i>
                 <p class="text-lg font-semibold text-ink-soft">아직 불러온 회차가 없습니다</p>
-                <p class="mt-1 text-base text-ink-soft">「파일 추가」에서 성적 파일을 올리거나 저장해 둔 프로젝트 파일을 여세요.</p>
+                <p class="mt-1 text-base text-ink-soft">「파일 추가」에서 성적 파일을 올리거나 저장해 둔 성적 모음 파일을 여세요.</p>
                 <button type="button" class="btn btn-primary no-print mt-5" data-action="switch-tab" data-tab="upload">파일 추가로 이동</button>
             </div>
             <div id="export-body" class="hidden grid gap-gutter lg:grid-cols-3">
