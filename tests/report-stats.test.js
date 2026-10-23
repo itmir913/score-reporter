@@ -228,7 +228,7 @@ describe('탐구를 하나도 보지 않은 학생', () => {
         student('국어결시', 3, {math: score('미적분', 90), inquiry1: score('물리학Ⅰ', 45)}),
     ];
 
-    it('기본은 합산에서 빼고 뺀 인원을 밝힌다', () => {
+    it('기본은 합산에서 제외하고 제외한 인원을 밝힌다', () => {
         ST.data = data();
         document.getElementById('top-n-count').value = 'all';
         renderAll();

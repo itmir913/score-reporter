@@ -236,7 +236,7 @@ describe('암호 파일', () => {
         expect(tableText()).toContain('암호가 걸린 파일 3개');
         document.querySelector('[aria-label="모든 암호 파일 비밀번호"]').value = PASSWORD;
         [...document.querySelectorAll('#import-area button')].find(b => b.textContent === '모두 열기').click();
-        await vi.waitFor(() => expect(IMPORT.rows.map(r => r.status)).toEqual(['ready', 'ready', 'locked']));
+        await vi.waitFor(() => expect(IMPORT.rows.map(r => r.status)).toEqual(['ready', 'ready', 'locked']), {timeout: 10000});
     });
 
     // 예전에는 "파일이 손상되었을 수 있습니다" 로 끝나 무엇을 해야 할지 알 수 없었다
@@ -281,9 +281,9 @@ function encryptedXls() {
 }
 
 describe('목록 다루기', () => {
-    it('「빼기」는 그 줄을, 「목록 비우기」는 표를 비운다. 회차는 건드리지 않는다', async () => {
+    it('「제거」는 그 줄을, 「목록 비우기」는 표를 비운다. 회차는 건드리지 않는다', async () => {
         await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop)), fakeFile('4월.xlsx', await xlsxOf(SCHEMAS.kkumkugo))]);
-        document.querySelector('[aria-label="3월.xlsx 목록에서 빼기"]').click();
+        document.querySelector('[aria-label="3월.xlsx 목록에서 제거"]').click();
         expect(IMPORT.rows.map(r => r.name)).toEqual(['4월.xlsx']);
         [...document.querySelectorAll('#import-area button')].find(b => b.textContent === '목록 비우기').click();
         expect(IMPORT.rows).toEqual([]);

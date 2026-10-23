@@ -120,7 +120,7 @@ export function blockers(rows, existing = []) {
     const keys = new Set();
     for (const r of chosen) {
         if (r.status === 'locked') problems.push(`${r.name}: 비밀번호를 넣어 주세요.`);
-        else if (r.status !== 'ready') problems.push(`${r.name}: 읽을 수 없는 파일입니다. 빼고 불러오세요.`);
+        else if (r.status !== 'ready') problems.push(`${r.name}: 읽을 수 없는 파일입니다. 체크를 해제하거나 목록에서 제거하세요.`);
         else if (!r.formatId) problems.push(`${r.name}: 진학 프로그램을 선택하세요.`);
         const key = normalizeExamKey(r.key);
         if (!key) problems.push(`${r.name}: 회차 이름을 넣어 주세요.`);
@@ -237,7 +237,7 @@ export function renderImportTable(root, state, options) {
     }
 
     const th = (text) => el('th', {class: 'border-b border-line px-3 py-2 text-left font-semibold text-ink-soft', text});
-    const td = (children, cls = '') => el('td', {class: `border-b border-line-soft px-3 py-2 align-top ${cls}`}, children);
+    const td = (children, cls = '', attrs = {}) => el('td', {class: `border-b border-line-soft px-3 py-2 align-middle ${cls}`, attrs}, children);
     const body = el('tbody');
     for (const row of rows) {
         const dupFile = existing().some(e => e.fileHash && e.fileHash === row.hash);
@@ -256,8 +256,11 @@ export function renderImportTable(root, state, options) {
             };
             input.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
             controls = [
-                td([el('div', {class: 'flex gap-2'}, [input, el('button', {class: 'btn', text: '열기', attrs: {type: 'button', 'aria-label': `${row.name} 열기`}, on: {click: go}})])], 'min-w-64'),
-                td([]), td([]), td([]),
+                // 비밀번호 칸은 회차 이름부터 미리보기까지 네 칸을 함께 쓴다. 칸이 좁아 단추 글자가 세로로 서던 것을 막는다
+                td([el('div', {class: 'flex max-w-md items-center gap-2'}, [
+                    el('div', {class: 'min-w-0 flex-1'}, [input]),
+                    el('button', {class: 'btn shrink-0 whitespace-nowrap', text: '열기', attrs: {type: 'button', 'aria-label': `${row.name} 열기`}, on: {click: go}}),
+                ])], '', {colspan: '4'}),
             ];
         } else if (row.status === 'ready') {
             const sheetNames = row.wb.worksheets.map(ws => ws.name);
@@ -284,7 +287,7 @@ export function renderImportTable(root, state, options) {
                 })]),
             ];
         } else {
-            controls = [td([el('span', {class: 'text-fail', text: row.error})]), td([]), td([]), td([])];
+            controls = [td([el('span', {class: 'text-fail', text: row.error})], '', {colspan: '4'})];
         }
 
         body.append(el('tr', {attrs: {'data-import': row.id}}, [
@@ -305,7 +308,7 @@ export function renderImportTable(root, state, options) {
             ])]),
             ...controls,
             td([el('button', {
-                class: 'btn btn-sm', text: '빼기', attrs: {type: 'button', 'aria-label': `${row.name} 목록에서 빼기`},
+                class: 'btn btn-sm whitespace-nowrap', text: '제거', attrs: {type: 'button', 'aria-label': `${row.name} 목록에서 제거`},
                 on: {click: () => { state.rows = state.rows.filter(r => r !== row); redraw(); }},
             })]),
         ]));

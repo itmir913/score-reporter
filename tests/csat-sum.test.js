@@ -99,7 +99,7 @@ describe('rankCsatSchool: 전교 석차(국어+수학+탐구평균)', () => {
         expect(names(ranked)).toEqual(['1:가', '1:나', '3:다']);
     });
 
-    it('탐구가 없으면 기본은 빼고, 옵션을 켜면 국어+수학으로 넣는다', () => {
+    it('탐구가 없으면 기본은 제외하고, 옵션을 켜면 국어+수학으로 넣는다', () => {
         const data = [st('탐구없음', sc(90), sc(80), sc(null)), st('응시', sc(50), sc(50), sc(20))];
         expect(names(rankCsatSchool(data))).toEqual(['1:응시']);
         expect(names(rankCsatSchool(data, {includeNoInquiry: true}))).toEqual(['1:탐구없음', '2:응시']);

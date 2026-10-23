@@ -64,7 +64,7 @@ export function exceljsTo2DArray(ws) {
     ws.eachRow({includeEmpty: true}, function (row, rowNumber) {
         const rowData = [];
         row.eachCell({includeEmpty: true}, function (cell, colNumber) {
-            // ExcelJS 의 cell.value 는 수식 결과가 0 이나 '' 이면 result 를 빼고 돌려준다.
+            // ExcelJS 의 cell.value 는 수식 결과가 0 이나 '' 이면 result 를 생략하고 돌려준다.
             // 그대로 쓰면 수식으로 낸 0점이 빈칸(미응시)이 되므로 결과는 cell.result 로 읽는다.
             const val = cell.type === ExcelJS.ValueType.Formula ? {result: cell.result} : cell.value;
             rowData[colNumber - 1] = cellToPlain(val);

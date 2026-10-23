@@ -206,7 +206,7 @@ export function createTable({ scroller, colgroup, headRow, searchRow, body, empt
         cell.style.left = '';
       }
       /*
-       * **다시 들어갈 자리가 생기면 되돌려 붙인다.** 빼기만 하면, 끌어 넓혔다가
+       * **다시 들어갈 자리가 생기면 되돌려 붙인다.** 제거만 하면, 끌어 넓혔다가
        * 같은 끌기 안에서 도로 줄여도 고정이 돌아오지 않는다 — 사람은 아까 너비로
        * 되맞췄는데 왜 그대로인지 알 수 없다.
        *
