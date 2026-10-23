@@ -221,7 +221,7 @@ export function renderImportTable(root, state, options) {
     const locked = rows.filter(r => r.status === 'locked');
 
     if (locked.length > 1) {
-        const all = el('input', {class: 'field', attrs: {type: 'password', placeholder: '같은 비밀번호를 쓰는 파일에 한 번에', autocomplete: 'off', 'aria-label': '여러 파일 공통 비밀번호'}});
+        const all = el('input', {class: 'field', attrs: {type: 'password', placeholder: '모든 파일에 적용할 비밀번호', autocomplete: 'off', 'aria-label': '여러 파일 공통 비밀번호'}});
         const go = async () => {
             if (state.unlocking) return;
             state.unlocking = true;
