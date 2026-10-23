@@ -197,7 +197,7 @@ src/
 - `sumParts`(공통+선택 빈칸 0 처리) 예외는 그대로 유지.
 
 **단계 3 — 회차·학생 모델**
-- `examStore`: `{key, order, profileId, fileName, fileHash, students[]}` 목록. 키 중복 금지, 초기 순서 제안, 순서 이동, 삭제.
+- `examStore`: `{key, order, formatId, fileName, fileHash, students[]}` 목록(formatId = schema.js 양식 id, 프로파일=스키마). 키 중복 금지, 초기 순서 제안, 순서 이동, 삭제.
 - `identity.js`: 결정 5의 키로 같은 학년 회차 간 연결; 모호하면 잇지 않고 미매칭 목록. 학년 간 대응표 입력 자리만 둔다.
 - `.json` 저장/불러오기(원본 엑셀 미포함). 담는 것: 파일 형식 버전, 회차별 `key`·`order`·프로파일 id·파일 해시(SHA), 학생 레코드, 체크박스 등 화면 옵션.
   저장할 때 "이름·성적이 담긴 개인정보 파일" 경고를 띄운다. `.gitignore`에 프로젝트 파일 패턴을 추가한다.
