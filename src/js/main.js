@@ -247,7 +247,9 @@ export async function processFile(file) {
     if (superseded()) return;
 
     try {
-        const bytes = file.bytes ?? new Uint8Array(await file.arrayBuffer());
+        // zip 에서 꺼낸 파일은 bytes(Uint8Array)를 들고 온다. 브라우저의 File 에도 bytes() 메서드가
+        // 있어(최신 Chrome) 있는지만 보면 함수를 바이트로 넘긴다. 형태로 가린다
+        const bytes = file.bytes instanceof Uint8Array ? file.bytes : new Uint8Array(await file.arrayBuffer());
         if (superseded()) return;
 
         // 직접 올린 파일과 zip 안의 파일이 같은 경로(loadWorkbook)를 지난다. 암호 해제도 여기서 한다

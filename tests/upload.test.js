@@ -200,6 +200,16 @@ describe('지원하지 않는 파일 형식', () => {
     });
 });
 
+describe('브라우저 File 의 bytes() 메서드', () => {
+    // 최신 Chrome 의 File 에는 bytes() 메서드가 있다. zip 항목의 bytes(Uint8Array)로 잘못 보면
+    // 함수를 바이트로 넘겨 "Cannot read properties of undefined (reading 'slice')" 로 실패했다
+    it('메서드가 있어도 arrayBuffer 로 읽는다', async () => {
+        const buf = await xlsxWithSheet('S');
+        await processFile({...fakeFile('성적.xlsx', buf), bytes: async () => new Uint8Array(buf)});
+        expect(ST.wb.getWorksheet('S')).toBeTruthy();
+    });
+});
+
 describe('processFile 을 겹쳐 부를 때', () => {
     // 앞 파일을 읽는(암호를 푸는) 동안 다른 파일을 올리면, 늦게 끝난 앞 파일이
     // 화면과 ST.wb 를 덮어써 고른 양식·미리보기는 뒤 파일 것인데 앞 파일을 파싱했다.
