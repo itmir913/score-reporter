@@ -92,6 +92,8 @@ export function switchTab(tabId) {
     });
     document.getElementById(`tab-${tabId}`).classList.remove('hidden');
     document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('active');
+    // 탭을 바꾸면 새 탭을 맨 위부터 보인다. 스크롤은 페이지가 아니라 #app-main 이 한다
+    document.getElementById('app-main')?.scrollTo?.({top: 0});
 }
 
 // 토스트 알림
