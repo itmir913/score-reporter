@@ -25,8 +25,10 @@ import {
 } from './main.js';
 import {renderAll, setGlobalBasis} from './report.js';
 import {openProject, saveProject} from './ui/examRail.js';
+import {choosePersonAt, renderTrend} from './ui/trendView.js';
 import {
     closeModal,
+    currentStudent,
     handleRowClick,
     printStudentDetail,
     showCsatStudents,
@@ -39,7 +41,19 @@ import {renderSubjectsCharts} from './report/report-render-chart-subjects.js';
 
 /** data-action 값 → 눌렀을 때 할 일. 인자는 (누른 요소, 이벤트). */
 const CLICK_ACTIONS = {
-    'switch-tab': (el) => switchTab(el.dataset.tab),
+    'switch-tab': (el) => {
+        switchTab(el.dataset.tab);
+        if (el.dataset.tab === 'trend') renderTrend();
+    },
+    // 성적표에서 이 학생의 회차별 추이로
+    'student-trend': () => {
+        const index = ST.data?.indexOf(currentStudent());
+        if (index === undefined || index < 0) return;
+        choosePersonAt(ST.activeExamKey, index);
+        closeModal('student-modal');
+        switchTab('trend');
+        renderTrend();
+    },
     'set-basis': (el) => setGlobalBasis(el.dataset.basis),
     'close-modal': (el) => closeModal(el.dataset.modal),
     'clear-all': () => {

@@ -10,6 +10,9 @@ import {DASH, escapeAttr, toFixedHalfUp} from '../utils.js';
 
 export let _printStudent = null;
 
+/** 지금 성적표에 열려 있는 학생 */
+export const currentStudent = () => _printStudent;
+
 /**
  * 모달 열고 닫기 공통 함수
  */

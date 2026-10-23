@@ -29,8 +29,12 @@ import './js/main.js';
 import {initActions} from './js/actions.js';
 import {onExamsChanged} from './js/main.js';
 import {renderExamRail} from './js/ui/examRail.js';
+import {renderTrend} from './js/ui/trendView.js';
 
 initActions();
 // 회차가 바뀔 때마다 머리줄의 회차 레일을 다시 그린다
-onExamsChanged(renderExamRail);
+onExamsChanged(() => {
+    renderExamRail();
+    if (!document.getElementById('tab-trend')?.classList.contains('hidden')) renderTrend();
+});
 renderExamRail();
