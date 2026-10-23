@@ -1,5 +1,5 @@
 import {ST} from './main.js';
-import {basisAvailable, missingBasisMessage} from './core/aggregate.js';
+import {missingBasisMessage} from './core/aggregate.js';
 import {computeRenderCache} from './report/report-cache.js';
 import {renderCsatMinRequirement} from './report/report-csat-sum.js';
 import {renderSubjectsCharts} from './report/report-render-chart-subjects.js';
