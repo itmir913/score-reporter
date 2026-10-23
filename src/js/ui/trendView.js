@@ -83,7 +83,6 @@ export function renderTrend() {
     const options = {includeNoInquiry: includeNoInquiry()};
     const keys = sortedExams(exams).map(e => e.key);
 
-    root.append(el('p', {class: 'text-base text-ink-soft', text: '합산: 국어+수학+탐구평균 · 회차는 상단 회차 목록의 순서를 따릅니다.'}));
     // 칩·드롭다운은 바뀐 부분만 다시 그린다. 화면 전체를 다시 그리면 그 사이 높이가 줄어 스크롤이 위로 튄다
     const schoolSection = el('section', {class: 'card px-5 py-4', attrs: {id: 'trend-school'}});
     root.append(schoolSection);
@@ -108,14 +107,17 @@ function paintSchool(section, exams, options, keys) {
         // 넓은 화면에서는 차트와 표를 나란히 둔다. 차트가 덜 납작해져 회차 사이 기울기가 잘 보인다
         el('div', {class: 'mt-3 grid gap-6 md:grid-cols-2 md:items-start'}, [
             el('div', {class: 'relative h-72'}, [schoolCanvas]),
+            el('div', {}, [
             el('div', {class: 'overflow-x-auto rounded-lg border border-line'}, [el('table', {class: 'w-full text-base'}, [
-                el('thead', {}, [el('tr', {}, [th('회차'), th('인원'), ...(isGrade ? [] : [th('합산 대상'), th('합산 평균')]), th('국어'), th('수학'), ...(isGrade ? [] : [th('탐구평균')]), th('영어 등급')])]),
-                el('tbody', {}, school.map(s => el('tr', {class: 'hover:bg-brand-soft'}, [
-                    td(s.key, 'font-semibold'), td(String(s.students)),
-                    ...(isGrade ? [] : [td(String(s.ranked)), td(fmt(s.total))]),
-                    td(fmt(s.kor, d)), td(fmt(s.math, d)), ...(isGrade ? [] : [td(fmt(s.inq))]), td(fmt(s.engGrade, 2)),
-                ]))),
-            ])]),
+                    el('thead', {}, [el('tr', {}, [th('회차'), th('인원'), ...(isGrade ? [] : [th('합산 대상'), th('합산 평균')]), th('국어'), th('수학'), ...(isGrade ? [] : [th('탐구평균')]), th('영어 등급')])]),
+                    el('tbody', {}, school.map(s => el('tr', {class: 'hover:bg-brand-soft'}, [
+                        td(s.key, 'font-semibold'), td(String(s.students)),
+                        ...(isGrade ? [] : [td(String(s.ranked)), td(fmt(s.total))]),
+                        td(fmt(s.kor, d)), td(fmt(s.math, d)), ...(isGrade ? [] : [td(fmt(s.inq))]), td(fmt(s.engGrade, 2)),
+                    ]))),
+                ])]),
+                isGrade ? null : el('p', {class: 'mt-2 text-right text-base text-ink-soft', text: '합산: 국어+수학+탐구평균'}),
+            ].filter(Boolean)),
         ]),
         isGrade ? el('p', {class: 'mt-2 text-base text-ink-soft', text: '등급은 합산과 탐구평균을 내지 않습니다. 과목별 평균 등급만 보입니다.'}) : null,
         school.some(s => s.kor === null && s.math === null)
