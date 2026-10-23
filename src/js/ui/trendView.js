@@ -1,7 +1,8 @@
 import Chart from 'chart.js/auto';
 import {linkStudents} from '../exams/identity.js';
 import {ST} from '../main.js';
-import {globalReportBasis, includeNoInquiry, labelMap} from '../report.js';
+import {includeNoInquiry} from '../report.js';
+import {sortedExams} from '../exams/examStore.js';
 import {personTrend, schoolTrend} from '../trend/trend.js';
 import {DASH, toFixedHalfUp} from '../utils.js';
 import {showStudentRecord} from '../report/report-modal.js';
@@ -23,7 +24,7 @@ const recordsOf = (p, exams) => new Set(exams.flatMap(e => (p.entries[e.key] ===
 const choose = (p, exams) => { chosenRecords = p ? recordsOf(p, exams) : null; };
 
 /* reverse: 작을수록 좋은 값(등급·석차)은 축을 뒤집어 좋은 쪽을 위에 둔다 */
-function drawLine(key, canvas, labels, datasets, {reverse = false, legend = true, tooltipLabel, min} = {}) {
+function drawLine(key, canvas, labels, datasets, {reverse = false, legend = true, tooltipLabel, min, secondAxis = false} = {}) {
     ST.charts[key]?.destroy();
     ST.charts[key] = new Chart(canvas.getContext('2d'), {
         type: 'line',
@@ -39,12 +40,37 @@ function drawLine(key, canvas, labels, datasets, {reverse = false, legend = true
                 // 회차가 하나면 점이 왼쪽 끝에 붙지 않게 가운데에 찍는다
                 x: {offset: labels.length === 1},
                 y: {beginAtZero: false, reverse, ...(min === undefined ? {} : {min}), ...(reverse ? {ticks: {precision: 0}} : {})},
+                ...(secondAxis ? {y1: {position: 'right', beginAtZero: false, grid: {drawOnChartArea: false}}} : {}),
             },
         },
     });
 }
 
 const COLORS = ['#3a5a8c', '#c2410c', '#15803d', '#7c3aed', '#64748b'];
+
+/* 통계 화면의 점수 기준 칩. 차트마다 따로 선택하고, 다시 그려도 유지한다 */
+const BASES = [['pct', '백분위'], ['grade', '등급'], ['raw', '원점수'], ['std', '표준점수']];
+const basisLabelOf = (b) => BASES.find(([k]) => k === b)[1];
+let schoolBasis = 'pct';
+let rankBasis = 'pct';
+
+/** 기준 칩 묶음. 누르면 onPick(기준)을 부른다 */
+function basisChips(current, onPick, ariaLabel) {
+    return el('div', {class: 'flex flex-wrap gap-2', attrs: {role: 'group', 'aria-label': ariaLabel}},
+        BASES.map(([b, text]) => el('button', {
+            class: `rounded-full border px-4 py-1 text-base font-semibold ${b === current ? 'border-brand bg-brand text-white' : 'border-line bg-surface text-ink-soft hover:text-ink'}`,
+            text, attrs: {type: 'button', 'aria-pressed': String(b === current)},
+            on: {click: () => onPick(b)},
+        })));
+}
+
+/** 등급에는 탐구평균·합산을 쓰지 않는다(CLAUDE.md). 등급 기준이면 합산·탐구평균은 비운다 */
+function schoolRows(exams, basis, options) {
+    return schoolTrend(exams, basis, options).map(s => (basis === 'grade' ? {...s, total: null, inq: null, ranked: null} : s));
+}
+
+/* 학급 드롭다운에서 선택한 학급. 학생을 선택하면 그 학생의 학급으로 맞춘다 */
+let chosenClass = null;
 
 export function renderTrend() {
     const root = document.getElementById('trend-content');
@@ -54,72 +80,119 @@ export function renderTrend() {
     // 빈 화면은 보고서·내보내기와 같은 꼴(index.html 의 trend-empty)을 켠다
     document.getElementById('trend-empty')?.classList.toggle('hidden', exams.length > 0);
     if (!exams.length) return;
-    const basis = globalReportBasis;
     const options = {includeNoInquiry: includeNoInquiry()};
-    const label = labelMap[basis];
-    const school = schoolTrend(exams, basis, options);
-    const keys = school.map(s => s.key);
+    const keys = sortedExams(exams).map(e => e.key);
 
-    root.append(el('p', {class: 'text-base text-ink-soft', text: `기준: ${label} · 합산: 국어+수학+탐구평균 · 회차는 상단 회차 목록의 순서를 따릅니다.`}));
+    root.append(el('p', {class: 'text-base text-ink-soft', text: '합산: 국어+수학+탐구평균 · 회차는 상단 회차 목록의 순서를 따릅니다.'}));
 
     // ── 전교 통계 ──
+    const school = schoolRows(exams, schoolBasis, options);
+    const label = basisLabelOf(schoolBasis);
+    const isGrade = schoolBasis === 'grade';
     const schoolCanvas = el('canvas', {attrs: {id: 'trend-school-chart'}});
-    const th = (t) => el('th', {class: 'border-b border-line px-3 py-2 text-left font-semibold text-ink-soft', text: t});
-    const td = (t, cls = '') => el('td', {class: `border-b border-line-soft px-3 py-2 tabular-nums ${cls}`, text: t});
+    const th = (t) => el('th', {class: 'border-b border-line bg-canvas px-2 py-2 text-left font-semibold text-ink-soft whitespace-nowrap', text: t});
+    const td = (t, cls = '') => el('td', {class: `border-b border-line-soft px-2 py-2 tabular-nums whitespace-nowrap ${cls}`, text: t});
+    const d = isGrade ? 2 : 1;
     root.append(el('section', {class: 'card px-5 py-4', attrs: {id: 'trend-school'}}, [
-        el('h3', {class: 'text-xl font-bold', text: '전교 통계'}),
-        el('div', {class: 'relative mt-3 h-72'}, [schoolCanvas]),
-        el('div', {class: 'mt-4 overflow-x-auto'}, [el('table', {class: 'w-full text-base'}, [
-            el('thead', {}, [el('tr', {}, [th('회차'), th('인원'), th('합산 대상'), th(`합산 평균`), th('국어'), th('수학'), th('탐구평균'), th('영어 등급')])]),
-            el('tbody', {}, school.map(s => el('tr', {}, [
-                td(s.key, 'font-semibold'), td(String(s.students)), td(String(s.ranked)),
-                td(fmt(s.total)), td(fmt(s.kor)), td(fmt(s.math)), td(fmt(s.inq)), td(fmt(s.engGrade, 2)),
-            ]))),
-        ])]),
+        el('div', {class: 'flex flex-wrap items-center justify-between gap-3'}, [
+            el('h3', {class: 'text-xl font-bold', text: '전교 통계'}),
+            basisChips(schoolBasis, (b) => { schoolBasis = b; renderTrend(); }, '전교 통계 기준'),
+        ]),
+        // 넓은 화면에서는 차트와 표를 나란히 둔다. 차트가 덜 납작해져 회차 사이 기울기가 잘 보인다
+        el('div', {class: 'mt-3 grid gap-6 md:grid-cols-2 md:items-start'}, [
+            el('div', {class: 'relative h-72'}, [schoolCanvas]),
+            el('div', {class: 'overflow-x-auto rounded-lg border border-line'}, [el('table', {class: 'w-full text-base'}, [
+                el('thead', {}, [el('tr', {}, [th('회차'), th('인원'), ...(isGrade ? [] : [th('합산 대상'), th('합산 평균')]), th('국어'), th('수학'), ...(isGrade ? [] : [th('탐구평균')]), th('영어 등급')])]),
+                el('tbody', {}, school.map(s => el('tr', {class: 'hover:bg-brand-soft'}, [
+                    td(s.key, 'font-semibold'), td(String(s.students)),
+                    ...(isGrade ? [] : [td(String(s.ranked)), td(fmt(s.total))]),
+                    td(fmt(s.kor, d)), td(fmt(s.math, d)), ...(isGrade ? [] : [td(fmt(s.inq))]), td(fmt(s.engGrade, 2)),
+                ]))),
+            ])]),
+        ]),
+        isGrade ? el('p', {class: 'mt-2 text-base text-ink-soft', text: '등급은 합산과 탐구평균을 내지 않습니다. 과목별 평균 등급만 보입니다.'}) : null,
         school.some(s => s.kor === null && s.math === null)
             ? el('p', {class: 'mt-2 text-base text-wait', text: `${label}가 없는 회차는 표에 —로 표시하고 그래프에서 비워 둡니다.`})
             : null,
     ]));
     drawLine('trendSchool', schoolCanvas, keys, [
-        {label: '합산 평균', data: school.map(s => s.total), borderColor: COLORS[0], backgroundColor: COLORS[0]},
+        // 합산은 과목보다 몇 배 커서 같은 축에 두면 과목 선이 납작해진다. 오른쪽 축을 따로 쓴다
+        ...(isGrade ? [] : [{label: '합산 평균 (오른쪽 축)', data: school.map(s => s.total), borderColor: COLORS[0], backgroundColor: COLORS[0], yAxisID: 'y1'}]),
         {label: '국어', data: school.map(s => s.kor), borderColor: COLORS[1], backgroundColor: COLORS[1]},
         {label: '수학', data: school.map(s => s.math), borderColor: COLORS[2], backgroundColor: COLORS[2]},
-        {label: '탐구평균', data: school.map(s => s.inq), borderColor: COLORS[3], backgroundColor: COLORS[3]},
-    ]);
+        ...(isGrade ? [] : [{label: '탐구평균', data: school.map(s => s.inq), borderColor: COLORS[3], backgroundColor: COLORS[3]}]),
+    ], {reverse: isGrade, secondAxis: !isGrade});
 
-    // ── 학생별 통계 ──
+    // ── 학생별 통계: 학급 → 학생 드롭다운 ──
     const {persons, conflicts} = linkStudents(exams);
     const chosen = chosenRecords ? persons.find(p => [...recordsOf(p, exams)].some(r => chosenRecords.has(r))) ?? null : null;
     if (chosen) choose(chosen, exams);
     else chosenRecords = null;
-    const search = el('input', {class: 'field', attrs: {type: 'search', placeholder: '이름·반·번호로 찾기', 'aria-label': '학생 찾기', autocomplete: 'off'}});
-    const results = el('div', {class: 'mt-2 flex flex-wrap gap-2'});
-    const detail = el('div', {class: 'mt-4'});
-    const showResults = () => {
-        clear(results);
-        const q = search.value.trim().replace(/\s+/g, '');
-        if (!q) return;
-        const found = persons.filter(p => describe(p, exams).replace(/\s+/g, '').includes(q)).slice(0, 30);
-        if (!found.length) results.append(el('span', {class: 'text-base text-ink-soft', text: '찾는 학생이 없습니다.'}));
-        found.forEach(p => results.append(el('button', {
-            class: `chip ${p === chosen ? 'ring-2 ring-brand' : ''}`, text: describe(p, exams), attrs: {type: 'button'},
-            on: {click: () => { choose(p, exams); renderTrend(); }},
-        })));
-    };
-    search.addEventListener('input', showResults);
 
+    const groups = classGroups(persons, exams);
+    if (chosen) chosenClass = groups.find(g => g.persons.includes(chosen))?.key ?? chosenClass;
+    if (!groups.some(g => g.key === chosenClass)) chosenClass = null;
+    const group = groups.find(g => g.key === chosenClass);
+
+    const classSelect = el('select', {class: 'field', attrs: {'aria-label': '학급'}}, [
+        el('option', {text: '학급 선택', attrs: {value: '', disabled: true, selected: !group}}),
+        ...groups.map(g => el('option', {text: `${g.label} (${g.persons.length}명)`, attrs: {value: g.key, selected: g === group}})),
+    ]);
+    classSelect.addEventListener('change', () => { chosenClass = classSelect.value; choose(null, exams); renderTrend(); });
+    const studentSelect = el('select', {class: 'field', attrs: {'aria-label': '학생', disabled: !group}}, [
+        el('option', {text: group ? '학생 선택' : '학급을 먼저 선택하세요', attrs: {value: '', disabled: true, selected: !chosen}}),
+        ...(group?.persons ?? []).map((p, i) => el('option', {text: studentLabel(p, exams), attrs: {value: String(i), selected: p === chosen}})),
+    ]);
+    studentSelect.addEventListener('change', () => { choose(group.persons[Number(studentSelect.value)], exams); renderTrend(); });
+    const field = (text, control) => el('label', {class: 'flex min-w-0 flex-col gap-1'}, [el('span', {class: 'text-base text-ink-soft', text}), control]);
+
+    const detail = el('div', {class: 'mt-4'});
     root.append(el('section', {class: 'card px-5 py-4', attrs: {id: 'trend-student'}}, [
         el('h3', {class: 'text-xl font-bold', text: '학생별 통계'}),
         el('p', {class: 'mt-1 text-base text-ink-soft', text: '학번 또는 학년·반·번호가 같은 학생을 같은 사람으로 봅니다. 이름이 다르면 연결하지 않습니다.'}),
         conflicts.length
             ? el('p', {class: 'mt-2 rounded-lg bg-wait-soft px-4 py-2 text-base text-wait', text: `회차 사이를 잇지 못한 기록이 ${new Set(conflicts.map(c => `${c.examKey}|${c.index}`)).size}건(회차별) 있습니다. 그 학생은 회차마다 따로 나옵니다.`})
             : null,
-        el('div', {class: 'mt-3'}, [search]),
-        results,
+        el('div', {class: 'mt-3 grid gap-3 sm:grid-cols-2'}, [field('학급', classSelect), field('학생', studentSelect)]),
         detail,
     ]));
 
-    if (chosen) renderPerson(detail, chosen, exams, basis, options, keys);
+    if (chosen) renderPerson(detail, chosen, exams, options, keys);
+}
+
+/** 사람의 대표 기록: 가장 나중 회차의 기록(반이 바뀌었으면 지금 반으로 묶는다) */
+function latestRecord(p, exams) {
+    const ordered = sortedExams(exams).filter(e => p.entries[e.key] !== undefined);
+    const last = ordered.at(-1);
+    return last ? last.students[p.entries[last.key]] : null;
+}
+
+const collator = new Intl.Collator('ko', {numeric: true});
+
+/** 학년·반으로 묶은 학급 목록. 반이 없는 양식(김영일)의 학생은 「반 없음」으로 묶는다 */
+function classGroups(persons, exams) {
+    const map = new Map();
+    for (const p of persons) {
+        const s = latestRecord(p, exams);
+        const grade = String(s?.grade_year ?? '').trim();
+        const cls = String(s?.class ?? '').trim();
+        const key = cls ? `${grade}|${cls}` : '|';
+        const label = cls ? `${grade ? `${grade}학년 ` : ''}${cls}반` : '반 없음';
+        if (!map.has(key)) map.set(key, {key, label, persons: []});
+        map.get(key).persons.push(p);
+    }
+    const sortKey = (p) => { const s = latestRecord(p, exams); return `${s?.number ?? ''}|${s?.student_id ?? ''}|${s?.name ?? ''}`; };
+    const groups = [...map.values()];
+    groups.forEach(g => g.persons.sort((a, b) => collator.compare(sortKey(a), sortKey(b))));
+    return groups.sort((a, b) => (a.key === '|') - (b.key === '|') || collator.compare(a.key, b.key));
+}
+
+/** 학생 드롭다운의 글: 「3번 홍길동」, 번호가 없으면 학번 */
+function studentLabel(p, exams) {
+    const s = latestRecord(p, exams);
+    const number = String(s?.number ?? '').trim();
+    const id = number ? `${number}번` : String(s?.student_id ?? '').trim();
+    return `${id ? `${id} ` : ''}${s?.name ?? ''}`;
 }
 
 
@@ -132,7 +205,6 @@ function describe(p, exams) {
 }
 
 /* 학생별 영역 성적 차트에서 선택한 기준과 끈 과목. 학생을 바꾸거나 다시 그려도 유지한다 */
-const SUBJECT_BASES = [['pct', '백분위'], ['grade', '등급'], ['raw', '원점수'], ['std', '표준점수']];
 const SUBJECT_LINES = [['korean', '국어'], ['math', '수학'], ['inquiry1', '탐구1'], ['inquiry2', '탐구2']];
 const SUBJECT_COLORS = {korean: '#0d9488', math: '#7c3aed', inquiry1: '#ea580c', inquiry2: '#0369a1'};
 let subjectBasis = 'pct';
@@ -158,25 +230,23 @@ const clickableRow = (r, cells) => el('tr', {
     on: {click: () => openRecord(r), keydown: (e) => { if (e.key === 'Enter') openRecord(r); }},
 }, cells);
 
-function renderPerson(root, person, exams, basis, options, keys) {
+function renderPerson(root, person, exams, options, keys) {
     clear(root);
-    const rows = personTrend(person, exams, basis, options);
-    const th = (t, cls = '') => el('th', {class: `border-b border-line px-3 py-2 text-left font-semibold text-ink-soft ${cls}`, text: t});
-    const td = (t, cls = '') => el('td', {class: `border-b border-line-soft px-3 py-2 tabular-nums ${cls}`, text: t});
+    // 석차는 등급으로 매기지 않는다(합산에 등급을 쓰지 않는다). 등급이면 영역 표만 쓰고 석차는 비운다
+    const rankByGrade = rankBasis === 'grade';
+    const rows = personTrend(person, exams, rankByGrade ? 'pct' : rankBasis, options);
+    const th = (t, cls = '') => el('th', {class: `border-b border-line bg-canvas px-3 py-2 text-left font-semibold text-ink-soft whitespace-nowrap ${cls}`, text: t});
+    const td = (t, cls = '') => el('td', {class: `border-b border-line-soft px-3 py-2 tabular-nums whitespace-nowrap ${cls}`, text: t});
     const absent = (r, span) => el('tr', {}, [td(r.key, 'font-semibold'), el('td', {class: 'border-b border-line-soft px-3 py-2 text-ink-soft', attrs: {colspan: String(span)}, text: '이 회차에는 없습니다'})]);
 
     // ── 회차별 영역 성적: 기준 칩과 과목 칩으로 선택한다 ──
     const subjectCanvas = el('canvas', {attrs: {id: 'trend-student-chart'}});
-    const basisChips = el('div', {class: 'flex flex-wrap gap-2', attrs: {role: 'group', 'aria-label': '점수 기준'}});
+    const subjectBasisChips = el('div');
     const subjectChips = el('div', {class: 'flex flex-wrap gap-2', attrs: {role: 'group', 'aria-label': '과목'}});
     const drawSubjects = () => {
-        clear(basisChips);
+        clear(subjectBasisChips);
         clear(subjectChips);
-        SUBJECT_BASES.forEach(([b, text]) => basisChips.append(el('button', {
-            class: `rounded-full border px-4 py-1 text-base font-semibold ${b === subjectBasis ? 'border-brand bg-brand text-white' : 'border-line bg-surface text-ink-soft hover:text-ink'}`,
-            text, attrs: {type: 'button', 'aria-pressed': String(b === subjectBasis)},
-            on: {click: () => { subjectBasis = b; drawSubjects(); }},
-        })));
+        subjectBasisChips.append(basisChips(subjectBasis, (b) => { subjectBasis = b; drawSubjects(); }, '영역 성적 기준'));
         SUBJECT_LINES.forEach(([k, text]) => {
             const on = !hiddenSubjects.has(k);
             subjectChips.append(el('button', {
@@ -185,7 +255,7 @@ function renderPerson(root, person, exams, basis, options, keys) {
                 on: {click: () => { if (on) hiddenSubjects.add(k); else hiddenSubjects.delete(k); drawSubjects(); }},
             }, [el('span', {class: 'inline-block size-3 rounded-full', style: {background: on ? SUBJECT_COLORS[k] : '#9ca3af'}}), el('span', {text})]));
         });
-        const basisLabel = SUBJECT_BASES.find(([b]) => b === subjectBasis)[1];
+        const basisLabel = basisLabelOf(subjectBasis);
         drawLine('trendStudent', subjectCanvas, keys,
             SUBJECT_LINES.filter(([k]) => !hiddenSubjects.has(k)).map(([k, text]) => ({
                 label: text, data: rows.map(r => (r.student ? valueOf(r.student[k], subjectBasis) : null)),
@@ -218,16 +288,21 @@ function renderPerson(root, person, exams, basis, options, keys) {
         el('div', {class: 'mt-3 rounded-xl border border-line p-4'}, [
             el('div', {class: 'flex flex-wrap items-center justify-between gap-3'}, [
                 el('h4', {class: 'text-lg font-bold', text: '회차별 영역 성적'}),
-                basisChips,
+                subjectBasisChips,
             ]),
             el('div', {class: 'mt-3'}, [subjectChips]),
             el('div', {class: 'relative mt-3 h-72'}, [subjectCanvas]),
-            el('div', {class: 'mt-4 overflow-x-auto'}, [subjectTable]),
+            el('div', {class: 'mt-4 overflow-x-auto rounded-lg border border-line'}, [subjectTable]),
         ]),
         el('div', {class: 'mt-4 rounded-xl border border-line p-4'}, [
-            el('h4', {class: 'text-lg font-bold', text: `회차별 합산 석차 (${labelMap[basis]} 기준)`}),
-            el('div', {class: 'relative mt-3 h-60'}, [rankCanvas]),
-            el('div', {class: 'mt-4 overflow-x-auto'}, [el('table', {class: 'w-full text-base', attrs: {id: 'trend-rank-table'}}, [
+            el('div', {class: 'flex flex-wrap items-center justify-between gap-3'}, [
+                el('h4', {class: 'text-lg font-bold', text: '회차별 합산 석차'}),
+                basisChips(rankBasis, (b) => { rankBasis = b; renderPerson(root, person, exams, options, keys); }, '합산 석차 기준'),
+            ]),
+            rankByGrade
+                ? el('p', {class: 'mt-3 rounded-lg bg-canvas px-4 py-3 text-base text-ink-soft', text: '등급으로는 합산 석차를 매기지 않습니다. 백분위·원점수·표준점수 중 하나를 선택하세요.'})
+                : el('div', {class: 'relative mt-3 h-60'}, [rankCanvas]),
+            el('div', {class: 'mt-4 overflow-x-auto rounded-lg border border-line'}, [el('table', {class: 'w-full text-base', attrs: {id: 'trend-rank-table'}}, [
                 el('thead', {}, [el('tr', {}, [th('회차'), th('합산'), th('합산 석차'), th('국어'), th('수학'), th('탐구평균'), th('영어 등급')])]),
                 el('tbody', {}, rows.map(r => (r.student ? clickableRow(r, [
                     td(r.key, 'font-semibold'), td(fmt(r.total)), td(r.rank ? `${r.rank} / ${r.of}` : DASH),
@@ -237,6 +312,7 @@ function renderPerson(root, person, exams, basis, options, keys) {
         ]),
     );
     drawSubjects();
+    if (rankByGrade) return;
     drawLine('trendRank', rankCanvas, keys, [
         {label: '합산 석차', data: rows.map(r => r.rank ?? null), borderColor: COLORS[0], backgroundColor: COLORS[0]},
     ], {

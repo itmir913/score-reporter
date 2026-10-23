@@ -83,11 +83,16 @@ describe('통계 화면', () => {
 
     it('학생을 찾아 고르면 그 학생의 회차별 성적과 석차를 보인다', () => {
         view.renderTrend();
-        const search = document.querySelector('[aria-label="학생 찾기"]');
-        search.value = '나';
-        search.dispatchEvent(new Event('input'));
-        const button = [...document.querySelectorAll('#trend-student button')].find(b => b.textContent.startsWith('나'));
-        button.click();
+        // 학급 → 학생 드롭다운으로 선택한다
+        const pick = (label, match) => {
+            const select = document.querySelector(`[aria-label="${label}"]`);
+            select.value = [...select.options].find(o => !o.disabled && match(o.textContent)).value;
+            select.dispatchEvent(new Event('change'));
+        };
+        pick('학급', t => t.startsWith('1반') || t.includes(' 1반'));
+        pick('학생', t => t.endsWith('나'));
+        // 합산 석차는 칩으로 기준을 선택한다(처음은 백분위)
+        [...document.querySelectorAll('[aria-label="합산 석차 기준"] button')].find(b => b.textContent === '원점수').click();
         const cells = [...document.querySelectorAll('#trend-rank-table tbody tr')].map(tr => [...tr.children].map(td => td.textContent));
         expect(cells[0].slice(0, 3)).toEqual(['3', '195.0', '1 / 2']);
         expect(cells[1]).toEqual(['4', '이 회차에는 없습니다']);
