@@ -51,7 +51,8 @@ export function renderSubjectsCharts() {
         }
 
         if (finalBasis === 'grade') {
-            if (value >= 1 && value <= MAX_GRADE) dataCounts[subjName].counts[value - 1]++;
+            // 등급은 1~9 정수만 막대에 센다. 막대를 눌러 여는 명단도 같은 규칙을 쓴다(소수 등급이 막대에서만 빠지지 않게)
+            if (Number.isInteger(value) && value >= 1 && value <= MAX_GRADE) dataCounts[subjName].counts[value - 1]++;
         } else if (finalBasis === 'pct') {
             // 백분위(pct) 처리 로직: 기존 유지 (0 ~ 100)
             if (value >= 0 && value <= 100) {
@@ -166,7 +167,7 @@ export function renderSubjectsCharts() {
 
                             // 2. 등급 기준일 때
                             if (basis === 'grade') {
-                                return Math.round(targetValue) === (idx + 1);
+                                return Number.isInteger(targetValue) && targetValue === idx + 1;
                             } else {
                                 // 집계 시 사용한 floor 기반 binning과 동일한 로직으로 비교
                                 // (정수 범위 비교는 89.5 같은 소수점 값을 잘못 걸러냄)
