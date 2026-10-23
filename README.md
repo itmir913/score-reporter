@@ -24,40 +24,65 @@ npm run dev
 | `npm run test:watch` | 파일 변경을 감시하며 테스트 |
 | `npm run lint` | ESLint 실행 |
 
+## 쓰는 법
+
+1. **파일 추가**: 회차마다 받은 엑셀을 여러 개, 또는 zip 하나로 끌어다 놓습니다. 표에 파일이 한 줄씩 올라옵니다.
+   - 양식은 머리글이 등록된 양식과 정확히 하나만 맞을 때 자동으로 고릅니다. 아니면 직접 고르고, 「보기」로 앞 5줄을 확인합니다.
+   - 회차 이름은 파일 이름에서 제안합니다(`2026-03`, `3`, `사설` 무엇이든 됩니다). 같은 이름은 둘 둘 수 없습니다.
+   - 암호 걸린 파일은 그 줄에 비밀번호를 넣습니다. 여러 파일이 같은 암호면 한 번에 넣을 수 있습니다.
+   - 「N개 회차 불러오기」 한 번으로 모두 회차가 됩니다.
+2. **머리줄의 회차 칩**: 칩을 눌러 회차를 고르고, ◀ ▶ 로 순서를 바꿉니다. 이 순서가 추이 화면의 가로축입니다.
+3. **보고서**: 고른 회차의 통계·상위 N·급간 분포·수능최저·학생 명단(정렬·열 검색).
+4. **추이**: 회차별 전교 평균과, 한 학생의 회차별 점수·합산 석차.
+5. **내보내기**: 고른 회차를 다른 프로그램 양식의 엑셀로 내보냅니다.
+6. **프로젝트 파일**: 모든 회차를 `.score.json` 하나로 저장하고 다음에 엽니다. 브라우저에는 아무것도 남지 않습니다.
+   이 파일에는 학생 이름과 성적이 들어 있으니 공용 PC·메신저에 두지 마세요.
+
+### 점수 해석 규칙
+
+정본은 [CLAUDE.md](CLAUDE.md)의 「점수 해석 원칙」입니다. 요약하면:
+
+- 빈칸은 0점이 아닙니다. 학생의 모든 점수가 0이면 미응시로 봅니다.
+- **합산 = 국어 + 수학 + 탐구평균.** 탐구를 한 과목만 본 학생은 그 과목 값이 들어갑니다. 탐구를 보지 않은 학생은 기본으로 빼고(인원을 밝힘), 「탐구 미응시 학생도 포함」을 켜면 국어+수학으로 넣습니다.
+- 동점은 공동순위 1, 1, 3.
+- 고른 기준(원점수·표준점수·백분위)의 값이 없는 회차는 다른 기준으로 바꾸지 않고 「이 회차에는 …가 없어 표시할 수 없습니다」를 띄우고 —로 가립니다.
+
 ## 구조
 
 ```
 index.html          단일 페이지 앱의 마크업. Vite의 진입 HTML이다.
 src/
-  main.js           진입점. 스타일과 앱 모듈을 불러오고, 인라인 핸들러용 전역을 노출한다.
+  main.js           진입점. 스타일과 앱 모듈을 불러오고 data-action 을 잇는다.
   js/               앱 로직 (아래 표 참고)
   styles/
     main.css        스타일시트 로드 순서를 정하는 파일
-    style.css       앱 고유 스타일
-    tailwind.css    @tailwind 지시어
-tests/              Vitest 테스트
+    style.css       앱 고유 스타일(리포트·인쇄)
+    tailwind.css    Tailwind v4 와 디자인 토큰(admission-outcomes 와 같은 토큰·부품)
+tests/              Vitest 테스트 (baseline.test.js 는 5종 양식의 읽기·리포트·내보내기 기준선 스냅숏)
+docs/migration-plan.md  다회차 마이그레이션 계획과 소유자 결정
 vendor/             npm 레지스트리에서 받을 수 없는 의존성 (아래 참고)
 ```
 
 | 파일 | 역할 |
 | --- | --- |
-| `src/js/main.js` | 앱 상태(`ST`), 파일 읽기, 탭 전환, 내보내기 |
+| `src/js/main.js` | 앱 상태(`ST`: 회차 목록, 지금 회차), 불러오기 표 상태, 탭 전환, 내보내기 |
+| `src/js/schema.js` | 양식 정의의 유일한 정본(열 매핑·머리글 줄 수·내보내기 머리글 = 양식 지문의 원천) |
+| `src/js/ingest/files.js` | 업로드 펼치기(zip), 암호 해제, ExcelJS/SheetJS 읽기 |
+| `src/js/ingest/formatMatch.js` | 머리글 지문으로 양식 자동 매칭, 값 범위 교차검증 |
 | `src/js/parser.js` | 성적 파일 → 학생 레코드 |
-| `src/js/schema.js` | 양식별 열 매핑 (`SCHEMAS`, `FormatSchema`) |
+| `src/js/core/` | 숫자 판정(`score.js`), 합산·탐구평균(`aggregate.js`) |
+| `src/js/exams/` | 회차 목록·순서(`examStore.js`), 회차 사이 동일인 연결(`identity.js`), 프로젝트 파일(`projectFile.js`) |
+| `src/js/trend/trend.js` | 회차별 전교·학생 추이 계산 |
+| `src/js/ui/` | 불러오기 표, 회차 레일, 학생 표(GridTable, admission-outcomes 이식), 추이 화면 |
 | `src/js/exporter.js` | 다른 양식으로 내보내기 |
-| `src/js/report.js` | 리포트 렌더링 총괄, 통계 기준(원점수/표준점수/백분위) 상태 |
-| `src/js/report/` | 통계·상위권·분포·선택과목·수능최저·모달 등 개별 렌더러 |
+| `src/js/report.js`, `src/js/report/` | 리포트 렌더링(통계·상위권·분포·선택과목·수능최저·모달) |
 | `src/js/utils.js` | 공용 헬퍼 |
-
-### 인라인 핸들러와 전역
-
-HTML에 `onclick="switchTab('upload')"` 같은 인라인 핸들러가 남아 있습니다. 인라인 핸들러는 전역 스코프에서만 이름을 찾기 때문에, `src/main.js`가 해당 함수들을 `window`에 올려 줍니다. 어떤 이름이 필요한지는 그 파일에 모아 두었습니다. 인라인 핸들러를 `addEventListener`로 옮기면 이 전역 노출은 통째로 없앨 수 있습니다.
 
 ## 의존성
 
 외부 라이브러리는 모두 npm으로 관리하며 빌드 시 번들에 포함됩니다. CDN을 실행 시점에 부르지 않습니다.
 
-Chart.js, ExcelJS, SheetJS(xlsx), buffer, Font Awesome, Pretendard.
+Chart.js, ExcelJS, SheetJS(xlsx), fflate(zip), Tailwind CSS v4, Font Awesome, Pretendard.
 
 ### 사용 설명서
 
