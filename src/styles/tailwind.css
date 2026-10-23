@@ -67,6 +67,43 @@
    * 카드와 카드 사이가 서로 다르면 어느 쪽이 기준인지 눈이 매번 다시 재야 한다.
    * 좁은 화면에서는 한 단계 줄여 자리를 내용에 돌려준다.
    */
+  /*
+   * 예전 화면(리포트 조각들)이 쓰던 slate·blue·indigo 를 위 토큰 계열로 다시 매긴다.
+   * 수백 곳의 클래스를 하나씩 고치지 않고도 같은 종이빛·청먹·낮은 채도의 브랜드색으로 보이게 한다.
+   */
+  --color-slate-50: oklch(0.972 0.003 250);
+  --color-slate-100: oklch(0.945 0.004 250);
+  --color-slate-200: oklch(0.885 0.006 250);
+  --color-slate-300: oklch(0.80 0.008 250);
+  --color-slate-400: oklch(0.64 0.012 253);
+  --color-slate-500: oklch(0.505 0.016 253);
+  --color-slate-600: oklch(0.43 0.018 253);
+  --color-slate-700: oklch(0.36 0.02 253);
+  --color-slate-800: oklch(0.29 0.021 253);
+  --color-slate-900: oklch(0.255 0.021 253);
+  --color-slate-950: oklch(0.22 0.02 253);
+  --color-blue-50: oklch(0.955 0.017 253);
+  --color-blue-100: oklch(0.92 0.03 253);
+  --color-blue-200: oklch(0.86 0.05 253);
+  --color-blue-300: oklch(0.76 0.07 253);
+  --color-blue-400: oklch(0.64 0.085 253);
+  --color-blue-500: oklch(0.55 0.095 253);
+  --color-blue-600: oklch(0.455 0.096 253);
+  --color-blue-700: oklch(0.40 0.09 253);
+  --color-blue-800: oklch(0.34 0.08 253);
+  --color-blue-900: oklch(0.29 0.07 253);
+  --color-indigo-50: oklch(0.955 0.017 253);
+  --color-indigo-100: oklch(0.92 0.03 253);
+  --color-indigo-200: oklch(0.86 0.05 253);
+  --color-indigo-300: oklch(0.76 0.07 253);
+  --color-indigo-400: oklch(0.64 0.085 253);
+  --color-indigo-500: oklch(0.55 0.095 253);
+  --color-indigo-600: oklch(0.455 0.096 253);
+  --color-indigo-700: oklch(0.40 0.09 253);
+  --color-indigo-800: oklch(0.34 0.08 253);
+  --color-indigo-900: oklch(0.29 0.07 253);
+  --color-indigo-950: oklch(0.25 0.06 253);
+
   --spacing-gutter: 1rem;    /* 16px, 좁은 화면 */
 
   --spacing-row: 2.75rem; /* 44px */

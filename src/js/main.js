@@ -229,7 +229,7 @@ export function renderExportCards() {
 
     document.getElementById('export-cards').innerHTML = Object.values(SCHEMAS).map(s => `
             <div class="bg-white border border-slate-200 rounded-xl p-5 flex items-center justify-between
-                        transition hover:border-blue-300 hover:shadow-sm">
+                        transition hover:border-blue-300">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-lg bg-${s.color}-100 flex items-center justify-center">
                         <i class="fa-solid ${s.icon} text-${s.color}-600 text-lg"></i>

@@ -125,7 +125,7 @@ export function renderSubjectsCharts() {
 
         const id = `chart-subj-${index}`;
         const div = document.createElement('div');
-        div.className = 'bg-white border border-slate-200 rounded-2xl p-5 shadow-sm';
+        div.className = 'bg-white border border-slate-200 rounded-xl p-5 shadow-sm';
         div.innerHTML = `
             <p class="text-base font-bold text-slate-700 mb-3 border-b border-slate-100 pb-2 flex flex-col items-start gap-2">
                 <span>${escapeAttr(subjName)} <small class="text-slate-400 font-normal">(${basisLabelText})</small></span>

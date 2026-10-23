@@ -53,24 +53,24 @@ export function renderStats(cache) {
     const engTop20Avg = getTop20Avg(cache.engGrades, true); // 등급은 낮을수록 상위권
 
     document.getElementById('stat-cards').innerHTML = `
-        <div class="stat-card bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-center items-center text-center shadow-sm">
+        <div class="stat-card bg-white border border-slate-200 rounded-xl p-5 flex flex-col justify-center items-center text-center">
             <span class="text-base text-slate-500 font-bold mb-1 uppercase tracking-tight">총 응시 인원</span>
-            <span class="text-3xl font-black text-slate-800">${takers}<span class="text-lg font-normal ml-0.5">명</span></span>
+            <span class="text-3xl font-bold text-slate-800">${takers}<span class="text-lg font-normal ml-0.5">명</span></span>
         </div>
         
-        <div class="stat-card bg-white border border-slate-200 border-b-4 border-b-blue-500 rounded-2xl p-5 flex flex-col justify-center items-center text-center shadow-sm">
+        <div class="stat-card bg-white border border-slate-200 border-b-4 border-b-blue-500 rounded-xl p-5 flex flex-col justify-center items-center text-center">
             <span class="text-base text-blue-600 font-bold mb-1 uppercase tracking-tight">국어 상위 20% ${basisLabel} 평균</span>
-            <span class="text-3xl font-black text-blue-700">${withUnit(korTop20Avg, unit)}</span>
+            <span class="text-3xl font-bold text-blue-700">${withUnit(korTop20Avg, unit)}</span>
         </div>
 
-        <div class="stat-card bg-white border border-slate-200 border-b-4 border-b-amber-400 rounded-2xl p-5 flex flex-col justify-center items-center text-center shadow-sm">
+        <div class="stat-card bg-white border border-slate-200 border-b-4 border-b-amber-400 rounded-xl p-5 flex flex-col justify-center items-center text-center">
             <span class="text-base text-amber-600 font-bold mb-1 uppercase tracking-tight">수학 상위 20% ${basisLabel} 평균</span>
-            <span class="text-3xl font-black text-amber-600">${withUnit(mathTop20Avg, unit)}</span>
+            <span class="text-3xl font-bold text-amber-600">${withUnit(mathTop20Avg, unit)}</span>
         </div>
 
-        <div class="stat-card bg-white border border-slate-200 border-b-4 border-b-rose-500 rounded-2xl p-5 flex flex-col justify-center items-center text-center shadow-sm">
+        <div class="stat-card bg-white border border-slate-200 border-b-4 border-b-rose-500 rounded-xl p-5 flex flex-col justify-center items-center text-center">
             <span class="text-base text-rose-600 font-bold mb-1 uppercase tracking-tight">영어 상위 20% 등급</span>
-            <span class="text-3xl font-black text-rose-700">${withUnit(engTop20Avg, '등급')}</span>
+            <span class="text-3xl font-bold text-rose-700">${withUnit(engTop20Avg, '등급')}</span>
         </div>
     `;
 }

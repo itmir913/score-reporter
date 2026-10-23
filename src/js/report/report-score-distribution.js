@@ -136,7 +136,7 @@ export function renderScoreDistribution(cache = ST.cache) {
         <tr class="bg-white border-b border-slate-200">
             <td class="px-1 py-3 text-center font-bold text-slate-700 border-r border-slate-200 text-base md:text-base">인원 (명)</td>
             ${chunkCounts.map(c =>
-            `<td class="px-1 py-3 text-center text-base md:text-base text-slate-600 ${c > 0 ? 'font-black text-emerald-600' : ''}">${c}</td>`
+            `<td class="px-1 py-3 text-center text-base md:text-base text-slate-600 ${c > 0 ? 'font-bold text-emerald-600' : ''}">${c}</td>`
         ).join('')}
             ${emptyCells}
         </tr>

@@ -56,7 +56,7 @@ export function _getCsatSums(student) {
     const format = (val, subj) => val === null
         ? `<span class="text-slate-300">${DASH}</span>`
         : `<div class="flex flex-col">
-               <span class="font-extrabold text-base">${escapeAttr(String(val))}</span>
+               <span class="font-bold text-base">${escapeAttr(String(val))}</span>
                <span class="text-base text-slate-500 font-normal mt-0.5">(${escapeAttr(subj)})</span>
            </div>`;
     return {
@@ -281,7 +281,7 @@ export function renderCsatClassTable(cache) {
         const fmtCsat = (val, subj) => val === null
             ? `<span class="text-slate-300">${DASH}</span>`
             : `<div class="flex flex-col">
-                   <span class="font-extrabold text-base">${escapeAttr(String(val))}</span>
+                   <span class="font-bold text-base">${escapeAttr(String(val))}</span>
                    <span class="text-base text-slate-500 font-normal mt-0.5">(${escapeAttr(subj)})</span>
                </div>`;
 
