@@ -220,16 +220,16 @@ export function renderImportTable(root, state, options) {
                 }
             }
             state.unlocking = false;
-            state.bulkNote = failed ? `${failed}개 파일은 이 비밀번호로 열리지 않았습니다. 그 줄에서 따로 넣으세요.` : '';
+            state.bulkNote = failed ? `엑셀 파일 ${failed}개는 이 비밀번호로 열리지 않았습니다. 아래 표에서 직접 입력하세요.` : '';
             redraw();
         };
         const button = el('button', {class: 'btn', text: '모두 확인', attrs: {type: 'button'}, on: {click: go}});
         all.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
         root.append(el('div', {class: 'card mb-3 flex flex-wrap items-center gap-3 border-wait/40 bg-wait-soft px-4 py-3'}, [
-            el('p', {class: 'text-base font-semibold text-wait', text: `비밀번호가 걸린 파일 ${locked.length}개`}),
+            el('p', {class: 'text-base font-semibold text-wait', text: `비밀번호가 필요한 엑셀 파일 ${locked.length}개`}),
             el('div', {class: 'min-w-48 flex-1'}, [all]),
             button,
-            el('p', {class: 'w-full text-base text-ink-soft', attrs: {'aria-live': 'polite'}, text: state.bulkNote || '비밀번호가 다른 파일은 그 줄에서 따로 넣으세요.'}),
+            el('p', {class: 'w-full text-base text-ink-soft', attrs: {'aria-live': 'polite'}, text: state.bulkNote || '비밀번호가 다른 엑셀 파일은 아래 표에서 직접 입력하세요.'}),
         ]));
     }
     if (skipped.length) {

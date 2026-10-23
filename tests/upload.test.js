@@ -233,7 +233,7 @@ describe('비밀번호 파일', () => {
             fakeFile('4월.xlsx', await encrypted(SCHEMAS.kkumkugo)),
             fakeFile('5월.xlsx', await encrypted(SCHEMAS.kimyoungil, '다른비밀번호')),
         ]);
-        expect(tableText()).toContain('비밀번호가 걸린 파일 3개');
+        expect(tableText()).toContain('비밀번호가 필요한 엑셀 파일 3개');
         document.querySelector('[aria-label="여러 파일 공통 비밀번호"]').value = PASSWORD;
         [...document.querySelectorAll('#import-area button')].find(b => b.textContent === '모두 확인').click();
         await vi.waitFor(() => expect(IMPORT.rows.map(r => r.status)).toEqual(['ready', 'ready', 'locked']), {timeout: 10000});
