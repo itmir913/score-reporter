@@ -32,7 +32,7 @@ export function renderExamRail() {
             }),
             el('button', {
                 class: 'exam-chip-name', text: exam.key,
-                attrs: {type: 'button', 'aria-pressed': String(active), title: `${exam.fileName || exam.key} · ${exam.students.length}명`},
+                attrs: {type: 'button', 'aria-pressed': String(active), title: `${exam.key}${exam.fileName ? ` · ${exam.fileName}` : ""} · ${exam.students.length}명`},
                 on: {click: () => selectExam(exam.key)},
             }),
             el('button', {
@@ -52,15 +52,22 @@ export function renderExamRail() {
             }),
         ]));
     });
-    // 좁은 화면에서 지금 회차가 회차 줄 밖에 있으면 보이는 곳까지 옆으로 민다(페이지는 움직이지 않는다)
-    const chip = rail.querySelector('.exam-chip.is-active');
-    if (chip) {
-        const left = chip.offsetLeft - rail.offsetLeft;
-        // 칩이 줄보다 넓으면 이름이 보이게 왼쪽 끝을 맞춘다
-        if (left < rail.scrollLeft || chip.offsetWidth > rail.clientWidth) rail.scrollLeft = left;
-        else if (left + chip.offsetWidth > rail.scrollLeft + rail.clientWidth) rail.scrollLeft = left + chip.offsetWidth - rail.clientWidth;
-    }
+    showActiveChip();
 }
+
+/** 좁은 화면에서 지금 회차가 회차 줄 밖에 있으면 보이는 곳까지 옆으로 민다(페이지는 움직이지 않는다) */
+function showActiveChip() {
+    const rail = document.getElementById('exam-rail');
+    const chip = rail?.querySelector('.exam-chip.is-active');
+    if (!chip) return;
+    const left = chip.offsetLeft - rail.offsetLeft;
+    // 칩이 줄보다 넓으면 이름이 보이게 왼쪽 끝을 맞춘다
+    if (left < rail.scrollLeft || chip.offsetWidth > rail.clientWidth) rail.scrollLeft = left;
+    else if (left + chip.offsetWidth > rail.scrollLeft + rail.clientWidth) rail.scrollLeft = left + chip.offsetWidth - rail.clientWidth;
+}
+
+// 창 너비가 바뀌면 회차 줄 너비도 바뀐다. 지금 회차가 가려지지 않게 다시 맞춘다
+window.addEventListener('resize', showActiveChip);
 
 function update(exams) {
     ST.exams = exams;

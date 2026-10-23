@@ -158,8 +158,9 @@
   .exam-chip.is-active {
     @apply border-brand bg-brand-soft;
   }
+  /* 좁은 화면에서 긴 회차 이름은 말줄임한다(전체 이름은 title) */
   .exam-chip-name {
-    @apply min-h-9 px-2.5 font-semibold text-ink-soft;
+    @apply min-h-9 px-2.5 font-semibold text-ink-soft max-sm:max-w-28 max-sm:truncate;
   }
   .exam-chip.is-active .exam-chip-name {
     @apply text-brand;
