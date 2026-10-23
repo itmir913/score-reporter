@@ -127,6 +127,24 @@ describe('자동 매칭: 고르지 않는 경우', () => {
     });
 });
 
+describe('왼쪽 빈 열', () => {
+    // A열이 통째로 빈 파일은 SheetJS 의 !ref 가 B열에서 시작한다. A1 으로 고정하지 않으면 열이 한 칸씩 당겨진다
+    const headers = [['', ...SCHEMAS.kimyoungil.exportHeaders[0]]];
+    const leftBlank = new FormatSchema({...SCHEMAS.kimyoungil, id: 'leftBlank', exportHeaders: headers, fields: SCHEMAS.kimyoungil.fields});
+    const schemas = {leftBlank, kimyoungil: SCHEMAS.kimyoungil};
+    const withBlankA = (rows) => rows.map(r => r.map((v, i) => (i === 0 ? null : v)));
+
+    it.each([['xlsx', async () => xlsxBytes(headers, {merge: false})], ['xls', async () => {
+        const sheet = XLSX.utils.aoa_to_sheet(withBlankA([...headers, ['', 3, 4]]));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, sheet, '성적');
+        return new Uint8Array(XLSX.write(wb, {type: 'array', bookType: 'xls'}));
+    }]])('%s: 열 위치가 유지되어 한 칸 밀린 양식으로만 맞는다', async (ext, make) => {
+        const wb = await loadWorkbook({name: `a.${ext}`, bytes: await make()});
+        expect(matchFormats(firstSheet(wb), schemas)).toEqual({candidates: ['leftBlank'], autoId: 'leftBlank'});
+    });
+});
+
 describe('zip 과 암호 파일', () => {
     const PASSWORD = '비밀1234';
     let plain;
