@@ -108,6 +108,43 @@ describe('표에 늘어놓기', () => {
     });
 });
 
+describe('감사 반영', () => {
+    it('한 묶음 안의 같은 파일(엑셀과 그것을 담은 zip)도 한 번만 올린다', async () => {
+        const bytes = await xlsxOf(SCHEMAS.univcoop);
+        await addUploads([fakeFile('a.xlsx', bytes), fakeFile('a.zip', zipSync({'a.xlsx': bytes}))]);
+        expect(IMPORT.rows).toHaveLength(1);
+    });
+
+    it('건너뛴 파일 안내는 묶음마다 이어 붙는다', async () => {
+        await addUploads([fakeFile('a.txt', new Uint8Array(4))]);
+        await addUploads([fakeFile('b.txt', new Uint8Array(4))]);
+        expect(IMPORT.skipped.map(x => x.name)).toEqual(['a.txt', 'b.txt']);
+    });
+
+    it('양식을 잘못 고르면 불러오기 전에 그 줄에 범위 밖 점수를 알린다', async () => {
+        await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop))]);
+        const sel = document.querySelector('[aria-label="3월.xlsx 양식"]');
+        sel.value = 'kkumkugo';
+        sel.dispatchEvent(new Event('change'));
+        expect(tableText()).toMatch(/범위 밖 점수 \d+개/);
+    });
+
+    it('칸을 바꿔 표를 다시 그려도 포커스가 그 칸에 남는다', async () => {
+        await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop))]);
+        const sel = document.querySelector('[aria-label="3월.xlsx 양식"]');
+        sel.focus();
+        sel.value = 'kkumkugo';
+        sel.dispatchEvent(new Event('change'));
+        expect(document.activeElement.getAttribute('aria-label')).toBe('3월.xlsx 양식');
+        expect(document.activeElement).not.toBe(sel); // 새로 그린 칸이다
+    });
+
+    it('여는 중인 줄은 다시 풀지 않는다', async () => {
+        const r = {status: 'locked', busy: true, name: 'x.xlsx'};
+        expect(await unlock(r, 'pw')).toBe(false);
+    });
+});
+
 describe('양식', () => {
     it('머리글이 맞지 않으면 고르지 않고, 고를 때까지 불러오기를 막는다. 사람이 고를 수 있다', async () => {
         const headers = SCHEMAS.univcoop.exportHeaders.map(r => [...r]);
@@ -197,10 +234,13 @@ describe('암호 파일', () => {
 
     // 예전에는 "파일이 손상되었을 수 있습니다" 로 끝나 무엇을 해야 할지 알 수 없었다
     it('암호가 걸린 옛 .xls 는 그 줄에 암호를 풀거나 .xlsx 로 저장하라고 알린다(이름만 .xlsx 여도)', async () => {
-        await addUploads([fakeFile('성적.xls', encryptedXls()), fakeFile('성적2.xlsx', encryptedXls())]);
-        expect(IMPORT.rows.map(r => r.status)).toEqual(['error', 'error']);
-        expect(tableText()).toContain('암호가 걸린 옛 형식(.xls)은 열 수 없습니다.');
-        expect(IMPORT.rows.every(r => !r.include)).toBe(true);
+        for (const name of ['성적.xls', '성적2.xlsx']) {
+            clearAll();
+            await addUploads([fakeFile(name, encryptedXls())]);
+            expect(row().status).toBe('error');
+            expect(row().include).toBe(false);
+            expect(tableText()).toContain('암호가 걸린 옛 형식(.xls)은 열 수 없습니다.');
+        }
     });
 
     it('확장자만 .xlsx 인 평범한 .xls 는 비밀번호 없이 읽는다', async () => {

@@ -64,6 +64,7 @@ function fail(row, err) {
 /** 읽은 통합 문서를 줄에 붙인다. 머리글이 한 양식과 맞는 첫 시트를 고른다 */
 function attach(row, wb) {
     row.wb = wb;
+    row.bytes = null; // 열었으면 원본 바이트는 더 쓰지 않는다. 파일이 100개여도 메모리를 아낀다
     row.status = 'ready';
     row.error = '';
     const found = wb.worksheets.map(ws => ({ws, m: matchFormats(ws, SCHEMAS)})).find(({m}) => m.autoId);
@@ -82,7 +83,9 @@ export function selectSheet(row, sheetName) {
 
 /** 비밀번호로 연다. 틀리면 그 줄에 알린다 */
 export async function unlock(row, password) {
-    if (row.status !== 'locked' || !password) return false;
+    // 여는 중에 또 누르면 같은 줄을 두 번 풀어, 늦게 끝난 쪽이 사람이 고른 시트·양식을 덮었다
+    if (row.status !== 'locked' || !password || row.busy) return false;
+    row.busy = true;
     try {
         attach(row, await loadWorkbook(row, {askPassword: async () => password}));
         return true;
@@ -93,7 +96,20 @@ export async function unlock(row, password) {
         }
         fail(row, err);
         return false;
+    } finally {
+        row.busy = false;
     }
+}
+
+/** 고른 양식으로 읽었을 때 범위를 벗어나는 점수 개수. 불러오기 전에 표에서 알린다(§1-B 3번) */
+export function rowOutOfRange(row) {
+    if (row.status !== 'ready' || !row.formatId) return 0;
+    const memo = `${row.sheet}|${row.formatId}`;
+    if (row.rangeMemo !== memo) {
+        row.rangeMemo = memo;
+        row.rangeCount = countOutOfRange(new GradeDataParser(SCHEMAS[row.formatId]).parse(row.wb, row.sheet));
+    }
+    return row.rangeCount;
 }
 
 /** 불러오기를 막는 까닭들. 비면 불러올 수 있다 */
@@ -172,6 +188,8 @@ export function previewTable(ws, schema) {
  */
 export function renderImportTable(root, state, options) {
     const {existing, onCommit, onChange} = options;
+    // 표를 다시 그려도 키보드 포커스를 잃지 않게, 같은 이름표의 칸으로 되돌린다
+    const focused = root.contains(document.activeElement) ? document.activeElement?.getAttribute('aria-label') : null;
     clear(root);
     const {rows, skipped} = state;
     if (!rows.length && !skipped.length) return;
@@ -186,18 +204,29 @@ export function renderImportTable(root, state, options) {
     if (locked.length > 1) {
         const all = el('input', {class: 'field', attrs: {type: 'password', placeholder: '같은 비밀번호를 쓰는 파일에 한 번에', autocomplete: 'off', 'aria-label': '모든 암호 파일 비밀번호'}});
         const go = async () => {
+            if (state.unlocking) return;
+            state.unlocking = true;
+            button.disabled = true;
+            button.textContent = '여는 중…';
+            let failed = 0;
             for (const r of rows.filter(x => x.status === 'locked')) {
                 const ok = await unlock(r, all.value);
-                if (!ok && r.status === 'locked') r.error = '';
+                if (!ok && r.status === 'locked') {
+                    r.error = '';
+                    failed++;
+                }
             }
+            state.unlocking = false;
+            state.bulkNote = failed ? `${failed}개 파일은 이 비밀번호로 열리지 않았습니다. 그 줄에서 따로 넣으세요.` : '';
             redraw();
         };
+        const button = el('button', {class: 'btn', text: '모두 열기', attrs: {type: 'button'}, on: {click: go}});
         all.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
         root.append(el('div', {class: 'card mb-3 flex flex-wrap items-center gap-3 border-wait/40 bg-wait-soft px-4 py-3'}, [
             el('p', {class: 'text-base font-semibold text-wait', text: `암호가 걸린 파일 ${locked.length}개`}),
             el('div', {class: 'min-w-48 flex-1'}, [all]),
-            el('button', {class: 'btn', text: '모두 열기', attrs: {type: 'button'}, on: {click: go}}),
-            el('p', {class: 'w-full text-base text-ink-soft', text: '비밀번호가 다른 파일은 그 줄에서 따로 넣으세요.'}),
+            button,
+            el('p', {class: 'w-full text-base text-ink-soft', attrs: {'aria-live': 'polite'}, text: state.bulkNote || '비밀번호가 다른 파일은 그 줄에서 따로 넣으세요.'}),
         ]));
     }
     if (skipped.length) {
@@ -221,6 +250,7 @@ export function renderImportTable(root, state, options) {
         if (row.status === 'locked') {
             const input = el('input', {class: 'field', attrs: {type: 'password', placeholder: '비밀번호', autocomplete: 'off', 'aria-label': `${row.name} 비밀번호`}});
             const go = async () => {
+                if (row.busy) return;
                 await unlock(row, input.value);
                 redraw();
             };
@@ -267,7 +297,11 @@ export function renderImportTable(root, state, options) {
                 row.container ? el('span', {class: 'block text-ink-soft', text: `${row.container} 안`}) : null,
                 row.error && row.status === 'locked' ? el('span', {class: 'block text-fail', text: row.error}) : null,
             ]),
-            td([el('div', {class: 'flex flex-col items-start gap-1'}, [statusTag, dupFile ? tag('wait', '이미 불러온 파일') : null])]),
+            td([el('div', {class: 'flex flex-col items-start gap-1', attrs: {'aria-live': 'polite'}}, [
+                statusTag,
+                dupFile ? tag('wait', '이미 불러온 파일') : null,
+                rowOutOfRange(row) ? tag('fail', `범위 밖 점수 ${rowOutOfRange(row)}개`) : null,
+            ])]),
             ...controls,
             td([el('button', {
                 class: 'btn btn-sm', text: '빼기', attrs: {type: 'button', 'aria-label': `${row.name} 목록에서 빼기`},
@@ -287,6 +321,7 @@ export function renderImportTable(root, state, options) {
         ]),
     ]));
 
+    if (focused) [...root.querySelectorAll('[aria-label]')].find(n => n.getAttribute('aria-label') === focused)?.focus();
     root.append(el('div', {class: 'mt-3 flex flex-wrap items-center gap-3'}, [
         el('p', {
             attrs: {id: 'import-note'},
