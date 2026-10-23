@@ -1,6 +1,6 @@
 import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
-import {beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {buildWorkbook} from './helpers/baseline-fixture.js';
 
 /* jsdom 에는 canvas 가 없어 Chart.js 가 그리지 못한다 */
@@ -88,19 +88,9 @@ describe('학생 표', () => {
     });
 });
 
-describe('프로그램별 내려받는 방법', () => {
-    beforeAll(async () => {
-        (await import('../src/js/actions.js')).initActions();
-    });
-
-    it('단추를 누르면 넓은 대화상자로 네 프로그램의 단계를 보인다', () => {
-        const dialog = document.getElementById('guide-dialog');
-        dialog.showModal = vi.fn();
-        document.querySelector('[data-action="open-guide"]').click();
-        expect(dialog.showModal).toHaveBeenCalled();
-        expect(dialog.className).toContain('w-[min(64rem,94vw)]');
-        expect([...dialog.querySelectorAll('h3')].map(h => h.textContent)).toEqual(['대교협', '유니브', '김영일', '꿈꾸GO']);
-    });
+it('불러올 수 있는 진학 프로그램과 내려받는 경로를 목록으로 보인다', () => {
+    const items = [...document.querySelectorAll('#tab-upload li .font-semibold')].map(n => n.textContent);
+    expect(items).toEqual(['대교협', '유니브', '김영일', '꿈꾸GO']);
 });
 
 it('처음 열면 보이는 화면(파일 추가)의 탭이 켜져 있다', () => {
