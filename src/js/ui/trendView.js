@@ -196,12 +196,13 @@ function studentLabel(p, exams) {
 }
 
 
-/** 학생을 가리키는 글: 이름 · 반-번호(또는 학번) · 몇 회차 */
+/** 학생을 가리키는 글: 학년 반 · 번호 이름 · 몇 회차(학급 드롭다운과 같은 가장 나중 회차의 기록). 반이 없으면 학번 */
 function describe(p, exams) {
-    const first = exams.find(e => p.entries[e.key] !== undefined);
-    const s = first?.students[p.entries[first.key]];
-    const who = s?.class && s?.number ? `${s.class}반 ${s.number}번` : s?.student_id ? s.student_id : '';
-    return `${s?.name ?? ''}${who ? ` · ${who}` : ''} · ${Object.keys(p.entries).length}회`;
+    const s = latestRecord(p, exams);
+    const grade = String(s?.grade_year ?? '').trim();
+    const cls = String(s?.class ?? '').trim();
+    const room = cls ? `${grade ? `${grade}학년 ` : ''}${cls}반` : '';
+    return [room, studentLabel(p, exams), `${Object.keys(p.entries).length}회`].filter(Boolean).join(' · ');
 }
 
 /* 학생별 영역 성적 차트에서 선택한 기준과 끈 과목. 학생을 바꾸거나 다시 그려도 유지한다 */

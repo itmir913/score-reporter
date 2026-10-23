@@ -108,7 +108,7 @@ describe('통계 화면', () => {
         view.choosePersonAt('3', 0);
         main.switchTab('trend');
         view.renderTrend();
-        expect(document.querySelector('#trend-student').textContent).toContain('가 · 1반 1번 · 3회');
+        expect(document.querySelector('#trend-student').textContent).toContain('3학년 1반 · 1번 가 · 3회');
         expect(document.getElementById('tab-trend').classList.contains('hidden')).toBe(false);
     });
 
@@ -118,6 +118,6 @@ describe('통계 화면', () => {
         view.renderTrend();
         ST.exams = moveExam(renameExam(ST.exams, '3', '2026-03'), '사설', -1);
         view.renderTrend();
-        expect(document.querySelector('#trend-student p.text-lg')?.textContent).toContain('가 · 1반 1번 · 3회');
+        expect(document.querySelector('#trend-student p.text-lg')?.textContent).toContain('3학년 1반 · 1번 가 · 3회');
     });
 });
