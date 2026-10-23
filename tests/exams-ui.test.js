@@ -77,43 +77,6 @@ describe('회차 레일', () => {
     }, 20000);
 });
 
-describe('성적 모음 파일', () => {
-    it('저장한 파일을 열면 모든 회차와 순서·옵션이 돌아온다', async () => {
-        await importFiles(fakeFile('2026-03.xlsx', await bytesOf(SCHEMAS.univcoop)), fakeFile('사설.xlsx', await bytesOf(SCHEMAS.kimyoungil)));
-        document.getElementById('include-no-inquiry').checked = true;
-
-        let saved = null;
-        vi.spyOn(window, 'confirm').mockReturnValue(true);
-        vi.stubGlobal('URL', {createObjectURL: (b) => { saved = b; return 'blob:x'; }, revokeObjectURL: () => {}});
-        vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
-        rail.saveProject();
-        vi.unstubAllGlobals();
-        const text = await new Promise(r => {
-            const fr = new FileReader();
-            fr.onload = () => r(fr.result);
-            fr.readAsText(saved);
-        });
-
-        main.clearAll();
-        document.getElementById('include-no-inquiry').checked = false;
-        await rail.openProject({text: async () => text});
-        vi.restoreAllMocks();
-        expect(ST.exams.map(e => e.key)).toEqual(['2026-03', '사설']);
-        expect(document.getElementById('include-no-inquiry').checked).toBe(true);
-        expect(railKeys()).toEqual(['2026-03', '사설']);
-    }, 20000);
-
-    it('저장 전에 개인정보 경고를 보여 주고, 취소하면 저장하지 않는다', async () => {
-        await importFiles(fakeFile('3월.xlsx', await bytesOf(SCHEMAS.univcoop)));
-        const ask = vi.spyOn(window, 'confirm').mockReturnValue(false);
-        const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
-        rail.saveProject();
-        expect(ask.mock.calls[0][0]).toContain('학생 이름과 성적');
-        expect(click).not.toHaveBeenCalled();
-        vi.restoreAllMocks();
-    });
-});
-
 describe('학생 표', () => {
     it('지금 회차의 학생을 보이고, 행을 누르면 성적표를 연다', async () => {
         await importFiles(fakeFile('3월.xlsx', await bytesOf(SCHEMAS.univcoop)));

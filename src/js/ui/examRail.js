@@ -1,8 +1,6 @@
 import {moveExam, removeExam, renameExam, sortedExams} from '../exams/examStore.js';
-import {PRIVACY_WARNING, PROJECT_EXTENSION, parseProject, serializeProject} from '../exams/projectFile.js';
 import {afterExamsChanged, renderExportCards, showToast, ST, switchTab} from '../main.js';
-import {globalReportBasis, includeNoInquiry, renderReport, setGlobalBasis} from '../report.js';
-import {dlBlob} from '../utils.js';
+import {renderReport} from '../report.js';
 import {el, clear} from './dom.js';
 
 /* ───────────────────────────────────────────
@@ -88,38 +86,4 @@ function removeAsk(key) {
     update(removeExam(ST.exams, key));
     renderReport();
     renderExportCards();
-}
-
-/* ── 성적 모음 파일 저장·열기 ── */
-
-export function saveProject() {
-    if (!ST.exams.length) return showToast('저장할 회차가 없습니다.', true);
-    if (!confirm(`${PRIVACY_WARNING}\n\n저장할까요?`)) return;
-    const text = serializeProject({exams: ST.exams, options: {basis: globalReportBasis, includeNoInquiry: includeNoInquiry()}});
-    const stamp = new Date().toISOString().slice(0, 10);
-    dlBlob(new Blob([text], {type: 'application/json'}), `모의고사-성적모음-${stamp}${PROJECT_EXTENSION}`);
-    showToast(`${ST.exams.length}개 회차를 저장했습니다.`);
-}
-
-export async function openProject(file) {
-    if (!file) return;
-    try {
-        const {exams, options} = parseProject(await file.text());
-        if (ST.exams.length && !confirm('지금 불러온 회차를 모두 지우고 성적 모음 파일로 바꿀까요?')) return;
-        ST.exams = exams;
-        ST.activeExamKey = null;
-        afterExamsChanged();
-        const box = document.getElementById('include-no-inquiry');
-        if (box) box.checked = options.includeNoInquiry === true;
-        renderReport();
-        if (['raw', 'std', 'pct'].includes(options.basis)) setGlobalBasis(options.basis);
-        renderExportCards();
-        switchTab('report');
-        showToast(`${exams.length}개 회차를 불러왔습니다.`);
-    } catch (e) {
-        showToast(e.message, true);
-    } finally {
-        const input = document.getElementById('projectInput');
-        if (input) input.value = '';
-    }
 }

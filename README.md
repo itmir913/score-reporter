@@ -35,8 +35,6 @@ npm run dev
 3. **보고서**: 선택한 회차의 통계·상위 N·급간 분포·수능최저·학생 명단(정렬·열 검색).
 4. **통계**: 회차별 전교 평균과, 한 학생의 회차별 점수·합산 석차.
 5. **내보내기**: 선택한 회차를 다른 프로그램 양식의 엑셀로 내보냅니다.
-6. **성적 모음 파일**: 모든 회차를 파일 하나(`.scores.json`)로 저장하고 다음에 엽니다. 브라우저에는 아무것도 남지 않습니다.
-   이 파일에는 학생 이름과 성적이 들어 있으니 공용 PC·메신저에 두지 마세요.
 
 ### 점수 해석 규칙
 
@@ -71,9 +69,9 @@ vendor/             npm 레지스트리에서 받을 수 없는 의존성 (아�
 | `src/js/ingest/formatMatch.js` | 머리글 지문으로 양식 자동 매칭, 값 범위 교차검증 |
 | `src/js/parser.js` | 성적 파일 → 학생 레코드 |
 | `src/js/core/` | 숫자 판정(`score.js`), 합산·탐구평균(`aggregate.js`) |
-| `src/js/exams/` | 회차 목록·순서(`examStore.js`), 회차 사이 동일인 연결(`identity.js`), 성적 모음 파일(`projectFile.js`) |
+| `src/js/exams/` | 회차 목록·순서(`examStore.js`), 회차 사이 동일인 연결(`identity.js`) |
 | `src/js/trend/trend.js` | 회차별 전교·학생별 통계 계산 |
-| `src/js/ui/` | 불러오기 표(`importer.js`), 회차 레일·성적 모음 파일 저장/열기(`examRail.js`), 학생 표(`studentTable.js`, `table.js` = admission-outcomes GridTable 이식), 통계 화면(`trendView.js`), DOM 잔손질(`dom.js`) |
+| `src/js/ui/` | 불러오기 표(`importer.js`), 회차 레일(`examRail.js`), 학생 표(`studentTable.js`, `table.js` = admission-outcomes GridTable 이식), 통계 화면(`trendView.js`), DOM 잔손질(`dom.js`) |
 | `src/js/actions.js` | 마크업의 `data-action`·`data-change` → 실제 함수 |
 | `src/js/xlsx-decrypt.js`, `src/js/sha.js` | 암호 걸린 xlsx 해제와 그에 쓰는 동기 해시 |
 | `src/js/exporter.js` | 다른 양식으로 내보내기 |

@@ -24,7 +24,6 @@ import {
     switchTab,
 } from './main.js';
 import {renderAll, setGlobalBasis} from './report.js';
-import {openProject, saveProject} from './ui/examRail.js';
 import {choosePersonAt, renderTrend} from './ui/trendView.js';
 import {
     closeModal,
@@ -67,8 +66,6 @@ const CLICK_ACTIONS = {
         dialog.onclick = (event) => { if (event.target === dialog) dialog.close(); };
     },
     'close-guide': () => document.getElementById('guide-dialog').close?.(),
-    'save-project': () => saveProject(),
-    'open-project': () => document.getElementById('projectInput').click(),
     'load-sample': () => loadSampleData(),
     'print-page': () => window.print(),
     'print-student': () => printStudentDetail(),
@@ -88,7 +85,6 @@ const CLICK_ACTIONS = {
 /** data-change 값 → 값이 바뀌었을 때 할 일. */
 const CHANGE_ACTIONS = {
     'file-select': (el, event) => handleFileSelect(event),
-    'project-select': (el) => openProject(el.files?.[0]),
     'render-all': () => renderAll(),
     // 표시 인원은 그 표에만 영향을 준다. renderAll 은 캐시와 차트까지 모두 다시 만든다
     'render-top-n': () => { if (ST.cache) renderTopN(ST.cache); },

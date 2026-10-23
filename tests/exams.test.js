@@ -3,7 +3,6 @@ import {
     addExam, fileHashHex, keyRank, moveExam, removeExam, renameExam, sortedExams, suggestExamKey,
 } from '../src/js/exams/examStore.js';
 import {identityKeys, linkStudents} from '../src/js/exams/identity.js';
-import {PROJECT_EXTENSION, parseProject, serializeProject} from '../src/js/exams/projectFile.js';
 
 const exam = (key, students = []) => ({key, formatId: 'univcoop', fileName: `${key}.xlsx`, fileHash: 'h', students});
 const keys = (list) => sortedExams(list).map(e => e.key);
@@ -153,39 +152,5 @@ describe('동일인 연결', () => {
 
     it('학년 간 대응표는 아직 받지 않는다', () => {
         expect(() => linkStudents([], {gradeTransitions: [{}]})).toThrow('아직 지원하지 않습니다');
-    });
-});
-
-describe('성적 모음 파일', () => {
-    const students = [st({class: '1', number: '1', name: '가상', korean: {raw: 80}})];
-
-    it('저장한 것을 다시 읽으면 회차·순서·학생·옵션이 같다', () => {
-        let list = build('3', '사설', '4').map(e => ({...e, students}));
-        list = moveExam(list, '사설', 1);
-        const text = serializeProject({exams: list, options: {includeNoInquiry: true, basis: 'std'}});
-        const {exams, options} = parseProject(text);
-        expect(keys(exams)).toEqual(keys(list));
-        expect(exams[0]).toEqual({key: '3', order: 0, formatId: 'univcoop', fileName: '3.xlsx', fileHash: 'h', students});
-        expect(options).toEqual({includeNoInquiry: true, basis: 'std'});
-    });
-
-    it('원본 엑셀(바이트)은 담지 않는다', () => {
-        const text = serializeProject({exams: [{...exam('3', students), order: 0, bytes: new Uint8Array([1])}]});
-        expect(JSON.parse(text).exams[0]).not.toHaveProperty('bytes');
-    });
-
-    it.each([
-        ['깨진 파일', '{', '읽을 수 없습니다'],
-        ['다른 파일', '{"format":"x"}', '성적 모음 파일이 아닙니다'],
-        ['다른 버전', '{"format":"score-reporter-project","version":99,"exams":[]}', '버전 99'],
-        ['키 중복', '{"format":"score-reporter-project","version":1,"exams":[{"key":"3","students":[]},{"key":" 3","students":[]}]}', '두 번'],
-        ['학생 없음', '{"format":"score-reporter-project","version":1,"exams":[{"key":"3"}]}', '학생 목록'],
-    ])('%s 는 알아볼 수 있는 오류를 낸다', (_, text, msg) => {
-        expect(() => parseProject(text)).toThrow(msg);
-    });
-
-    it('파일 꼬리는 .gitignore 에 걸려 있다', async () => {
-        const {readFileSync} = await import('node:fs');
-        expect(readFileSync('.gitignore', 'utf-8')).toContain(`*${PROJECT_EXTENSION}`);
     });
 });
