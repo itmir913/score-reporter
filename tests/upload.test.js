@@ -3,7 +3,9 @@ import {resolve} from 'node:path';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import ExcelJS from 'exceljs';
 import * as XLSX from 'xlsx';
-import {clearFile, loadSampleData, processFile, ST} from '../src/js/main.js';
+import {clearFile, loadSampleData, processFile, selectFormat, ST} from '../src/js/main.js';
+import {SCHEMAS} from '../src/js/schema.js';
+import {buildWorkbook} from './helpers/baseline-fixture.js';
 import {showStudentDetail} from '../src/js/report/report-modal.js';
 import {renderSubjectsCharts} from '../src/js/report/report-render-chart-subjects.js';
 
@@ -255,5 +257,30 @@ describe('clearFile', () => {
         clearFile();
         expect(() => renderSubjectsCharts()).not.toThrow();
         expect(() => showStudentDetail('홍길동', '1', '1')).not.toThrow();
+    });
+});
+
+describe('양식 자동 매칭 화면', () => {
+    const note = () => document.getElementById('format-match-note').textContent;
+    const selected = () => [...document.querySelectorAll('.format-card.selected')].map(el => el.dataset.format);
+
+    it('머리글이 한 양식과 같으면 그 양식을 고르고 알린다. 사람이 다른 양식으로 바꿀 수 있다', async () => {
+        await processFile(fakeFile('3월.xlsx', await buildWorkbook(SCHEMAS.univcoop).xlsx.writeBuffer()));
+        expect(selected()).toEqual(['univcoop']);
+        expect(note()).toContain('「유니브」 양식과 같아 자동으로 골랐습니다');
+        expect(document.getElementById('preview-section').classList.contains('hidden')).toBe(false);
+        selectFormat('kkumkugo');
+        expect(selected()).toEqual(['kkumkugo']);
+    });
+
+    it('맞는 양식이 없으면 고르지 않고 직접 고르라고 알린다', async () => {
+        const headers = SCHEMAS.univcoop.exportHeaders.map(r => [...r]);
+        headers[1][5] = '변경';
+        const wb = buildWorkbook({...SCHEMAS.univcoop, exportHeaders: headers});
+        await processFile(fakeFile('4월.xlsx', await wb.xlsx.writeBuffer()));
+        expect(selected()).toEqual([]);
+        expect(note()).toContain('등록된 양식과 맞지 않아');
+        clearFile();
+        expect(note()).toBe('');
     });
 });

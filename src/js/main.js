@@ -1,17 +1,14 @@
 import ExcelJS from 'exceljs';
-import * as XLSX from 'xlsx';
 import {GradeExporter} from './exporter.js';
+import {loadWorkbook} from './ingest/files.js';
+import {countOutOfRange, matchFormats} from './ingest/formatMatch.js';
 import {GradeDataParser} from './parser.js';
 import {renderReport, setGlobalBasis} from './report.js';
 import {FIELD_LABELS, SCHEMAS} from './schema.js';
 import {escapeAttr, sameInquirySubject} from './utils.js';
-import {
-    decryptXlsx,
-    EncryptedLegacyXlsError,
-    isEncryptedOfficeFile,
-    readCfb,
-    WrongPasswordError
-} from './xlsx-decrypt.js';
+import {EncryptedLegacyXlsError, WrongPasswordError} from './xlsx-decrypt.js';
+
+export {sheetjsTo2DArray} from './ingest/files.js';
 
 /* ───────────────────────────────────────────
        § 애플리케이션 상태 (ST) 및 로직
@@ -69,16 +66,6 @@ export function exceljsTo2DArray(ws) {
     return result;
 }
 
-// SheetJS 시트를 A1 부터 시작하는 2차원 배열로 바꾼다.
-// sheet_to_json 은 !ref 의 시작 칸부터 읽는다. 1행이나 A열이 통째로 비어 있으면
-// !ref 가 A2·B1 같은 곳에서 시작하고, 그만큼 행·열이 앞으로 당겨진다. 그러면
-// 머리글 행 수와 열 문자가 어긋나 첫 학생이 빠지거나 옆 열을 읽는다. 시작을 A1 로 고정한다.
-export function sheetjsTo2DArray(sheet) {
-    if (!sheet || !sheet['!ref']) return [];
-    const {e} = XLSX.utils.decode_range(sheet['!ref']);
-    return XLSX.utils.sheet_to_json(sheet, {header: 1, defval: null, range: {s: {r: 0, c: 0}, e}});
-}
-
 // 탭 전환 로직
 export function switchTab(tabId) {
     ['upload', 'report', 'export'].forEach(t => {
@@ -120,7 +107,10 @@ export function clearFile() {
     ST.wb = null;
     ST.file = null;
     ST.fmtId = null;
+    ST.autoFmtId = null;
     ST.data = null;
+    const matchNote = document.getElementById('format-match-note');
+    if (matchNote) matchNote.textContent = '';
     ST.cache = null;
     document.getElementById('fileInput').value = '';
     document.getElementById('file-info').classList.add('hidden');
@@ -194,66 +184,23 @@ export async function processFile(file) {
     if (superseded()) return;
 
     try {
-        const arrayBuffer = await file.arrayBuffer();
+        const bytes = new Uint8Array(await file.arrayBuffer());
         if (superseded()) return;
 
-        let wb = new ExcelJS.Workbook(); // 미리 생성
-
-        // 확장자는 .xlsx 인데 속은 옛 .xls(OLE2) 인 파일이 있다. 암호 정보가 없으면
-        // 비밀번호를 묻지 않고 .xls 처럼 SheetJS 로 읽는다.
-        // 컨테이너는 한 번만 읽어 암호 확인과 해제가 함께 쓴다
-        const cfb = fileExt === 'xlsx' ? readCfb(arrayBuffer) : null;
-        const isEncrypted = !!cfb && isEncryptedOfficeFile(arrayBuffer, cfb);
-        const isLegacyXls = !!cfb && !isEncrypted;
-
-        if (fileExt === 'xls' || fileExt === 'csv' || isLegacyXls) {
-            // [최적화 2] .xls와 .csv는 SheetJS가 훨씬 빠릅니다.
-            let xlsWorkbook;
-            if (fileExt === 'csv') {
-                let csvText = '';
-                try {
-                    csvText = new TextDecoder('utf-8', {fatal: true}).decode(arrayBuffer);
-                } catch {
-                    csvText = new TextDecoder('euc-kr').decode(arrayBuffer);
-                }
-                xlsWorkbook = XLSX.read(csvText, {type: 'string'});
-            } else {
-                try {
-                    xlsWorkbook = XLSX.read(arrayBuffer, {type: 'array'});
-                } catch (e) {
-                    // 암호가 걸린 옛 .xls 는 "손상된 파일" 이 아니다. 무엇을 하면 되는지 알린다.
-                    // 암호 정보(/EncryptionInfo)가 있는 것은 새 형식이 이름만 .xls 인 파일이라 뺀다
-                    if (/password-protected/i.test(e?.message) && (isLegacyXls || !isEncryptedOfficeFile(arrayBuffer))) {
-                        throw new EncryptedLegacyXlsError();
-                    }
-                    throw e;
-                }
-            }
-
-            // [최적화 3] addRow 반복문 대신 addRows 일괄 처리
-            xlsWorkbook.SheetNames.forEach(sheetName => {
-                const newWs = wb.addWorksheet(sheetName);
-                const jsonData = sheetjsTo2DArray(xlsWorkbook.Sheets[sheetName]);
-                newWs.addRows(jsonData); // 한 줄씩 addRow 하는 것보다 훨씬 빠름
-            });
-        } else if (fileExt === 'xlsx') {
-            /* 암호가 걸린 xlsx 는 zip 이 아니라 OLE2 컨테이너로 저장된다. ExcelJS 는
-             * 그걸 그대로 zip 으로 읽으려다 실패하므로, 먼저 우리가 풀어서 넘긴다. */
-            let data = arrayBuffer;
-            if (isEncrypted) {
+        // 직접 올린 파일과 zip 안의 파일이 같은 경로(loadWorkbook)를 지난다. 암호 해제도 여기서 한다
+        const wb = await loadWorkbook({name: file.name, bytes}, {
+            askPassword: async () => {
                 const pwd = prompt("암호가 걸려있는 엑셀 파일입니다.\n비밀번호를 입력해주세요.");
-                if (superseded()) return;
-                if (pwd === null) return showToast("취소되었습니다.", true);
-
-                showToast("암호를 해제하는 중입니다. 잠시만 기다려주세요...");
-                await new Promise(r => setTimeout(r, 50));
-                if (superseded()) return;
-                data = await decryptXlsx(arrayBuffer, pwd, cfb);
-                if (superseded()) return;
-            }
-            await wb.xlsx.load(data);
-            if (superseded()) return;
-        }
+                if (pwd !== null && !superseded()) {
+                    showToast("암호를 해제하는 중입니다. 잠시만 기다려주세요...");
+                    await new Promise(r => setTimeout(r, 50));
+                }
+                return pwd;
+            },
+            isCancelled: superseded,
+        });
+        if (superseded()) return;
+        if (!wb) return showToast("취소되었습니다.", true);
 
         // 공통 마무리 로직
         ST.wb = wb;
@@ -273,6 +220,7 @@ export async function processFile(file) {
         renderFormatCards();
         document.getElementById('format-area').classList.remove('hidden');
         showToast("데이터를 성공적으로 불러왔습니다.");
+        autoMatchFormat({pickSheet: true});
 
     } catch (err) {
         if (superseded()) return; // 이미 다른 파일을 읽고 있다. 앞 파일의 오류는 알리지 않는다
@@ -283,6 +231,38 @@ export async function processFile(file) {
                 ? '암호가 걸린 옛 형식(.xls) 파일은 지원하지 않습니다. 엑셀에서 암호를 풀거나 .xlsx 로 저장해 주세요.'
                 : '파일을 읽는 데 실패했습니다. 파일이 손상되었을 수 있습니다.', true);
     }
+}
+
+/* 헤더 지문으로 양식을 고른다. 정확히 한 양식만 맞을 때만 고르고, 그래도 사람이 바꿀 수 있다.
+ * pickSheet 면 지문이 한 양식과 맞는 첫 시트로 옮긴다 */
+export function autoMatchFormat({pickSheet = false} = {}) {
+    if (!ST.wb) return;
+    const sel = document.getElementById('sheet-select');
+    let sheetName = sel.value;
+    let match = matchFormats(ST.wb.getWorksheet(sheetName), SCHEMAS);
+    if (pickSheet && !match.autoId) {
+        for (const ws of ST.wb.worksheets) {
+            const m = matchFormats(ws, SCHEMAS);
+            if (m.autoId) {
+                sheetName = ws.name;
+                match = m;
+                sel.value = sheetName;
+                break;
+            }
+        }
+    }
+    ST.autoFmtId = match.autoId;
+    const note = document.getElementById('format-match-note');
+    if (match.autoId) {
+        selectFormat(match.autoId);
+        note.textContent = `머리글이 「${SCHEMAS[match.autoId].label}」 양식과 같아 자동으로 골랐습니다. 아래 미리보기에서 열이 맞는지 확인하고, 다르면 다른 양식을 고르세요.`;
+    } else if (match.candidates.length > 1) {
+        note.textContent = `머리글이 여러 양식(${match.candidates.map(id => SCHEMAS[id].label).join(', ')})과 같아 자동으로 고르지 않았습니다. 양식을 직접 고르고 미리보기로 확인하세요.`;
+    } else {
+        note.textContent = '머리글이 등록된 양식과 맞지 않아 자동으로 고르지 않았습니다. 양식을 직접 고르고 미리보기로 열이 맞는지 확인하세요.';
+    }
+    document.querySelectorAll('.format-card .fmt-auto').forEach(el =>
+        el.classList.toggle('hidden', el.closest('.format-card').dataset.format !== match.autoId));
 }
 
 // 양식 선택 UI
@@ -297,7 +277,7 @@ export function renderFormatCards() {
                     </div>
                     <div>
                         <p class="font-bold text-slate-800 text-base">${s.label}</p>
-                        <p class="text-base text-slate-400">헤더 ${s.headerRows}행</p>
+                        <p class="text-base text-slate-400">헤더 ${s.headerRows}행 <span class="fmt-auto hidden ml-1 rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-700 font-semibold">자동 인식</span></p>
                     </div>
                 </div>
                 <div class="fmt-check hidden w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center">
@@ -421,7 +401,10 @@ export function parseData() {
         // 같은 과목이 두 번 적힌 것은 자료 중복이다. 합산·통계에는 탐구1 값만 쓴다(탐구평균 규칙)
         if (sameInq > 0) msg.push(`탐구 과목 중복 ${sameInq}명: 탐구1·탐구2 과목이 같습니다. 합산에는 탐구1 값만 씁니다. 원본 파일을 확인해 주세요.`);
         if (noRaw) msg.push('원점수가 없는 파일이라 표준점수 기준으로 보여 줍니다.');
-        showToast(msg.join(' '), sameInq > 0);
+        // 양식이 맞아도 열이 엉뚱하면 값이 범위를 벗어난다(백분위 0~100, 등급 1~9, 원점수 만점 이하)
+        const outOfRange = countOutOfRange(ST.data);
+        if (outOfRange > 0) msg.push(`범위를 벗어난 점수가 ${outOfRange}개 있습니다. 양식이 맞는지 미리보기로 확인해 주세요.`);
+        showToast(msg.join(' '), sameInq > 0 || outOfRange > 0);
         document.getElementById('badge-text').innerText = `${ST.data.length}명 로드됨`;
         document.getElementById('data-badge').querySelector('span').className = 'w-2 h-2 rounded-full bg-green-500';
 

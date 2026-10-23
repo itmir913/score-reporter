@@ -13,6 +13,7 @@
  * 마크업도 다시 묶어 줄 필요 없이 바로 동작한다.
  */
 import {
+    autoMatchFormat,
     clearFile,
     exportTo,
     handleDragLeave,
@@ -66,7 +67,8 @@ const CLICK_ACTIONS = {
 /** data-change 값 → 값이 바뀌었을 때 할 일. */
 const CHANGE_ACTIONS = {
     'file-select': (el, event) => handleFileSelect(event),
-    'render-raw-preview': () => renderRawPreview(),
+    // 시트를 바꾸면 그 시트의 머리글로 양식을 다시 맞춰 본다. 맞는 양식이 없으면 고른 양식을 그대로 둔다
+    'render-raw-preview': () => { autoMatchFormat(); renderRawPreview(); },
     'render-all': () => renderAll(),
     // 표시 인원은 그 표에만 영향을 준다. renderAll 은 캐시와 차트까지 모두 다시 만든다
     'render-top-n': () => { if (ST.cache) renderTopN(ST.cache); },

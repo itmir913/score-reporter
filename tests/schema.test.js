@@ -185,3 +185,11 @@ describe('꿈꾸GO 탐구영역 분류', () => {
         expect(domain('', '')).toBe('');
     });
 });
+
+describe('확인된 미매핑 열(extraColumns)', () => {
+    it.each(Object.keys(SCHEMAS))('%s: 읽는 열(fields)과 겹치지 않는다', (id) => {
+        const s = SCHEMAS[id];
+        const used = new Set(Object.values(s.fields).filter(Boolean));
+        expect(s.extraColumns.filter(c => used.has(c))).toEqual([]);
+    });
+});

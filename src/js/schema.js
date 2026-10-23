@@ -1,3 +1,4 @@
+import {toScore} from './core/score.js';
 import {colToIdx} from './utils.js';
 
 // 영문 변수명을 한글 라벨로 변환해주는 매핑 사전
@@ -48,23 +49,11 @@ export const FIELD_LABELS = {
     fl2_grade: '제2외국어 등급'
 };
 
-// 점수 칸 값 → 숫자. 없거나 숫자가 아니면 null.
-// parseFloat 는 앞부분만 읽어 "1,234" 가 1, "85abc" 가 85, "1e2" 가 100 이 되었다.
-// 문자열은 소수 하나(뒤에 '점'·'%' 하나까지)만 받고 나머지는 모두 버린다
-const SCORE_TEXT = /^-?\d+(?:\.\d+)?\s*[점%]?$/;
-
-function toScore(v) {
-    if (typeof v === 'number') return Number.isFinite(v) ? v : null;
-    if (typeof v !== 'string') return null;
-    const t = v.trim();
-    return SCORE_TEXT.test(t) ? parseFloat(t) : null;
-}
-
 /* ───────────────────────────────────────────
        § FormatSchema 클래스
     ─────────────────────────────────────────── */
 export class FormatSchema {
-    constructor({id, label, color, icon, headerRows, fields, exportHeaders, customGetters}) {
+    constructor({id, label, color, icon, headerRows, fields, exportHeaders, customGetters, extraColumns, unmappedNote}) {
         this.id = id;
         this.label = label;
         this.color = color;
@@ -73,6 +62,9 @@ export class FormatSchema {
         this.fields = fields;
         this.exportHeaders = exportHeaders || [];
         this.customGetters = customGetters || {};
+        // 사람이 확인해 「담을 필드가 없다」고 정한 열(열 문자)과 그 메모. 읽지 않고 묻지도 않는다
+        this.extraColumns = extraColumns || [];
+        this.unmappedNote = unmappedNote || '';
 
         // 숫자 필드에 대해 자동으로 ensureNumericOrZero 적용
         const numericSuffixes = ['_raw', '_std', '_pct', '_grade'];
