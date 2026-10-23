@@ -52,6 +52,14 @@ export function renderExamRail() {
             }),
         ]));
     });
+    // 좁은 화면에서 지금 회차가 회차 줄 밖에 있으면 보이는 곳까지 옆으로 민다(페이지는 움직이지 않는다)
+    const chip = rail.querySelector('.exam-chip.is-active');
+    if (chip) {
+        const left = chip.offsetLeft - rail.offsetLeft;
+        // 칩이 줄보다 넓으면 이름이 보이게 왼쪽 끝을 맞춘다
+        if (left < rail.scrollLeft || chip.offsetWidth > rail.clientWidth) rail.scrollLeft = left;
+        else if (left + chip.offsetWidth > rail.scrollLeft + rail.clientWidth) rail.scrollLeft = left + chip.offsetWidth - rail.clientWidth;
+    }
 }
 
 function update(exams) {

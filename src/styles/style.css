@@ -368,3 +368,10 @@ canvas, img {
 #student-grid .col-search button {
     display: none;
 }
+
+/* 좁은 화면에서 회차가 있으면 상단바 제목을 숨겨 회차 줄에 자리를 준다(회차가 없으면 제목을 그대로 둔다) */
+@media (width < 40rem) {
+    header:has(#exam-rail .exam-chip) > h1 {
+        display: none;
+    }
+}
