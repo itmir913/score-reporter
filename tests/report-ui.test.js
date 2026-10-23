@@ -16,7 +16,13 @@ vi.mock('chart.js/auto', () => ({
     }
 }));
 
-const {ST, parseData} = await import('../src/js/main.js');
+const {ST, IMPORT, commitImports} = await import('../src/js/main.js');
+
+/* 엑셀 하나를 불러오기 표에 올린 것처럼 만들어 회차로 넣는다 */
+function importSheet(wb, formatId) {
+    IMPORT.rows = [{id: 0, name: '성적.xlsx', include: true, status: 'ready', wb, sheet: 'S', formatId, key: '시험', hash: ''}];
+    commitImports();
+}
 const {SCHEMAS} = await import('../src/js/schema.js');
 const {renderSubjectsCharts} = await import('../src/js/report/report-render-chart-subjects.js');
 const ExcelJS = (await import('exceljs')).default;
@@ -283,14 +289,11 @@ describe('탐구1·탐구2 과목이 같은 학생', () => {
         wb.addWorksheet('S').addRows([['머리글'], ['머리글'],
             row('가', '물리학Ⅰ', '물리학Ⅰ'), row('나', '물리학Ⅰ', '화학Ⅰ')]);
         ST.data = null; // 회차를 비운다. 파일마다 새 회차로 들어간다
-        ST.wb = wb;
-        ST.fmtId = schema.id;
-        document.getElementById('sheet-select').innerHTML = '<option value="S">S</option>';
         window.scrollTo = () => {};
-        parseData();
+        importSheet(wb, schema.id);
         expect(ST.data).toHaveLength(2);
         expect(document.getElementById('toast-msg').innerText)
-            .toBe('2명의 데이터를 파싱했습니다. 탐구 과목 중복 1명: 탐구1·탐구2 과목이 같습니다. 합산에는 탐구1 값만 씁니다. 원본 파일을 확인해 주세요.');
+            .toBe('1개 회차를 불러왔습니다. 「시험」 탐구 과목 중복 1명(합산에는 탐구1 값만 씁니다).');
         expect(document.getElementById('toast-icon').className).toContain('text-red-400');
     });
 
@@ -304,12 +307,9 @@ describe('탐구1·탐구2 과목이 같은 학생', () => {
         const wb = new ExcelJS.Workbook();
         wb.addWorksheet('S').addRows([['머리글'], ['머리글'], r]);
         ST.data = null; // 회차를 비운다. 파일마다 새 회차로 들어간다
-        ST.wb = wb;
-        ST.fmtId = schema.id;
-        document.getElementById('sheet-select').innerHTML = '<option value="S">S</option>';
         window.scrollTo = () => {};
-        parseData();
-        expect(document.getElementById('toast-msg').innerText).toBe('1명의 데이터를 파싱했습니다.');
+        importSheet(wb, schema.id);
+        expect(document.getElementById('toast-msg').innerText).toBe('1개 회차를 불러왔습니다.');
     });
 });
 
@@ -388,11 +388,8 @@ describe('원점수가 없는 파일', () => {
         const wb = new ExcelJS.Workbook();
         wb.addWorksheet('S').addRows([['머리글'], ['머리글'], ...rows]);
         ST.data = null; // 회차를 비운다. 파일마다 새 회차로 들어간다
-        ST.wb = wb;
-        ST.fmtId = schema.id;
-        document.getElementById('sheet-select').innerHTML = '<option value="S">S</option>';
         window.scrollTo = () => {};
-        parseData();
+        importSheet(wb, schema.id);
     };
     const row = ({raw = '', std = 130, inq1 = '물리학Ⅰ', inq2 = '화학Ⅰ'} = {}) => {
         const r = Array(40).fill('');
@@ -410,7 +407,7 @@ describe('원점수가 없는 파일', () => {
         load([row()]);
         expect(report.globalReportBasis).toBe('raw');
         expect(document.getElementById('btn-basis-raw').className).toContain('font-bold');
-        expect(toast()).toBe('1명의 데이터를 파싱했습니다.');
+        expect(toast()).toBe('1개 회차를 불러왔습니다.');
         expect(document.getElementById('toast-icon').className).toContain('text-green-400');
         expect(document.getElementById('basis-missing-note').textContent).toBe('이 회차에는 원점수가 없어 표시할 수 없습니다.');
     });
@@ -419,7 +416,7 @@ describe('원점수가 없는 파일', () => {
         report.setGlobalBasis('raw');
         load([row({inq2: '물리학Ⅰ'})]);
         expect(report.globalReportBasis).toBe('raw');
-        expect(toast()).toBe('1명의 데이터를 파싱했습니다. 탐구 과목 중복 1명: 탐구1·탐구2 과목이 같습니다. 합산에는 탐구1 값만 씁니다. 원본 파일을 확인해 주세요.');
+        expect(toast()).toBe('1개 회차를 불러왔습니다. 「시험」 탐구 과목 중복 1명(합산에는 탐구1 값만 씁니다).');
         expect(document.getElementById('toast-icon').className).toContain('text-red-400');
         report.setGlobalBasis('raw');
     });
@@ -428,7 +425,7 @@ describe('원점수가 없는 파일', () => {
         report.setGlobalBasis('pct');
         load([row({raw: 80})]);
         expect(report.globalReportBasis).toBe('pct');
-        expect(toast()).toBe('1명의 데이터를 파싱했습니다.');
+        expect(toast()).toBe('1개 회차를 불러왔습니다.');
         report.setGlobalBasis('raw');
         load([row({raw: 80})]);
         expect(report.globalReportBasis).toBe('raw');

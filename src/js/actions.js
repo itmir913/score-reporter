@@ -13,19 +13,13 @@
  * 마크업도 다시 묶어 줄 필요 없이 바로 동작한다.
  */
 import {
-    autoMatchFormat,
     clearAll,
-    clearFile,
     exportTo,
     handleDragLeave,
     handleDragOver,
     handleDrop,
     handleFileSelect,
     loadSampleData,
-    parseData,
-    renderRawPreview,
-    selectFormat,
-    skipFile,
     ST,
     switchTab,
 } from './main.js';
@@ -48,19 +42,15 @@ const CLICK_ACTIONS = {
     'switch-tab': (el) => switchTab(el.dataset.tab),
     'set-basis': (el) => setGlobalBasis(el.dataset.basis),
     'close-modal': (el) => closeModal(el.dataset.modal),
-    'clear-file': () => clearFile(),
-    'skip-file': () => skipFile(),
     'clear-all': () => {
         if (ST.exams.length && !confirm('불러온 회차를 모두 지울까요? 저장하지 않았다면 되돌릴 수 없습니다.')) return;
         clearAll();
     },
     'save-project': () => saveProject(),
     'open-project': () => document.getElementById('projectInput').click(),
-    'parse-data': () => parseData(),
     'load-sample': () => loadSampleData(),
     'print-page': () => window.print(),
     'print-student': () => printStudentDetail(),
-    'select-format': (el) => selectFormat(el.dataset.format),
     'export-to': (el) => exportTo(el.dataset.format),
     'row-click': (el) => handleRowClick(el),
     'csat-students': (el) => showCsatStudents(Number(el.dataset.sum), Number(el.dataset.index)),
@@ -78,8 +68,6 @@ const CLICK_ACTIONS = {
 const CHANGE_ACTIONS = {
     'file-select': (el, event) => handleFileSelect(event),
     'project-select': (el) => openProject(el.files?.[0]),
-    // 시트를 바꾸면 그 시트의 머리글로 양식을 다시 맞춰 본다. 맞는 양식이 없으면 고른 양식을 그대로 둔다
-    'render-raw-preview': () => { autoMatchFormat(); renderRawPreview(); },
     'render-all': () => renderAll(),
     // 표시 인원은 그 표에만 영향을 준다. renderAll 은 캐시와 차트까지 모두 다시 만든다
     'render-top-n': () => { if (ST.cache) renderTopN(ST.cache); },

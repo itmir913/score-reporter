@@ -165,6 +165,14 @@ export function sheetjsTo2DArray(sheet) {
     return XLSX.utils.sheet_to_json(sheet, {header: 1, defval: null, range: {s: {r: 0, c: 0}, e}});
 }
 
+/** 암호가 걸린 xlsx 인가(열려면 비밀번호가 필요한가). 읽기 전에 카드에 「암호 필요」를 띄우려고 쓴다 */
+export function needsPassword({name, bytes}) {
+    if (!String(name).toLowerCase().endsWith('.xlsx')) return false;
+    const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+    const cfb = readCfb(buffer);
+    return !!cfb && isEncryptedOfficeFile(buffer, cfb);
+}
+
 /**
  * 엑셀 파일 하나를 ExcelJS 통합 문서로 읽는다. 직접 올린 파일과 zip 안의 파일이 모두 여기를 지난다.
  * 암호 걸린 xlsx 는 askPassword() 로 비밀번호를 받아 먼저 푼다. null 을 돌려주면 취소다.
