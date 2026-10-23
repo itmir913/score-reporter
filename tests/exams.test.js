@@ -86,14 +86,16 @@ describe('동일인 연결', () => {
         expect(persons.map(p => p.entries)).toEqual([{3: 0, 4: 1}, {3: 1, 4: 0}]);
     });
 
-    it('키가 같은데 이름이 다르면 잇지 않고 알린다', () => {
+    it('키가 같으면 이름이 달라도(외국인 학생 표기 등) 같은 학생으로 잇는다', () => {
         const exams = build('3', '4').map(e => ({...e, students: [st({class: '1', number: '1', name: e.key === '3' ? '가' : '나'})]}));
         const {persons, conflicts} = linkStudents(exams);
-        expect(persons).toHaveLength(2);
-        expect(conflicts).toEqual([
-            {examKey: '3', index: 0, reason: '식별 키가 같은데 이름이 다릅니다.'},
-            {examKey: '4', index: 0, reason: '식별 키가 같은데 이름이 다릅니다.'},
-        ]);
+        expect(persons.map(p => p.entries)).toEqual([{3: 0, 4: 0}]);
+        expect(conflicts).toEqual([]);
+    });
+
+    it('이름이 비어 있어도 키가 같으면 잇는다', () => {
+        const exams = build('3', '4').map(e => ({...e, students: [st({student_id: '7', name: e.key === '3' ? '' : '가'})]}));
+        expect(linkStudents(exams).persons).toHaveLength(1);
     });
 
     it('학년이 다르면 같은 반·번호여도 잇지 않는다', () => {
@@ -130,22 +132,23 @@ describe('동일인 연결', () => {
         expect(persons.every(p => Object.keys(p.entries).length === 1)).toBe(true);
     });
 
-    it('결과는 회차를 넣은 순서와 무관하다: 이름이 다른 한 명 때문에 나머지 둘을 놓치지 않는다', () => {
-        // 감사 반례: 학번 100 이 A '이', B '김', C '김'
+    it('결과는 회차를 넣은 순서와 무관하다', () => {
+        // 학번 100 이 회차마다 이름 표기가 다르다: '이', '김', '김'
         const names = {'2026-03': '이', '2026-04': '김', '2026-05': '김'};
         const make = (order) => order.reduce((list, k) => addExam(list, exam(k, [st({student_id: '100', name: names[k]})])), []);
         const a = linkStudents(make(['2026-03', '2026-04', '2026-05']));
         const b = linkStudents(make(['2026-05', '2026-04', '2026-03']));
         const linked = (r) => r.persons.map(p => Object.keys(p.entries).sort().join('+')).sort();
-        expect(linked(a)).toEqual(['2026-03', '2026-04+2026-05']);
+        expect(linked(a)).toEqual(['2026-03+2026-04+2026-05']);
         expect(linked(b)).toEqual(linked(a));
-        expect(a.conflicts.map(c => c.examKey).sort()).toEqual(b.conflicts.map(c => c.examKey).sort());
     });
 
     it('학생 한 명의 사유는 한 줄로 모은다', () => {
-        const exams = build('3', '4').map(e => ({...e, students: [st({student_id: 'A', class: '1', number: '1', name: e.key === '3' ? '가' : '나'})]}));
+        // 학번·반번호 두 키가 모두 겹쳐도 학생마다 한 줄이다
+        const twin = () => st({student_id: 'A', class: '1', number: '1', name: '가'});
+        const exams = build('3', '4').map(e => (e.key === '3' ? {...e, students: [twin(), twin()]} : {...e, students: [twin()]}));
         const {conflicts} = linkStudents(exams);
-        expect(conflicts.map(c => c.examKey)).toEqual(['3', '4']);
+        expect(conflicts.map(c => [c.examKey, c.index])).toEqual([['3', 0], ['3', 1]]);
     });
 
     it('식별 키를 만들 수 없는 학생은 혼자 남는다', () => {

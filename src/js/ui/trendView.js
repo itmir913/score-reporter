@@ -179,7 +179,7 @@ function studentSection(exams, options, keys) {
     const field = (text, control) => el('label', {class: 'flex min-w-0 flex-col gap-1'}, [el('span', {class: 'text-base text-ink-soft', text}), control]);
     return el('section', {class: 'card px-5 py-4', attrs: {id: 'trend-student'}}, [
         el('h3', {class: 'text-xl font-bold', text: '학생별 통계'}),
-        el('p', {class: 'mt-1 text-base text-ink-soft', text: '학번 또는 학년·반·번호가 같은 학생을 같은 사람으로 봅니다. 이름이 다르면 연결하지 않습니다.'}),
+        el('p', {class: 'mt-1 text-base text-ink-soft', text: '학번 또는 학년·반·번호가 같으면 이름이 달라도 같은 학생으로 봅니다.'}),
         conflicts.length
             ? el('p', {class: 'mt-2 rounded-lg bg-wait-soft px-4 py-2 text-base text-wait', text: `회차 사이를 잇지 못한 기록이 ${new Set(conflicts.map(c => `${c.examKey}|${c.index}`)).size}건(회차별) 있습니다. 그 학생은 회차마다 따로 나옵니다.`})
             : null,
