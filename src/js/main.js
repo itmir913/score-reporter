@@ -153,8 +153,20 @@ export async function addUploads(files) {
     IMPORT.skipped = [...IMPORT.skipped, ...skipped];
     renderImports();
     // 올린 파일이 드롭존 아래 표에 나타난다. 화면 밖이면 반응이 없는 줄 알기 쉬우니 표로 스크롤한다
-    if (rows.length || skipped.length) document.getElementById('import-area')?.scrollIntoView?.({block: 'start'});
+    if (rows.length || skipped.length) scrollToImports();
     showToast(rows.length ? `${rows.length}개 파일을 목록에 추가했습니다.` : '읽을 수 있는 엑셀 파일이 없습니다.', !rows.length);
+}
+
+/* 불러오기 표로 부드럽게 스크롤한다. 애니메이션이 돌지 않는 환경(화면을 그리지 않는 창 등)에서는
+ * 잠시 뒤에도 표가 화면 밖이면 그때 바로 옮긴다 */
+function scrollToImports() {
+    const area = document.getElementById('import-area');
+    if (!area?.scrollIntoView) return;
+    area.scrollIntoView({behavior: 'smooth', block: 'start'});
+    setTimeout(() => {
+        const box = area.getBoundingClientRect();
+        if (box.top > window.innerHeight || box.bottom < 0) area.scrollIntoView({block: 'start'});
+    }, 700);
 }
 
 /** 표에서 선택한 파일들을 회차로 넣는다 */
