@@ -3,6 +3,7 @@ import {GradeExporter} from './exporter.js';
 import {addExam} from './exams/examStore.js';
 import {blockers, commitRows, prepareUploads, renderImportTable} from './ui/importer.js';
 import {renderReport} from './report.js';
+import {generateSampleExams, SAMPLE_KEYS, SAMPLE_SIZE} from './sample.js';
 import {SCHEMAS} from './schema.js';
 import {escapeAttr} from './utils.js';
 
@@ -271,162 +272,24 @@ export async function exportTo(formatId) {
 }
 
 /* ───────────────────────────────────────────
-   § 샘플 데이터 로드 (현실적인 랜덤 데이터 생성)
+   § 샘플 데이터 로드 (가상 학생으로 만든 3월·6월·9월 회차, sample.js)
 ─────────────────────────────────────────── */
 export function loadSampleData() {
-    const dummy = [];
-
-    // 무작위 이름 생성을 위한 성/이름 배열
-    const lastNames = ['김', '이', '박', '최', '정', '강', '조', '윤', '장', '임', '한', '오', '서', '신', '권', '황', '안', '송', '전', '홍'];
-    const firstNames = ['서준', '하준', '도윤', '시우', '민준', '지호', '예준', '주원', '건우', '우진', '지안', '수아', '서윤', '서연', '하윤', '지우', '하은', '민서', '윤서', '채원', '도현', '준서', '민재', '현우', '승우', '지민', '수현', '지원', '다은', '은지'];
-
-    const subjectsKor = ['화법과 작문', '언어와 매체'];
-    const subjectsMath = ['확률과 통계', '미적분', '기하'];
-    const subjectsInq = ['생활과 윤리', '윤리와 사상', '한국지리', '세계지리', '동아시아사', '세계사', '경제', '정치와 법', '사회·문화', '물리학Ⅰ', '화학Ⅰ', '생명과학Ⅰ', '지구과학Ⅰ'];
-
-    // 원점수 기반 등급 계산
-    const getGrade = (raw, max) => {
-        const r = raw / max;
-        if (r >= 0.9) return 1;
-        if (r >= 0.8) return 2;
-        if (r >= 0.7) return 3;
-        if (r >= 0.6) return 4;
-        if (r >= 0.5) return 5;
-        if (r >= 0.4) return 6;
-        if (r >= 0.3) return 7;
-        if (r >= 0.2) return 8;
-        return 9;
-    };
-
-    // 정규분포(Normal Distribution) 난수 생성 함수 (Box-Muller Transform)
-    const randn_bm = () => {
-        let u = 0, v = 0;
-        while (u === 0) u = Math.random();
-        while (v === 0) v = Math.random();
-        return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+    // 이미 있는 샘플 회차는 새 샘플로 바꾼다. 다른 회차는 그대로 둔다
+    let exams = ST.exams.filter(e => !SAMPLE_KEYS.includes(e.key));
+    for (const {key, students} of generateSampleExams()) {
+        exams = addExam(exams, {key, formatId: null, fileName: '', fileHash: '', students});
     }
-
-    // 평균(mean)과 표준편차(stdDev)를 이용해 점수 생성
-    const generateScore = (mean, stdDev, max) => {
-        let score = Math.round(mean + randn_bm() * stdDev);
-        if (score > max) score = max;
-        if (score < 0) score = 0;
-        return score;
-    };
-
-    // 100명의 랜덤 학생 생성
-    for (let i = 1; i <= 100; i++) {
-        const name = lastNames[Math.floor(Math.random() * lastNames.length)] +
-            firstNames[Math.floor(Math.random() * firstNames.length)];
-        const cls = String(Math.floor(Math.random() * 5) + 1); // 1반 ~ 5반
-
-        // 현실적인 점수 분포 설정 (과목별 평균 및 표준편차 조정)
-        const korRaw = generateScore(65, 15, 100);
-        const mathRaw = generateScore(55, 20, 100);
-        const engRaw = generateScore(60, 18, 100);
-        const inq1Raw = generateScore(30, 10, 50);
-        const inq2Raw = generateScore(30, 10, 50);
-        const histRaw = generateScore(35, 8, 50);
-        // 탐구 두 과목은 서로 다른 과목이다. 따로 뽑으면 같은 과목이 두 번 나온다
-        const inq1Subject = subjectsInq[Math.floor(Math.random() * subjectsInq.length)];
-        const inq2Choices = subjectsInq.filter(sub => sub !== inq1Subject);
-        const inq2Subject = inq2Choices[Math.floor(Math.random() * inq2Choices.length)];
-
-        dummy.push({
-            exam_year: String(new Date().getFullYear()),
-            grade_year: '3',
-            class: cls,
-            number: '0', // 정렬 후 재할당
-            name: name,
-            korean: {
-                subject: subjectsKor[Math.floor(Math.random() * subjectsKor.length)],
-                common_raw: null,
-                select_raw: null,
-                raw: korRaw,
-                std: Math.floor(korRaw * 0.8 + 50),
-                pct: Math.floor((korRaw / 100) * 100),
-                grade: getGrade(korRaw, 100)
-            },
-            math: {
-                subject: subjectsMath[Math.floor(Math.random() * subjectsMath.length)],
-                common_raw: null,
-                select_raw: null,
-                raw: mathRaw,
-                std: Math.floor(mathRaw * 0.9 + 40),
-                pct: Math.floor((mathRaw / 100) * 100),
-                grade: getGrade(mathRaw, 100)
-            },
-            english: {
-                raw: engRaw,
-                std: null,
-                pct: null,
-                grade: getGrade(engRaw, 100)
-            },
-            inquiry1: {
-                subject: inq1Subject,
-                raw: inq1Raw,
-                std: Math.floor(inq1Raw * 1.2 + 20),
-                pct: Math.floor((inq1Raw / 50) * 100),
-                grade: getGrade(inq1Raw, 50)
-            },
-            inquiry2: {
-                subject: inq2Subject,
-                raw: inq2Raw,
-                std: Math.floor(inq2Raw * 1.2 + 20),
-                pct: Math.floor((inq2Raw / 50) * 100),
-                grade: getGrade(inq2Raw, 50)
-            },
-            hist: {
-                raw: histRaw,
-                std: null,
-                pct: null,
-                grade: getGrade(histRaw, 50)
-            },
-            fl2: {
-                subject: '',
-                raw: null,
-                std: null,
-                pct: null,
-                grade: null
-            }
-        });
-    }
-
-    // 반, 이름 순으로 정렬 후 번호 1번부터 예쁘게 재할당
-    dummy.sort((a, b) => {
-        // 1. 반(class) 비교: parseInt의 한계를 벗어난 안전한 문자/숫자 혼합 정렬
-        const classA = String(a.class || "");
-        const classB = String(b.class || "");
-        if (classA !== classB) {
-            return classA.localeCompare(classB, undefined, {numeric: true});
-        }
-
-        // 2. 이름(name) 비교: null/undefined로 인한 TypeError 완벽 방어
-        const nameA = String(a.name || "");
-        const nameB = String(b.name || "");
-        return nameA.localeCompare(nameB);
-    });
-
-    let currentClass = '';
-    let numCounter = 1;
-    dummy.forEach(s => {
-        if (s.class !== currentClass) {
-            currentClass = s.class;
-            numCounter = 1;
-        }
-        s.number = String(numCounter++);
-    });
-
-    // 샘플은 「샘플」 회차 하나로 넣는다. 이미 있으면 그 회차를 새 샘플로 바꾼다
-    ST.exams = addExam(ST.exams.filter(e => e.key !== '샘플'), {key: '샘플', formatId: null, fileName: '', fileHash: '', students: dummy});
-    ST.activeExamKey = '샘플';
-    showToast('샘플 데이터 100명이 로드되었습니다.');
+    ST.exams = exams;
+    ST.activeExamKey = SAMPLE_KEYS[SAMPLE_KEYS.length - 1];
+    showToast(`샘플 ${SAMPLE_KEYS.length}회차(학생 ${SAMPLE_SIZE}명)를 불러왔습니다.`);
 
     afterExamsChanged();
     renderReport();
     renderExportCards();
     switchTab('report');
 }
+
 /* 회차 목록이 바뀐 뒤: 지금 회차가 없어졌으면 첫 회차를 고르고, 상단바를 다시 그린다.
  * 리포트는 부르는 쪽이 다시 그린다. 회차 레일은 ui/examRail.js 가 onExamsChanged 로 받는다 */
 let examsListener = () => {};

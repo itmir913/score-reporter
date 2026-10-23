@@ -205,9 +205,9 @@ describe('회차 이름', () => {
     it('이미 있는 회차 이름도 막는다', async () => {
         loadSampleData();
         await addUploads([fakeFile('샘플.xlsx', await xlsxOf(SCHEMAS.univcoop))]);
-        row().key = '샘플';
+        row().key = '6월 샘플';
         renderImports();
-        expect(document.getElementById('import-note').textContent).toBe('회차 이름 「샘플」이 겹칩니다.');
+        expect(document.getElementById('import-note').textContent).toBe('회차 이름 「6월 샘플」이 겹칩니다.');
     }, 20000);
 });
 

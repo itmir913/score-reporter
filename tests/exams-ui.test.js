@@ -47,20 +47,22 @@ describe('회차 레일', () => {
         ST.activeExamKey = null;
         ST.exams = [...ST.exams];
         main.loadSampleData();
+        // 9월 샘플만 남기고 그 이름을 바꿔 여러 회차를 만든다
+        ST.exams = ST.exams.filter(e => e.key !== '3월 샘플' && e.key !== '6월 샘플');
+        main.afterExamsChanged();
         rail.renderExamRail();
-        // 샘플 회차 이름을 바꿔 여러 회차를 만든다
         vi.spyOn(window, 'prompt').mockReturnValueOnce(key);
-        document.querySelector('#exam-rail [data-exam="샘플"] [aria-label="샘플 이름 바꾸기"]').click();
+        document.querySelector('#exam-rail [data-exam="9월 샘플"] [aria-label="9월 샘플 이름 바꾸기"]').click();
         vi.restoreAllMocks();
     };
 
     it('칩을 누르면 그 회차를 보고, ◀ ▶ 로 순서를 바꾼다', () => {
         put('사설');
         put('3');
-        // 이름을 바꿔도 자리는 그대로다(나중에 넣은 「샘플」 자리 = 끝)
-        expect(railKeys()).toEqual(['사설', '3']);
-        document.querySelector('#exam-rail [aria-label="3 앞으로"]').click();
+        // 이름을 바꿔도 자리는 그대로다(나중에 넣은 「9월 샘플」 자리 = 숫자로 시작해 「사설」 앞)
         expect(railKeys()).toEqual(['3', '사설']);
+        document.querySelector('#exam-rail [aria-label="사설 앞으로"]').click();
+        expect(railKeys()).toEqual(['사설', '3']);
         [...document.querySelectorAll('#exam-rail .exam-chip-name')].find(b => b.textContent === '3').click();
         expect(ST.activeExamKey).toBe('3');
         expect(document.getElementById('report-subtitle').innerText).toContain('「3」 회차');
@@ -111,7 +113,7 @@ describe('보고서 제목·종합 분석은 회차마다 따로', () => {
     const two = () => {
         ST.exams = [];
         main.loadSampleData();
-        const sample = ST.exams[0];
+        const sample = ST.exams.find(e => e.key === '9월 샘플');
         ST.exams = [{...sample, key: '5월', order: 0}, {...sample, key: '6월', order: 1}];
         ST.activeExamKey = '5월';
         main.afterExamsChanged();
