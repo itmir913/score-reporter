@@ -2,7 +2,7 @@ import {missingBasisMessage, noInquiryNote} from '../core/aggregate.js';
 import {labelMap} from '../report.js';
 /* 아래 마크업의 on* 속성이 부르는 함수는 모듈 스코프가 아니라 전역에서 찾는다.
  * src/main.js가 window에 올려두므로 여기서 import 하지 않는다. */
-import {escapeAttr, roundHalfUp, toFixedHalfUp} from '../utils.js';
+import {DASH, escapeAttr, roundHalfUp, toFixedHalfUp} from '../utils.js';
 import {numberLabel, studentIdxAttr} from './report-modal.js';
 
 /* ───────────────────────────────────────────
@@ -81,16 +81,16 @@ export function renderTopN(cache) {
                 data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" ${studentIdxAttr(s)}
                 data-action="row-click">
                 <td class="px-2 py-2 text-center font-bold text-slate-500">${rank}</td>
-                <td class="px-2 py-2 text-center">${escapeAttr(s.class) || '-'}</td>
-                <td class="px-2 py-2 text-center">${escapeAttr(numberLabel(s)) || '-'}</td>
-                <td class="px-2 py-2 text-center font-semibold text-slate-800 whitespace-nowrap">${escapeAttr(s.name) || '-'}</td>
+                <td class="px-2 py-2 text-center">${escapeAttr(s.class) || DASH}</td>
+                <td class="px-2 py-2 text-center">${escapeAttr(numberLabel(s)) || DASH}</td>
+                <td class="px-2 py-2 text-center font-semibold text-slate-800 whitespace-nowrap">${escapeAttr(s.name) || DASH}</td>
                 <td class="px-2 py-2 text-center font-bold text-blue-600 bg-blue-50/20">
                     ${displaySum}
                 </td>
-                <td class="px-1 py-2 text-center">${escapeAttr(s.korean?.subject) || '-'}</td>
-                <td class="px-1 py-2 text-center">${escapeAttr(s.math?.subject) || '-'}</td>
-                <td class="px-1 py-2 text-center">${escapeAttr(s.inquiry1?.subject) || '-'}</td>
-                <td class="px-1 py-2 text-center">${escapeAttr(s.inquiry2?.subject) || '-'}</td>
+                <td class="px-1 py-2 text-center">${escapeAttr(s.korean?.subject) || DASH}</td>
+                <td class="px-1 py-2 text-center">${escapeAttr(s.math?.subject) || DASH}</td>
+                <td class="px-1 py-2 text-center">${escapeAttr(s.inquiry1?.subject) || DASH}</td>
+                <td class="px-1 py-2 text-center">${escapeAttr(s.inquiry2?.subject) || DASH}</td>
             </tr>
         `;
     }).join('');

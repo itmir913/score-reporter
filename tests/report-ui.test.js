@@ -330,7 +330,7 @@ describe('반이 빈 양식의 번호 칸', () => {
         document.getElementById('top-n-count').value = 'all';
         document.getElementById('csat-top-n-count').value = 'all';
         renderAll();
-        expect(cells('#top20-tbody', 1)).toEqual(['-', '1']);
+        expect(cells('#top20-tbody', 1)).toEqual(['—', '1']);
         expect(cells('#top20-tbody', 2)).toEqual(['30105', '2']);
         expect(cells('#csat-school-tbody', 1)).toEqual(['', '1']);
         expect(cells('#csat-school-tbody', 2)).toEqual(['30105', '2']);
@@ -344,7 +344,7 @@ describe('반이 빈 양식의 번호 칸', () => {
         renderAll();
         modal.showSelectedSubjectStudents('kor', '화법과 작문');
         // 반이 비면 반 칸은 "반" 만 남기지 않고 - 이다
-        expect(cells('#bin-modal-tbody', 0)).toEqual(['-', '1반']);
+        expect(cells('#bin-modal-tbody', 0)).toEqual(['—', '1반']);
         expect(cells('#bin-modal-tbody', 1)).toEqual(['30105', '2번']);
         modal.showCsatStudents(2, 18);
         expect(cells('#csat-list-modal-tbody', 0)).toEqual(['30105', '1반 2번']);
@@ -355,10 +355,10 @@ describe('반이 빈 양식의 번호 칸', () => {
         ST.data = [student('다', '', '', 90)];
         renderAll();
         modal.showSelectedSubjectStudents('kor', '화법과 작문');
-        expect(cells('#bin-modal-tbody', 0)).toEqual(['-']);
-        expect(cells('#bin-modal-tbody', 1)).toEqual(['-']);
+        expect(cells('#bin-modal-tbody', 0)).toEqual(['—']);
+        expect(cells('#bin-modal-tbody', 1)).toEqual(['—']);
         modal.showCsatStudents(2, 18);
-        expect(cells('#csat-list-modal-tbody', 0)).toEqual(['-']);
+        expect(cells('#csat-list-modal-tbody', 0)).toEqual(['—']);
         modal.handleRowClick(document.querySelector('#top20-tbody tr'));
         expect(document.getElementById('modal-student-info').innerText).toBe('다 성적표');
         ST.data[0].number = '7';
@@ -379,7 +379,7 @@ describe('반이 빈 양식의 번호 칸', () => {
         open.mockRestore();
         const info = new DOMParser().parseFromString(html, 'text/html')
             .querySelector('table tbody tr').children;
-        expect(info[1].textContent).toBe('-');
+        expect(info[1].textContent).toBe('—');
         expect(info[2].textContent).toBe('30105');
     });
 });

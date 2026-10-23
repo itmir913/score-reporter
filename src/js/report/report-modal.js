@@ -123,8 +123,8 @@ export function showBinStudentsModal(label, students) {
         return `
             <tr class="hover:bg-blue-50 cursor-pointer transition-colors group"
                 data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" ${studentIdxAttr(s)} data-action="row-click">
-                <td class="border-b border-slate-200 p-3 text-slate-600">${String(s.class ?? '').trim() ? `${escapeAttr(s.class)}반` : '-'}</td>
-                <td class="border-b border-slate-200 p-3 text-slate-600">${showsStudentId(s) ? escapeAttr(s.student_id) : String(s.number ?? '').trim() ? `${escapeAttr(s.number)}번` : '-'}</td>
+                <td class="border-b border-slate-200 p-3 text-slate-600">${String(s.class ?? '').trim() ? `${escapeAttr(s.class)}반` : DASH}</td>
+                <td class="border-b border-slate-200 p-3 text-slate-600">${showsStudentId(s) ? escapeAttr(s.student_id) : String(s.number ?? '').trim() ? `${escapeAttr(s.number)}번` : DASH}</td>
                 <td class="border-b border-slate-200 p-3 font-bold text-slate-800">${escapeAttr(s.name)}</td>
                 <td class="border-b border-slate-200 p-3 text-blue-600 font-bold">
                     ${sum === null ? DASH : toFixedHalfUp(sum, 1)}
@@ -190,7 +190,7 @@ function _showStudent(s) {
         return `
             <tr class="hover:bg-slate-50">
                 <td class="border border-slate-300 p-2 bg-emerald-50 font-bold">${r.label}</td>
-                <td class="border border-slate-300 p-2">${escapeAttr(d.subject) || '-'}</td>
+                <td class="border border-slate-300 p-2">${escapeAttr(d.subject) || DASH}</td>
                 <td class="border border-slate-300 p-2 font-bold">${totalRaw}</td>
                 <td class="border border-slate-300 p-2">${isAbs ? DASH : escapeAttr(d.std ?? DASH)}</td>
                 <td class="border border-slate-300 p-2">${isAbs ? DASH : escapeAttr(d.pct ?? DASH)}</td>
@@ -266,10 +266,10 @@ export function showCsatStudents(n, targetSum) {
             return `
                 <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer group"
                     data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" ${studentIdxAttr(s)} data-action="row-click">
-                    <td class="border border-slate-300 p-3 text-slate-700">${escapeAttr(classNumberText(s)) || '-'}</td>
+                    <td class="border border-slate-300 p-3 text-slate-700">${escapeAttr(classNumberText(s)) || DASH}</td>
                     <td class="border border-slate-300 p-3 font-bold text-slate-800">${escapeAttr(s.name) || ''}</td>
                     <td class="border border-slate-300 p-3 text-blue-600 font-bold">${actualSum}</td>
-                    <td class="border border-slate-300 p-3 text-blue-600 font-bold">${escapeAttr(actualSubj || '-')}</td>
+                    <td class="border border-slate-300 p-3 text-blue-600 font-bold">${escapeAttr(actualSubj || DASH)}</td>
                 </tr>
             `;
         }).join('');
@@ -315,13 +315,13 @@ export function printStudentDetail() {
     const fmtNum = (v) => (typeof v === 'number') ? String(v) : DASH;
     const fmtSubj = (subj) => {
         const d = s[subj];
-        return (d && d.subject) ? escapeAttr(d.subject) : '-';
+        return (d && d.subject) ? escapeAttr(d.subject) : DASH;
     };
 
     // 제2외국어 존재 여부
     const hasFl2 = s.fl2 && (s.fl2.subject || typeof s.fl2.raw === 'number' || typeof s.fl2.grade === 'number');
 
-    const fl2SubjCell  = hasFl2 ? fmtSubj('fl2') : '-';
+    const fl2SubjCell  = hasFl2 ? fmtSubj('fl2') : DASH;
     const fl2RawCell   = hasFl2 ? fmtRaw('fl2')  : DASH;
     const fl2DashCell = `<td>${DASH}</td>`;
     const fl2GradeCell = hasFl2 ? fmtNum(s.fl2?.grade) : DASH;
@@ -369,9 +369,9 @@ export function printStudentDetail() {
   </thead>
   <tbody>
     <tr>
-      <td>${escapeAttr(s.grade_year) || '-'}</td>
-      <td>${escapeAttr(s.class) || '-'}</td>
-      <td>${escapeAttr(numberLabel(s)) || '-'}</td>
+      <td>${escapeAttr(s.grade_year) || DASH}</td>
+      <td>${escapeAttr(s.class) || DASH}</td>
+      <td>${escapeAttr(numberLabel(s)) || DASH}</td>
       <td style="font-weight:bold;font-size:14px;">${escapeAttr(s.name)}</td>
     </tr>
   </tbody>
