@@ -419,7 +419,7 @@ export function parseData() {
         const sameInq = ST.data.filter(sameInquirySubject).length;
         const msg = [`${ST.data.length}명의 데이터를 파싱했습니다.`];
         // 같은 과목이 두 번 적힌 것은 자료 중복이다. 합산·통계에는 탐구1 값만 쓴다(탐구평균 규칙)
-        if (sameInq > 0) msg.push(`${sameInq}명의 탐구1·탐구2 과목이 같습니다. 합산에는 탐구1 값만 씁니다. 원본 파일을 확인해 주세요.`);
+        if (sameInq > 0) msg.push(`탐구 과목 중복 ${sameInq}명: 탐구1·탐구2 과목이 같습니다. 합산에는 탐구1 값만 씁니다. 원본 파일을 확인해 주세요.`);
         if (noRaw) msg.push('원점수가 없는 파일이라 표준점수 기준으로 보여 줍니다.');
         showToast(msg.join(' '), sameInq > 0);
         document.getElementById('badge-text').innerText = `${ST.data.length}명 로드됨`;

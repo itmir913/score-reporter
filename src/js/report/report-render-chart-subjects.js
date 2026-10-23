@@ -19,6 +19,7 @@ export function renderSubjectsCharts() {
         note.className = 'col-span-full p-8 text-slate-400 text-center';
         note.textContent = missingBasisMessage(chartBasis);
         grid.appendChild(note);
+        // 빠져나가지 않는다: 아래에서 이전 차트를 정리해야 하고, 영어·한국사 등급 차트는 그대로 그린다
     }
 
     if (!ST.charts) {
