@@ -85,7 +85,7 @@ export function exceljsTo2DArray(ws) {
 
 // 탭 전환 로직
 export function switchTab(tabId) {
-    ['upload', 'report', 'export'].forEach(t => {
+    ['upload', 'report', 'trend', 'export'].forEach(t => {
         document.getElementById(`tab-${t}`).classList.add('hidden');
         document.querySelector(`.tab-btn[data-tab="${t}"]`).classList.remove('active');
     });
@@ -139,9 +139,15 @@ export async function addUploads(files) {
     if (input) input.value = '';
     showToast('파일을 읽는 중입니다…');
     const {rows, skipped} = await prepareUploads(files);
+    // 표에 있던 것뿐 아니라 이번 묶음 안의 같은 파일(예: a.xlsx 와 그것을 담은 zip)도 한 번만 넣는다
     const known = new Set(IMPORT.rows.map(r => r.hash));
-    IMPORT.rows.push(...rows.filter(r => !known.has(r.hash)));
-    IMPORT.skipped = skipped;
+    for (const r of rows) {
+        if (known.has(r.hash)) continue;
+        known.add(r.hash);
+        IMPORT.rows.push(r);
+    }
+    // 앞 묶음의 건너뛴 안내를 덮지 않고 잇는다
+    IMPORT.skipped = [...IMPORT.skipped, ...skipped];
     renderImports();
     showToast(rows.length ? `${rows.length}개 파일을 표에 올렸습니다. 확인한 뒤 「불러오기」를 누르세요.` : '읽을 수 있는 엑셀 파일이 없습니다.', !rows.length);
 }
