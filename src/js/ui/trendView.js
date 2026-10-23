@@ -26,7 +26,11 @@ function drawLine(key, canvas, labels, datasets) {
     ST.charts[key] = new Chart(canvas.getContext('2d'), {
         type: 'line',
         data: {labels, datasets: datasets.map(d => ({...d, spanGaps: false, tension: 0.2, pointRadius: 4}))},
-        options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {position: 'bottom'}}, scales: {y: {beginAtZero: false}}},
+        options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {position: 'bottom'}}, scales: {
+            // 회차가 하나면 점이 왼쪽 끝에 붙지 않게 가운데에 찍는다
+            x: {offset: labels.length === 1},
+            y: {beginAtZero: false},
+        }},
     });
 }
 
