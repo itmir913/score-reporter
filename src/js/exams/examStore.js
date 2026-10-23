@@ -21,19 +21,11 @@ export function hasExamKey(exams, key) {
     return exams.some(e => normalizeExamKey(e.key) === k);
 }
 
-/* 처음 자리를 정하는 순위: YYYY-MM → 숫자(월) → 그 밖의 문자열(넣은 순서대로 끝에).
- * 연월끼리, 숫자끼리만 크기를 비교한다. 서로 다른 종류의 앞뒤는 사람이 정한다(옮기기) */
-const YEAR_MONTH = /^(\d{4})[-./](\d{1,2})$/;
-const NUMBER = /^(\d+)\s*월?$/;
-
-export function keyRank(key) {
-    const k = normalizeExamKey(key);
-    const ym = k.match(YEAR_MONTH);
-    if (ym) return [0, Number(ym[1]) * 100 + Number(ym[2])];
-    const num = k.match(NUMBER);
-    if (num) return [1, Number(num[1])];
-    return [2, null];
-}
+/* 처음 자리는 회차 이름 전체를 자연 정렬(숫자 부분은 크기로, 나머지는 글자순)해 정한다.
+ * 숫자를 따로 꺼내 비교하지 않는다. 1월 → 2월 → 9월 → 10월, 2026-03 → 2026-04 가 되고,
+ * 「3학년_5월」처럼 숫자가 여럿인 이름도 이름 그대로 비교한다 */
+const collator = new Intl.Collator('ko', {numeric: true});
+export const compareExamKeys = (a, b) => collator.compare(normalizeExamKey(a), normalizeExamKey(b));
 
 const reindex = (list) => list.map((e, i) => ({...e, order: i}));
 
@@ -44,8 +36,7 @@ export function sortedExams(exams) {
 
 /**
  * 회차를 더한다. 키가 비었거나 이미 있으면 Error.
- * 자리: 같은 종류(연월끼리, 숫자끼리)에서 키가 더 큰 첫 회차 앞. 없으면 그 종류의 마지막 뒤,
- * 그 종류가 없으면 맨 끝. 사람이 이미 바꿔 둔 다른 회차들의 순서는 건드리지 않는다.
+ * 자리: 자연 정렬로 키가 더 작은 마지막 회차 바로 뒤(없으면 맨 앞). 사람이 바꿔 둔 다른 회차들의 순서는 건드리지 않는다.
  */
 export function addExam(exams, exam) {
     const key = normalizeExamKey(exam.key);
@@ -53,14 +44,9 @@ export function addExam(exams, exam) {
     if (hasExamKey(exams, key)) throw new Error(`「${key}」 회차가 이미 있습니다. 다른 이름을 쓰세요(예: ${key}1, ${key}2).`);
 
     const list = sortedExams(exams);
-    const [kind, value] = keyRank(key);
-    let at = list.length;
-    if (kind !== 2) {
-        const sameKind = list.map((e, i) => ({i, r: keyRank(e.key)})).filter(({r}) => r[0] === kind);
-        const after = sameKind.find(({r}) => r[1] > value);
-        if (after) at = after.i;
-        else if (sameKind.length) at = sameKind[sameKind.length - 1].i + 1;
-    }
+    // 키가 더 작은 마지막 회차 바로 뒤. 사람이 앞쪽으로 옮겨 둔 회차가 있어도 그 자리를 밀어내지 않는다
+    let at = 0;
+    list.forEach((e, i) => { if (compareExamKeys(e.key, key) < 0) at = i + 1; });
     list.splice(at, 0, {...exam, key});
     return reindex(list);
 }

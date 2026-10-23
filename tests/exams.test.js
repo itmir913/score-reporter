@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import {
-    addExam, fileHashHex, keyRank, moveExam, removeExam, renameExam, sortedExams, suggestExamKey,
+    addExam, compareExamKeys, fileHashHex, moveExam, removeExam, renameExam, sortedExams, suggestExamKey,
 } from '../src/js/exams/examStore.js';
 import {identityKeys, linkStudents} from '../src/js/exams/identity.js';
 
@@ -13,7 +13,7 @@ describe('회차 목록', () => {
         expect(keys(build('2026-05', '2026-03', '2026-04'))).toEqual(['2026-03', '2026-04', '2026-05']);
     });
 
-    it('숫자만 쓴 키(3, 4)도 크기순이고, 그 밖의 키(사설)는 넣은 순서대로 끝에 붙는다', () => {
+    it('숫자만 쓴 키(3, 4)도 크기순이고, 글자로 된 키(사설)는 숫자 뒤에 온다', () => {
         expect(keys(build('4', '사설', '3', '10'))).toEqual(['3', '4', '10', '사설']);
     });
 
@@ -49,10 +49,9 @@ describe('회차 목록', () => {
         expect(sortedExams(list).map(e => [e.key, e.order])).toEqual([['4월', 0], ['5', 1]]);
     });
 
-    it('keyRank', () => {
-        expect(keyRank('2026.3')).toEqual([0, 202603]);
-        expect(keyRank('3')).toEqual([1, 3]);
-        expect(keyRank('사설')).toEqual([2, null]);
+    it('회차 이름 전체를 자연 정렬한다(숫자를 따로 꺼내지 않는다)', () => {
+        const sorted = ['3학년_10월', '사설', '3학년_9월', '2026-04', '2026-03'].sort(compareExamKeys);
+        expect(sorted).toEqual(['3학년_9월', '3학년_10월', '2026-03', '2026-04', '사설']);
     });
 
     it.each([
