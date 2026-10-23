@@ -405,22 +405,21 @@ describe('원점수가 없는 파일', () => {
     };
     const toast = () => document.getElementById('toast-msg').innerText;
 
-    it('표준점수 기준으로 바꾸고 한 번 알린다', () => {
+    it('기준을 바꾸지 않고 원점수가 없다고 안내한다', () => {
         report.setGlobalBasis('raw');
         load([row()]);
-        expect(report.globalReportBasis).toBe('std');
-        expect(document.getElementById('btn-basis-std').className).toContain('font-bold');
-        expect(toast()).toBe('1명의 데이터를 파싱했습니다. 원점수가 없는 파일이라 표준점수 기준으로 보여 줍니다.');
+        expect(report.globalReportBasis).toBe('raw');
+        expect(document.getElementById('btn-basis-raw').className).toContain('font-bold');
+        expect(toast()).toBe('1명의 데이터를 파싱했습니다.');
         expect(document.getElementById('toast-icon').className).toContain('text-green-400');
-        report.setGlobalBasis('raw');
+        expect(document.getElementById('basis-missing-note').textContent).toBe('이 회차에는 원점수가 없어 표시할 수 없습니다.');
     });
 
     it('탐구 과목이 같다는 경고와 함께 알린다', () => {
         report.setGlobalBasis('raw');
         load([row({inq2: '물리학Ⅰ'})]);
-        expect(report.globalReportBasis).toBe('std');
-        expect(toast()).toBe('1명의 데이터를 파싱했습니다. 탐구 과목 중복 1명: 탐구1·탐구2 과목이 같습니다. 합산에는 탐구1 값만 씁니다. 원본 파일을 확인해 주세요. ' +
-            '원점수가 없는 파일이라 표준점수 기준으로 보여 줍니다.');
+        expect(report.globalReportBasis).toBe('raw');
+        expect(toast()).toBe('1명의 데이터를 파싱했습니다. 탐구 과목 중복 1명: 탐구1·탐구2 과목이 같습니다. 합산에는 탐구1 값만 씁니다. 원본 파일을 확인해 주세요.');
         expect(document.getElementById('toast-icon').className).toContain('text-red-400');
         report.setGlobalBasis('raw');
     });

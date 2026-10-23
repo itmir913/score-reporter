@@ -4,7 +4,7 @@ import {addExam, fileHashHex, normalizeExamKey, suggestExamKey} from './exams/ex
 import {expandUploads, isSheetName, loadWorkbook} from './ingest/files.js';
 import {countOutOfRange, matchFormats} from './ingest/formatMatch.js';
 import {GradeDataParser} from './parser.js';
-import {renderReport, setGlobalBasis} from './report.js';
+import {renderReport} from './report.js';
 import {FIELD_LABELS, SCHEMAS} from './schema.js';
 import {escapeAttr, sameInquirySubject} from './utils.js';
 import {EncryptedLegacyXlsError, WrongPasswordError} from './xlsx-decrypt.js';
@@ -469,18 +469,14 @@ export function parseData() {
         }
         ST.activeExamKey = key;
 
-        // 원점수 열이 비어 있는 파일(대교협 실채점 등)은 원점수 기준이면 표·분포가 모두 빈다.
-        // 국어·수학·탐구 원점수가 아무에게도 없으면 표준점수 기준으로 바꿔 보여 준다.
-        // 원점수가 있으면 사용자가 고른 기준을 그대로 둔다
-        const noRaw = ST.data.length > 0 && !ST.data.some(s =>
-            ['korean', 'math', 'inquiry1', 'inquiry2'].some(subj => Number.isFinite(s[subj]?.raw)));
+        // 기준(원·표·백)은 자동으로 바꾸지 않는다. 처음에는 원점수이고, 이 회차에 고른 기준의 값이
+        // 없으면 보고서가 「이 회차에는 …가 없어 표시할 수 없습니다」를 띄운다(회차를 바꿀 때와 같은 규칙)
 
         // 알림은 한 번에 하나만 보인다. 안내와 경고를 성공 문구에 합치고, 경고가 있으면 오류 알림으로 띄운다
         const sameInq = ST.data.filter(sameInquirySubject).length;
         const msg = [`${ST.data.length}명의 데이터를 파싱했습니다.`];
         // 같은 과목이 두 번 적힌 것은 자료 중복이다. 합산·통계에는 탐구1 값만 쓴다(탐구평균 규칙)
         if (sameInq > 0) msg.push(`탐구 과목 중복 ${sameInq}명: 탐구1·탐구2 과목이 같습니다. 합산에는 탐구1 값만 씁니다. 원본 파일을 확인해 주세요.`);
-        if (noRaw) msg.push('원점수가 없는 파일이라 표준점수 기준으로 보여 줍니다.');
         // 양식이 맞아도 열이 엉뚱하면 값이 범위를 벗어난다(백분위 0~100, 등급 1~9, 원점수 만점 이하)
         const outOfRange = countOutOfRange(ST.data);
         if (outOfRange > 0) msg.push(`범위를 벗어난 점수가 ${outOfRange}개 있습니다. 양식이 맞는지 미리보기로 확인해 주세요.`);
@@ -488,7 +484,6 @@ export function parseData() {
 
         afterExamsChanged();
         renderReport();
-        if (noRaw) setGlobalBasis('std'); // 버튼 모양도 함께 바꾼다
         renderExportCards();
         // 함께 올린 파일이 남았으면 다음 파일을 확인한다
         clearFile();
