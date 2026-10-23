@@ -4,9 +4,9 @@
 
 ## 스키마는 사용자만 바꾼다
 
-`src/js/schema.js`의 `SCHEMAS`(양식별 열 매핑, `headerRows`, `exportHeaders`, `customGetters`)와 `FIELD_LABELS`는 코드 소유자만 바꾼다.
+`src/js/schema.js`의 `SCHEMAS`(양식별 열 매핑, `headerRows`, `exportHeaders`, `customGetters`)와 `FIELD_LABELS`는 코드 소유자만 바꾼다. 에이전트는 버그를 찾더라도 스키마를 직접 고치지 말고 소유자에게 보고한다. 소유자가 대화에서 특정 변경을 명시적으로 승인한 경우에만 그 변경을 한다.
 
-`schema.js`는 양식 데이터 구조의 유일한 정본이다. 양식 자동 매칭의 지문은 `exportHeaders`에서 쓸 때마다 계산하고 따로 저장하지 않는다. 같은 사실을 다른 파일(JSON 프로파일 등)에 두 번 적지 않는다. 에이전트는 버그를 찾더라도 스키마를 직접 고치지 말고 소유자에게 보고한다. 소유자가 대화에서 특정 변경을 명시적으로 승인한 경우에만 그 변경을 한다.
+`schema.js`는 양식 데이터 구조의 유일한 정본이다. 양식 자동 매칭의 지문은 `exportHeaders`에서 쓸 때마다 계산하고 따로 저장하지 않는다. 같은 사실을 다른 파일(JSON 프로파일 등)에 두 번 적지 않는다.
 
 ## 점수 해석 원칙
 

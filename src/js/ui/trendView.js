@@ -14,7 +14,12 @@ import {clear, el} from './dom.js';
 ─────────────────────────────────────────── */
 
 const fmt = (v, d = 1) => (Number.isFinite(v) ? toFixedHalfUp(v, d) : DASH);
-let chosen = null; // 고른 학생(linkStudents 의 한 명)
+/* 고른 학생. linkStudents 의 결과는 그릴 때마다 새로 만들어지고, 회차 이름·순서가 바뀌면 키도 바뀐다.
+ * 그래서 사람이 아니라 그 사람의 학생 레코드(객체)들을 기억해 두고, 다시 그릴 때 그 레코드를 가진 사람을 찾는다 */
+let chosenRecords = null;
+
+const recordsOf = (p, exams) => new Set(exams.flatMap(e => (p.entries[e.key] === undefined ? [] : [e.students[p.entries[e.key]]])));
+const choose = (p, exams) => { chosenRecords = p ? recordsOf(p, exams) : null; };
 
 function drawLine(key, canvas, labels, datasets) {
     ST.charts[key]?.destroy();
@@ -71,7 +76,9 @@ export function renderTrend() {
 
     // ── 학생 추이 ──
     const {persons, conflicts} = linkStudents(exams);
-    if (chosen && !persons.some(p => samePerson(p, chosen))) chosen = null;
+    const chosen = chosenRecords ? persons.find(p => [...recordsOf(p, exams)].some(r => chosenRecords.has(r))) ?? null : null;
+    if (chosen) choose(chosen, exams);
+    else chosenRecords = null;
     const search = el('input', {class: 'field', attrs: {type: 'search', placeholder: '이름·반·번호로 찾기', 'aria-label': '학생 찾기', autocomplete: 'off'}});
     const results = el('div', {class: 'mt-2 flex flex-wrap gap-2'});
     const detail = el('div', {class: 'mt-4'});
@@ -82,8 +89,8 @@ export function renderTrend() {
         const found = persons.filter(p => describe(p, exams).replace(/\s+/g, '').includes(q)).slice(0, 30);
         if (!found.length) results.append(el('span', {class: 'text-base text-ink-soft', text: '찾는 학생이 없습니다.'}));
         found.forEach(p => results.append(el('button', {
-            class: `chip ${chosen && samePerson(p, chosen) ? 'ring-2 ring-brand' : ''}`, text: describe(p, exams), attrs: {type: 'button'},
-            on: {click: () => { chosen = p; renderTrend(); }},
+            class: `chip ${p === chosen ? 'ring-2 ring-brand' : ''}`, text: describe(p, exams), attrs: {type: 'button'},
+            on: {click: () => { choose(p, exams); renderTrend(); }},
         })));
     };
     search.addEventListener('input', showResults);
@@ -92,7 +99,7 @@ export function renderTrend() {
         el('h3', {class: 'text-xl font-bold', text: '학생 추이'}),
         el('p', {class: 'mt-1 text-base text-ink-soft', text: '같은 학년 안에서 학번, 없으면 학년·반·번호로 회차를 잇습니다. 이름이 다르거나 모호하면 잇지 않습니다.'}),
         conflicts.length
-            ? el('p', {class: 'mt-2 rounded-lg bg-wait-soft px-4 py-2 text-base text-wait', text: `회차 사이를 잇지 못한 학생이 ${new Set(conflicts.map(c => `${c.examKey}|${c.index}`)).size}명 있습니다. 그 학생은 회차마다 따로 나옵니다.`})
+            ? el('p', {class: 'mt-2 rounded-lg bg-wait-soft px-4 py-2 text-base text-wait', text: `회차 사이를 잇지 못한 기록이 ${new Set(conflicts.map(c => `${c.examKey}|${c.index}`)).size}건(회차별) 있습니다. 그 학생은 회차마다 따로 나옵니다.`})
             : null,
         el('div', {class: 'mt-3'}, [search]),
         results,
@@ -102,7 +109,6 @@ export function renderTrend() {
     if (chosen) renderPerson(detail, chosen, exams, basis, options, keys);
 }
 
-const samePerson = (a, b) => JSON.stringify(a.entries) === JSON.stringify(b.entries);
 
 /** 학생을 가리키는 글: 이름 · 반-번호(또는 학번) · 몇 회차 */
 function describe(p, exams) {
@@ -140,5 +146,5 @@ function renderPerson(root, person, exams, basis, options, keys) {
 /** 성적표 모달 등에서: 이 학생(지금 회차의 위치)의 추이를 연다 */
 export function choosePersonAt(examKey, index) {
     const {persons} = linkStudents(ST.exams);
-    chosen = persons.find(p => p.entries[examKey] === index) ?? null;
+    choose(persons.find(p => p.entries[examKey] === index) ?? null, ST.exams);
 }

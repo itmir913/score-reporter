@@ -100,4 +100,13 @@ describe('추이 화면', () => {
         expect(document.querySelector('#trend-student').textContent).toContain('가 · 1반 1번 · 3회');
         expect(document.getElementById('tab-trend').classList.contains('hidden')).toBe(false);
     });
+
+    it('학생을 고른 뒤 회차 순서·이름을 바꿔도 그 학생이 남는다', async () => {
+        const {moveExam, renameExam} = await import('../src/js/exams/examStore.js');
+        view.choosePersonAt('3', 0);
+        view.renderTrend();
+        ST.exams = moveExam(renameExam(ST.exams, '3', '2026-03'), '사설', -1);
+        view.renderTrend();
+        expect(document.querySelector('#trend-student p.text-lg')?.textContent).toContain('가 · 1반 1번 · 3회');
+    });
 });
