@@ -150,6 +150,9 @@ export function commitRows(rows, exams) {
 
 /* ── 화면: 「파일 추가」 탭 안의 표 ── */
 
+/* 표 안의 입력란·드롭다운은 단추(btn-sm)와 같은 높이 하나로 둔다. 줄마다 높이가 다르면 칸이 들쭉날쭉해 보인다 */
+const CELL_FIELD = 'field min-h-9 py-0';
+
 const tag = (kind, text) => el('span', {class: `tag tag-${kind} whitespace-nowrap`, text});
 
 /** 앞 5줄 미리보기. 헤더 줄은 노랗게, 양식이 읽는 열은 이름을 위에 적는다 */
@@ -202,7 +205,7 @@ export function renderImportTable(root, state, options) {
     const locked = rows.filter(r => r.status === 'locked');
 
     if (locked.length > 1) {
-        const all = el('input', {class: 'field', attrs: {type: 'password', placeholder: '같은 비밀번호를 쓰는 파일에 한 번에', autocomplete: 'off', 'aria-label': '모든 비밀번호 파일 비밀번호'}});
+        const all = el('input', {class: 'field', attrs: {type: 'password', placeholder: '같은 비밀번호를 쓰는 파일에 한 번에', autocomplete: 'off', 'aria-label': '여러 파일 공통 비밀번호'}});
         const go = async () => {
             if (state.unlocking) return;
             state.unlocking = true;
@@ -249,7 +252,7 @@ export function renderImportTable(root, state, options) {
 
         let controls;
         if (row.status === 'locked') {
-            const input = el('input', {class: 'field min-h-9', attrs: {type: 'password', placeholder: '비밀번호', autocomplete: 'off', 'aria-label': `${row.name} 비밀번호`}});
+            const input = el('input', {class: CELL_FIELD, attrs: {type: 'password', placeholder: '비밀번호', autocomplete: 'off', 'aria-label': `${row.name} 비밀번호`}});
             const go = async () => {
                 if (row.busy) return;
                 await unlock(row, input.value);
@@ -267,10 +270,10 @@ export function renderImportTable(root, state, options) {
             const sheetNames = row.wb.worksheets.map(ws => ws.name);
             controls = [
                 td([el('input', {
-                    class: 'field', attrs: {value: row.key, placeholder: '예: 2026-03, 3, 사설', autocomplete: 'off', 'aria-label': `${row.name} 회차 이름`},
+                    class: CELL_FIELD, attrs: {value: row.key, placeholder: '예: 2026-03, 3, 사설', autocomplete: 'off', 'aria-label': `${row.name} 회차 이름`},
                     on: {change: (e) => { row.key = e.target.value; redraw(); }},
                 })], 'min-w-40'),
-                td([el('select', {class: 'field', attrs: {'aria-label': `${row.name} 진학 프로그램 양식`}, on: {change: (e) => { row.formatId = e.target.value || null; redraw(); }}}, [
+                td([el('select', {class: CELL_FIELD, attrs: {'aria-label': `${row.name} 진학 프로그램 양식`}, on: {change: (e) => { row.formatId = e.target.value || null; redraw(); }}}, [
                     // 안내용 첫 항목은 고를 수 없다. 고를 수 있으면 인식된 양식이 빈 값으로 풀려 버린다
                     el('option', {text: '양식 선택', attrs: {value: '', disabled: true, selected: !row.formatId}}),
                     ...Object.values(SCHEMAS).map(s => el('option', {
@@ -278,7 +281,7 @@ export function renderImportTable(root, state, options) {
                     })),
                 ])], 'min-w-36'),
                 td([sheetNames.length > 1
-                    ? el('select', {class: 'field', attrs: {'aria-label': `${row.name} 시트`}, on: {change: (e) => { selectSheet(row, e.target.value); redraw(); }}},
+                    ? el('select', {class: CELL_FIELD, attrs: {'aria-label': `${row.name} 시트`}, on: {change: (e) => { selectSheet(row, e.target.value); redraw(); }}},
                         sheetNames.map(n => el('option', {text: n, attrs: {value: n, selected: n === row.sheet}})))
                     : el('span', {class: 'text-ink-soft', text: row.sheet})], 'min-w-28'),
                 td([el('button', {
