@@ -121,7 +121,7 @@ export function blockers(rows, existing = []) {
     for (const r of chosen) {
         if (r.status === 'locked') problems.push(`${r.name}: 비밀번호를 넣어 주세요.`);
         else if (r.status !== 'ready') problems.push(`${r.name}: 읽을 수 없는 파일입니다. 빼고 불러오세요.`);
-        else if (!r.formatId) problems.push(`${r.name}: 양식을 고르세요.`);
+        else if (!r.formatId) problems.push(`${r.name}: 진학 프로그램을 선택하세요.`);
         const key = normalizeExamKey(r.key);
         if (!key) problems.push(`${r.name}: 회차 이름을 넣어 주세요.`);
         else if (keys.has(key) || existing.some(e => normalizeExamKey(e.key) === key)) problems.push(`회차 이름 「${key}」이 겹칩니다.`);
@@ -243,8 +243,8 @@ export function renderImportTable(root, state, options) {
         const dupFile = existing().some(e => e.fileHash && e.fileHash === row.hash);
         const statusTag = row.status === 'locked' ? tag('wait', '암호 필요')
             : row.status === 'error' ? tag('fail', '읽을 수 없음')
-                : row.autoId ? tag('pass', '양식 인식')
-                    : row.candidates.length > 1 ? tag('wait', '후보 여럿') : tag('wait', '양식 미확인');
+                : row.autoId ? tag('pass', '자동 인식')
+                    : row.candidates.length > 1 ? tag('wait', '후보 여럿') : tag('wait', '확인 필요');
 
         let controls;
         if (row.status === 'locked') {
@@ -266,9 +266,9 @@ export function renderImportTable(root, state, options) {
                     class: 'field', attrs: {value: row.key, placeholder: '예: 2026-03, 3, 사설', autocomplete: 'off', 'aria-label': `${row.name} 회차 이름`},
                     on: {change: (e) => { row.key = e.target.value; redraw(); }},
                 })], 'min-w-40'),
-                td([el('select', {class: 'field', attrs: {'aria-label': `${row.name} 양식`}, on: {change: (e) => { row.formatId = e.target.value || null; redraw(); }}}, [
+                td([el('select', {class: 'field', attrs: {'aria-label': `${row.name} 진학 프로그램`}, on: {change: (e) => { row.formatId = e.target.value || null; redraw(); }}}, [
                     // 안내용 첫 항목은 고를 수 없다. 고를 수 있으면 인식된 양식이 빈 값으로 풀려 버린다
-                    el('option', {text: '양식 선택', attrs: {value: '', disabled: true, selected: !row.formatId}}),
+                    el('option', {text: '진학 프로그램 선택', attrs: {value: '', disabled: true, selected: !row.formatId}}),
                     ...Object.values(SCHEMAS).map(s => el('option', {
                         text: `${s.label}${s.id === row.autoId ? ' ✓' : ''}`, attrs: {value: s.id, selected: s.id === row.formatId},
                     })),
@@ -317,7 +317,7 @@ export function renderImportTable(root, state, options) {
 
     root.append(el('div', {class: 'card overflow-x-auto'}, [
         el('table', {class: 'w-full text-base'}, [
-            el('thead', {}, [el('tr', {}, [th(''), th('파일'), th('상태'), th('회차 이름'), th('양식'), th('시트'), th('미리보기'), th('')])]),
+            el('thead', {}, [el('tr', {}, [th(''), th('파일'), th('상태'), th('회차 이름'), th('진학 프로그램'), th('시트'), th('미리보기'), th('')])]),
             body,
         ]),
     ]));

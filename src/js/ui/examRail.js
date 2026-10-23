@@ -17,7 +17,8 @@ export function renderExamRail() {
     const list = sortedExams(ST.exams);
     clear(rail);
     if (!list.length) {
-        rail.append(el('span', {class: 'text-base text-ink-soft', text: '아직 불러온 회차가 없습니다'}));
+        // 좁은 화면에서 줄이 바뀌어 상단바 밖으로 넘치지 않게 한 줄로 두고 말줄임한다
+        rail.append(el('span', {class: 'truncate whitespace-nowrap text-base text-ink-soft', text: '불러온 회차 없음'}));
         return;
     }
     list.forEach((exam, i) => {

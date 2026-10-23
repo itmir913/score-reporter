@@ -139,39 +139,7 @@
     display: flex !important;
 }
 
-/* ─── 스크롤바 및 태그 (기존 유지, 세련되게) ─── */
-::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-}
-
-::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
-
-.custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-    background: #f8fafc;
-    border-radius: 10px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 10px;
-}
+/* 스크롤바는 브라우저 기본 모양을 쓰고, 자리만 늘 비워 둔다(tailwind.css 의 scroll-stable, admission-outcomes 와 같다) */
 
 .ftag {
     display: inline-flex;

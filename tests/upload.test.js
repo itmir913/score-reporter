@@ -123,7 +123,7 @@ describe('감사 반영', () => {
 
     it('양식을 잘못 고르면 불러오기 전에 그 줄에 범위 밖 점수를 알린다', async () => {
         await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop))]);
-        const sel = document.querySelector('[aria-label="3월.xlsx 양식"]');
+        const sel = document.querySelector('[aria-label="3월.xlsx 진학 프로그램"]');
         sel.value = 'kkumkugo';
         sel.dispatchEvent(new Event('change'));
         expect(tableText()).toMatch(/범위 밖 점수 \d+개/);
@@ -131,11 +131,11 @@ describe('감사 반영', () => {
 
     it('칸을 바꿔 표를 다시 그려도 포커스가 그 칸에 남는다', async () => {
         await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop))]);
-        const sel = document.querySelector('[aria-label="3월.xlsx 양식"]');
+        const sel = document.querySelector('[aria-label="3월.xlsx 진학 프로그램"]');
         sel.focus();
         sel.value = 'kkumkugo';
         sel.dispatchEvent(new Event('change'));
-        expect(document.activeElement.getAttribute('aria-label')).toBe('3월.xlsx 양식');
+        expect(document.activeElement.getAttribute('aria-label')).toBe('3월.xlsx 진학 프로그램');
         expect(document.activeElement).not.toBe(sel); // 새로 그린 칸이다
     });
 
@@ -151,10 +151,10 @@ describe('양식', () => {
         headers[1][5] = '변경';
         await addUploads([fakeFile('3월.xlsx', new Uint8Array(await buildWorkbook({...SCHEMAS.univcoop, exportHeaders: headers}).xlsx.writeBuffer()))]);
         expect(row().formatId).toBeNull();
-        expect(tableText()).toContain('양식 미확인');
+        expect(tableText()).toContain('확인 필요');
         expect(document.getElementById('import-commit').disabled).toBe(true);
-        expect(document.getElementById('import-note').textContent).toBe('3월.xlsx: 양식을 고르세요.');
-        const sel = document.querySelector('[aria-label="3월.xlsx 양식"]');
+        expect(document.getElementById('import-note').textContent).toBe('3월.xlsx: 진학 프로그램을 선택하세요.');
+        const sel = document.querySelector('[aria-label="3월.xlsx 진학 프로그램"]');
         sel.value = 'univcoop';
         sel.dispatchEvent(new Event('change'));
         expect(row().formatId).toBe('univcoop');
@@ -167,7 +167,7 @@ describe('양식', () => {
         const preview = document.querySelector('#import-area tbody tr:not([data-import]) table');
         expect(preview.querySelectorAll(':scope > tbody > tr')).toHaveLength(SCHEMAS.univcoop.headerRows + 5);
         expect(preview.querySelector('thead').textContent).toContain('국어 원점수');
-        const sel = document.querySelector('[aria-label="3월.xlsx 양식"]');
+        const sel = document.querySelector('[aria-label="3월.xlsx 진학 프로그램"]');
         sel.value = 'kkumkugo';
         sel.dispatchEvent(new Event('change'));
         expect(row().formatId).toBe('kkumkugo');
@@ -176,8 +176,8 @@ describe('양식', () => {
 
 it('양식 칸의 안내용 첫 항목은 고를 수 없다', async () => {
     await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop))]);
-    const first = document.querySelector('[aria-label="3월.xlsx 양식"]').options[0];
-    expect(first.textContent).toBe('양식 선택');
+    const first = document.querySelector('[aria-label="3월.xlsx 진학 프로그램"]').options[0];
+    expect(first.textContent).toBe('진학 프로그램 선택');
     expect(first.disabled).toBe(true);
 });
 
