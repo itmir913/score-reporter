@@ -1,5 +1,6 @@
 import Chart from 'chart.js/auto';
 import {ST} from '../main.js';
+import {noInquiryNote} from '../core/aggregate.js';
 import {labelMap} from '../report.js';
 import {roundHalfUp} from '../utils.js';
 import {showBinStudentsModal} from './report-modal.js';
@@ -13,7 +14,8 @@ export function renderScoreDistribution(cache = ST.cache) {
     const basisLabel = labelMap[cache.basis];
 
     document.getElementById('dist-title').innerText =
-        `${basisLabel} 합(국어+수학+탐구1+탐구2) 급간별 인원 분포`;
+        `${basisLabel} 합(국어+수학+탐구평균) 급간별 인원 분포`;
+    document.getElementById('dist-note').textContent = noInquiryNote(cache.noInquiryCount, cache.includeNoInquiry);
 
     // ★ 캐시의 studentWithSums 재사용 — ST.data 재순회 없음
     // cache.basis 기준 합산이 이미 되어 있으므로 합산 기준도 상위 N명 테이블과 완전히 일치
@@ -42,8 +44,8 @@ export function renderScoreDistribution(cache = ST.cache) {
 
     for (let i = numBins - 1; i >= 0; i--) {
         const min = i * intervalSize;
-        const max = min + intervalSize - 1;
-        labels.push(`${min}~${max}`);
+        // 합이 소수일 수 있어(탐구평균) 'min~max' 정수 라벨 사이에 걸리지 않게 '이상'으로 적는다
+        labels.push(`${min} 이상`);
         counts.push(0);
     }
 

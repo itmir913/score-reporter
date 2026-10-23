@@ -1,3 +1,4 @@
+import {noInquiryNote} from '../core/aggregate.js';
 import {labelMap} from '../report.js';
 /* 아래 마크업의 on* 속성이 부르는 함수는 모듈 스코프가 아니라 전역에서 찾는다.
  * src/main.js가 window에 올려두므로 여기서 import 하지 않는다. */
@@ -49,7 +50,8 @@ export function renderTopN(cache) {
     const limitLabel = topNValue === 'all' ? '전체'
         : shown.length > limit ? `상위 ${limit}명(동점 포함 ${shown.length}명)` : `상위 ${limit}명`;
     document.getElementById('top-n-title').innerText =
-        `${basisLabel} 합(국어+수학+탐구1+탐구2) ${limitLabel} 학생`;
+        `${basisLabel} 합(국어+수학+탐구평균) ${limitLabel} 학생`;
+    document.getElementById('top-n-note').textContent = noInquiryNote(cache.noInquiryCount, cache.includeNoInquiry);
 
     const thead = document.getElementById('top20-thead');
     thead.innerHTML = `
@@ -68,7 +70,8 @@ export function renderTopN(cache) {
 
     const tbody = document.getElementById('top20-tbody');
     tbody.innerHTML = shown.map(({s, sum, rank}) => {
-        const displaySum = toFixedHalfUp(sum, cache.basis === 'pct' ? 1 : 0);
+        // 탐구평균에서 .5 가 나오므로 모든 기준을 소수 1자리로 보인다
+        const displaySum = toFixedHalfUp(sum, 1);
         return `
             <tr class="hover:bg-slate-50 cursor-pointer transition-colors divide-x divide-slate-100 border-b border-slate-100"
                 data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" ${studentIdxAttr(s)}

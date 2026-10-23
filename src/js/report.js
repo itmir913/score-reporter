@@ -11,6 +11,11 @@ import {renderSubjectSelection} from './report/report-subject-selection.js';
 export let globalReportBasis = 'raw';
 export const labelMap = {'raw': '원점수', 'std': '표준점수', 'pct': '백분위'};
 
+/** 「탐구 미응시 학생도 포함」 체크 여부. 켜면 탐구 값이 없는 학생을 국어 + 수학으로 합산에 넣는다 */
+export function includeNoInquiry() {
+    return document.getElementById('include-no-inquiry')?.checked === true;
+}
+
 /* ───────────────────────────────────────────
    § 통계 기준 설정 및 UI 업데이트
 ─────────────────────────────────────────── */
@@ -71,7 +76,7 @@ export function renderAll() {
 
     try {
         // 2. 캐시 생성 시도
-        const cache = computeRenderCache(ST.data, globalReportBasis);
+        const cache = computeRenderCache(ST.data, globalReportBasis, {includeNoInquiry: includeNoInquiry()});
 
         // 3. 캐시 결과가 정상인지 확인 (computeRenderCache가 null을 반환할 경우 대비)
         if (!cache) {

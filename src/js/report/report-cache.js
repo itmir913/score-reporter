@@ -1,3 +1,4 @@
+import {compositeScore, lacksInquiryOnly} from '../core/aggregate.js';
 import {sameInquirySubject} from '../utils.js';
 import {_getCsatRawSums} from './report-csat-sum.js';
 
@@ -6,11 +7,11 @@ import {_getCsatRawSums} from './report-csat-sum.js';
    ST.data를 단 한 번만 순회하여 모든 렌더링 함수에
    필요한 집계 데이터를 미리 계산합니다.
 ─────────────────────────────────────────── */
-export function computeRenderCache(data, basis) {
+export function computeRenderCache(data, basis, {includeNoInquiry = false} = {}) {
     // [안전 장치] 데이터가 없으면 빈 객체 반환
     if (!data || !Array.isArray(data) || data.length === 0) {
         return {
-            korScores: [], mathScores: [], engGrades: [], studentWithSums: [], basis,
+            korScores: [], mathScores: [], engGrades: [], studentWithSums: [], basis, includeNoInquiry, noInquiryCount: 0,
             korSubjectStats: {}, mathSubjectStats: {}, inqSubjectStats: {}, csatSums: []
         };
     }
@@ -23,6 +24,7 @@ export function computeRenderCache(data, basis) {
     const mathSubjectStats = {};
     const inqSubjectStats = {};
     const csatSums = [];  // _getCsatRawSums(s) 결과, data와 동일 인덱스
+    let noInquiryCount = 0;  // 국어·수학은 있는데 탐구가 없는 학생 수
 
     /* ── 선택과목 통계 누적 헬퍼 ── */
     const accSubject = (statsObj, subjectName, scoreObj) => {
@@ -69,11 +71,10 @@ export function computeRenderCache(data, basis) {
         if (Number.isFinite(mathVal)) mathScores.push(mathVal);
         if (Number.isFinite(engGrade)) engGrades.push(engGrade);
 
-        /* 2. 4과목 합산 (상위N · 분포 공용)
-         *    한 과목이라도 이 기준 점수가 없으면(일부 결시) 0점으로 채워 더하지 않고 null 로 두어
-         *    순위·분포에서 뺀다. 수능 최저 전교 석차는 이 합을 쓰지 않는다 (_getScoreSum) */
-        const vals = ['korean', 'math', 'inquiry1', 'inquiry2'].map(subj => s[subj]?.[basis]);
-        const sum = vals.every(Number.isFinite) ? vals.reduce((a, b) => a + b, 0) : null;
+        /* 2. 합산 점수 = 국어 + 수학 + 탐구평균 (상위N · 분포 공용)
+         *    국어·수학이 없거나 탐구가 없으면(옵션을 켜지 않은 한) null 로 두어 순위·분포에서 뺀다 */
+        const sum = compositeScore(s, basis, {includeNoInquiry});
+        if (lacksInquiryOnly(s, basis)) noInquiryCount++;
 
         studentWithSums.push({s, sum});
 
@@ -89,7 +90,7 @@ export function computeRenderCache(data, basis) {
     });
 
     return {
-        basis,
+        basis, includeNoInquiry, noInquiryCount,
         korScores, mathScores, engGrades,
         studentWithSums,
         korSubjectStats, mathSubjectStats, inqSubjectStats,

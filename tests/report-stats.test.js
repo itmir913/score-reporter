@@ -130,7 +130,7 @@ describe('네 과목 모두 결시한 학생', () => {
         renderAll();
         const {labels, datasets} = ST.charts.scoreDist.cfg.data;
         expect(datasets[0].data.reduce((a, b) => a + b, 0)).toBe(1);
-        const zeroBin = datasets[0].data[labels.indexOf('0~9')];
+        const zeroBin = datasets[0].data[labels.indexOf('0 이상')];
         expect(zeroBin).toBe(0);
     });
 
@@ -162,14 +162,14 @@ describe('네 과목 모두 결시한 학생', () => {
         setGlobalBasis('std');
         expect(ST.charts.scoreDist).toBeUndefined();
         expect(cellTexts('top20-tbody').flat().join('')).not.toContain('가');
-        expect(document.getElementById('score-dist-tbody').textContent).not.toMatch(/\d+~\d+/);
+        expect(document.getElementById('score-dist-tbody').textContent).not.toMatch(/\d+ 이상/);
         setGlobalBasis('raw');
     });
 });
 
-describe('한 과목이라도 결시한 학생', () => {
-    // 탐구2 만 빈 학생의 합이 세 과목 합으로 순위·분포에 들어가, 네 과목을 다 본 학생과
-    // 한 줄에서 비교되었다. 네 과목이 모두 있어야 합을 낸다
+describe('탐구를 한 과목만 본 학생', () => {
+    // 예전에는 네 과목이 모두 있어야 합을 내서 탐구 한 과목 응시자가 순위·분포에서 빠졌다.
+    // 이제 합산은 국어 + 수학 + 탐구평균이라, 한 과목 응시자는 그 과목 값으로 같은 척도에 들어간다
     const data = () => [
         student('응시', 1, {
             korean: score('화법과 작문', 90), math: score('미적분', 80),
@@ -181,31 +181,30 @@ describe('한 과목이라도 결시한 학생', () => {
         }),
     ];
 
-    it('점수 합 상위 명단에 넣지 않는다', () => {
+    it('상위 명단에 탐구평균으로 넣는다', () => {
         ST.data = data();
         document.getElementById('top-n-count').value = 'all';
         renderAll();
-        expect(cellTexts('top20-tbody').map(r => r[3])).toEqual(['응시']);
+        // 일부결시 95+90+45 = 230, 응시 90+80+(40+40)/2 = 210
+        expect(cellTexts('top20-tbody').map(r => [r[3], r[4]])).toEqual([['일부결시', '230.0'], ['응시', '210.0']]);
     });
 
-    it('급간 분포와 막대 명단에 넣지 않는다', () => {
+    it('급간 분포와 막대 명단에 넣는다', () => {
         ST.data = data();
         document.getElementById('interval-size').value = '10';
         renderAll();
         const chart = ST.charts.scoreDist.cfg;
-        expect(chart.data.datasets[0].data.reduce((a, b) => a + b, 0)).toBe(1);
-        // 세 과목 합 230 은 어느 급간에도 세지 않는다
-        expect(chart.data.datasets[0].data[chart.data.labels.indexOf('230~239')]).toBe(0);
+        expect(chart.data.datasets[0].data.reduce((a, b) => a + b, 0)).toBe(2);
         chart.options.onClick.call({data: chart.data}, null, [{index: 0}]);
-        expect(cellTexts('bin-modal-tbody').map(r => r[2])).toEqual(['응시']);
+        expect(cellTexts('bin-modal-tbody').map(r => r[2])).toEqual(['일부결시']);
     });
 
-    it('명단 모달의 점수 합은 세 과목 합이 아니라 - 이다', () => {
+    it('명단 모달의 점수 합도 탐구평균 합이다', () => {
         ST.data = data();
         renderAll();
         showSelectedSubjectStudents('kor', '화법과 작문');
         const row = cellTexts('bin-modal-tbody').find(r => r[2] === '일부결시');
-        expect(row[3]).toBe('-');
+        expect(row[3]).toBe('230.0');
     });
 
     it('전교 석차 표에는 그대로 넣는다', () => {
@@ -213,6 +212,36 @@ describe('한 과목이라도 결시한 학생', () => {
         document.getElementById('csat-top-n-count').value = 'all';
         renderAll();
         expect(cellTexts('csat-school-tbody').map(r => r[3])).toEqual(['응시', '일부결시']);
+    });
+});
+
+describe('탐구를 하나도 보지 않은 학생', () => {
+    const data = () => [
+        student('응시', 1, {
+            korean: score('화법과 작문', 90), math: score('미적분', 80),
+            inquiry1: score('물리학Ⅰ', 40), inquiry2: score('화학Ⅰ', 40),
+        }),
+        student('탐구없음', 2, {korean: score('화법과 작문', 95), math: score('미적분', 90)}),
+        student('국어결시', 3, {math: score('미적분', 90), inquiry1: score('물리학Ⅰ', 45)}),
+    ];
+
+    it('기본은 합산에서 빼고 뺀 인원을 밝힌다', () => {
+        ST.data = data();
+        document.getElementById('top-n-count').value = 'all';
+        renderAll();
+        expect(cellTexts('top20-tbody').map(r => r[3])).toEqual(['응시']);
+        expect(document.getElementById('top-n-note').textContent).toBe('탐구 미응시 1명은 합산에서 제외했습니다.');
+        expect(document.getElementById('dist-note').textContent).toBe('탐구 미응시 1명은 합산에서 제외했습니다.');
+    });
+
+    it('「탐구 미응시 학생도 포함」을 켜면 국어 + 수학으로 넣는다', () => {
+        ST.data = data();
+        document.getElementById('top-n-count').value = 'all';
+        document.getElementById('include-no-inquiry').checked = true;
+        renderAll();
+        // 탐구없음 95+90 = 185 (탐구를 0점으로 보지 않는다), 국어결시는 여전히 뺀다
+        expect(cellTexts('top20-tbody').map(r => [r[3], r[4]])).toEqual([['응시', '210.0'], ['탐구없음', '185.0']]);
+        expect(document.getElementById('top-n-note').textContent).toContain('탐구 미응시 1명 포함');
     });
 });
 
@@ -320,14 +349,14 @@ describe('소수 합의 2진 오차', () => {
         expect(cellTexts('csat-school-tbody').map(r => r[0])).toEqual(['1', '1']);
     });
 
-    it('급간 분포: 화면에 50.0 인 합은 50~59 급간에 센다', () => {
+    it('급간 분포: 화면에 50.0 인 합은 50 이상 급간에 센다', () => {
         // 3.8+33.3+12.9 는 49.99999999999999 라 상위 N명에는 50.0 인데 40~49 급간에 들어갔다
         const threePct = (name, number, a, b, c) => student(name, number, {
             korean: {...score('화법과 작문', 90), pct: a},
             math: {...score('미적분', 80), pct: b},
             inquiry1: {...score('물리학Ⅰ', 40), pct: c},
-            // 탐구2 가 비면 합에서 빠진다. 0 을 더해도 49.99999999999999 는 그대로다
-            inquiry2: {...score('화학Ⅰ', 40), pct: 0},
+            // 탐구2 백분위가 비면 탐구평균은 탐구1 값이다
+            inquiry2: {...score('화학Ⅰ', 40), pct: null},
         });
         ST.data = [threePct('가', 1, 3.8, 33.3, 12.9), threePct('나', 2, 20, 20, 10)];
         document.getElementById('interval-size').value = '10';
@@ -337,13 +366,12 @@ describe('소수 합의 2진 오차', () => {
         chart.options.onClick.call({data: chart.data}, null, [{index: 0}]);
         const binNames = cellTexts('bin-modal-tbody').map(r => r[2]);
         setGlobalBasis('raw');
-        expect(labels).toEqual(['50~59', '40~49', '30~39', '20~29', '10~19', '0~9']);
+        expect(labels).toEqual(['50 이상', '40 이상', '30 이상', '20 이상', '10 이상', '0 이상']);
         expect(counts).toEqual(['2', '0', '0', '0', '0', '0']);
         expect(binNames).toEqual(['가', '나']);
     });
 
     it('빈 분포 안내는 기준 이름만 쓴다', () => {
-        // 원점수 합이 있으려면 네 과목 원점수가 모두 있어야 한다 (한 과목만 있으면 합에서 빠진다)
         const noStd = (subject, raw) => ({...score(subject, raw), std: null, pct: null});
         ST.data = [student('가', 1, {
             korean: noStd('화법과 작문', 90), math: noStd('미적분', 80),

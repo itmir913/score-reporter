@@ -1,5 +1,6 @@
 import {ST} from '../main.js';
-import {globalReportBasis} from '../report.js';
+import {compositeScore} from '../core/aggregate.js';
+import {globalReportBasis, includeNoInquiry} from '../report.js';
 import {_getCsatRawSums} from './report-csat-sum.js';
 import {escapeAttr, toFixedHalfUp} from '../utils.js';
 
@@ -114,9 +115,8 @@ export function showBinStudentsModal(label, students) {
     // 3. tbody 내용 삽입 (td에 border-b만 남겨서 깔끔하게 표시)
     const tbody = document.getElementById('bin-modal-tbody');
     tbody.innerHTML = students.map(s => {
-        // 한 과목이라도 결시면 0 을 채운 합이 아니라 - 를 찍는다 (상위 N명·분포에서도 빠진 학생이다)
-        const vals = ['korean', 'math', 'inquiry1', 'inquiry2'].map(cur => s[cur]?.[basis]);
-        const sum = vals.every(Number.isFinite) ? vals.reduce((a, b) => a + b, 0) : null;
+        // 합산할 수 없으면 0 을 채운 합이 아니라 - 를 찍는다 (상위 N명·분포에서도 빠진 학생이다)
+        const sum = compositeScore(s, basis, {includeNoInquiry: includeNoInquiry()});
         return `
             <tr class="hover:bg-blue-50 cursor-pointer transition-colors group"
                 data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" ${studentIdxAttr(s)} data-action="row-click">
@@ -124,7 +124,7 @@ export function showBinStudentsModal(label, students) {
                 <td class="border-b border-slate-200 p-3 text-slate-600">${showsStudentId(s) ? escapeAttr(s.student_id) : String(s.number ?? '').trim() ? `${escapeAttr(s.number)}번` : '-'}</td>
                 <td class="border-b border-slate-200 p-3 font-bold text-slate-800">${escapeAttr(s.name)}</td>
                 <td class="border-b border-slate-200 p-3 text-blue-600 font-bold">
-                    ${sum === null ? '-' : toFixedHalfUp(sum, basis === 'pct' ? 1 : 0)}
+                    ${sum === null ? '-' : toFixedHalfUp(sum, 1)}
                 </td>
                 <td class="border-b border-slate-200 p-3 text-base text-slate-400 group-hover:text-blue-500 font-medium">
                     상세보기 >

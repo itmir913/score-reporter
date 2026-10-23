@@ -1,0 +1,40 @@
+import {sameInquirySubject} from '../utils.js';
+
+/* ───────────────────────────────────────────
+   § 합산 점수 = 국어 + 수학 + 탐구평균 (CLAUDE.md 점수 해석 원칙)
+   탐구를 한 과목만 본 학생이 탐구 두 과목을 더하는 방식에서 손해를 보거나
+   네 과목이 다 있어야 하는 규칙에 걸려 빠지던 것을 막는다.
+─────────────────────────────────────────── */
+
+/** 이 기준(raw·std·pct)의 탐구평균. 값이 있는 탐구가 없으면 null.
+ *  과목명이 같은 두 칸은 자료 중복이므로 탐구1 하나로 본다. */
+export function inquiryAvg(s, basis) {
+    const subjects = sameInquirySubject(s) ? ['inquiry1'] : ['inquiry1', 'inquiry2'];
+    const vals = subjects.map(subj => s?.[subj]?.[basis]).filter(Number.isFinite);
+    if (vals.length === 0) return null;
+    return vals.reduce((a, b) => a + b, 0) / vals.length;
+}
+
+/** 합산 점수. 국어·수학 중 하나라도 없으면 null.
+ *  탐구 값이 하나도 없으면 null 이지만, includeNoInquiry 면 국어 + 수학이다(탐구를 0점으로 보지 않는다). */
+export function compositeScore(s, basis, {includeNoInquiry = false} = {}) {
+    const kor = s?.korean?.[basis];
+    const math = s?.math?.[basis];
+    if (!Number.isFinite(kor) || !Number.isFinite(math)) return null;
+    const inq = inquiryAvg(s, basis);
+    if (inq === null) return includeNoInquiry ? kor + math : null;
+    return kor + math + inq;
+}
+
+/** 국어·수학은 있는데 탐구 값이 하나도 없는 학생인가 — 「탐구 미응시 N명」에 세는 대상 */
+export function lacksInquiryOnly(s, basis) {
+    return Number.isFinite(s?.korean?.[basis]) && Number.isFinite(s?.math?.[basis]) && inquiryAvg(s, basis) === null;
+}
+
+/** 합산 표·분포 아래에 붙이는 탐구 미응시 안내. 해당 학생이 없으면 빈 문자열 */
+export function noInquiryNote(count, includeNoInquiry) {
+    if (!count) return '';
+    return includeNoInquiry
+        ? `탐구 미응시 ${count}명 포함 — 국어+수학만으로 계산되어 다른 학생과 같은 척도가 아닙니다.`
+        : `탐구 미응시 ${count}명은 합산에서 제외했습니다.`;
+}
