@@ -86,22 +86,19 @@ Chart.js, ExcelJS, SheetJS(xlsx), fflate(zip), Tailwind CSS v4, Font Awesome, Pr
 
 ### 사용 설명서
 
-설명서(PDF, HWPX)는 저장소에 두지 않고 `latest` 릴리스의 자산으로 올립니다. 바이너리라서 개정할 때마다 델타 압축이 듣지 않고 이력에 1MB씩 그대로 쌓이기 때문입니다.
+설명서 원본은 `manual/index.html` 과 화면(`manual/shots/*.jpg`)입니다. 배포용 PDF는 저장소에 두지 않고 `latest` 릴리스의 자산 `score-reporter-manual.pdf` 로 올립니다. 앱의 '매뉴얼 PDF 다운로드' 버튼이 이 URL을 가리킵니다.
 
-| 자산 | 용도 |
-| --- | --- |
-| `score-reporter-manual.pdf` | 배포용. 앱의 '매뉴얼 PDF 다운로드' 버튼이 이 URL을 가리킨다. |
-| `score-reporter-manual.hwpx` | 편집 원본. 고칠 때 여기서 받아 고치고 두 파일을 다시 올린다. |
+화면은 앱의 「샘플 불러오기」 가상 자료로 찍고 학생 이름을 학생001 꼴 가명으로 바꿔 씁니다. 실제 학생 자료로 찍지 않습니다.
 
 개정 절차는 이렇습니다.
 
 ```bash
-gh release download latest -p 'score-reporter-manual.hwpx'
-# 고친 뒤 PDF로 내보내고
-gh release upload latest score-reporter-manual.pdf score-reporter-manual.hwpx --clobber
+# manual/index.html 을 고친 뒤 Chrome 으로 PDF 를 만든다
+chrome --headless=new --no-pdf-header-footer --print-to-pdf=score-reporter-manual.pdf manual/index.html
+gh release upload latest score-reporter-manual.pdf --clobber
 ```
 
-배포 워크플로는 `score-reporter.zip` 만 올리므로 이 두 자산을 건드리지 않습니다.
+배포 워크플로는 `score-reporter.zip` 만 올리므로 설명서 PDF를 건드리지 않습니다.
 
 ### xlsx 가 `vendor/` 에 있는 이유
 

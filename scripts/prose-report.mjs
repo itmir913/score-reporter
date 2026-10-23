@@ -30,7 +30,7 @@ const only = process.argv[2];
 const targets = [
   ...filesUnder(join(ROOT, 'src')), ...filesUnder(join(ROOT, 'tests')),
   ...filesUnder(join(ROOT, 'docs')), ...filesUnder(join(ROOT, 'scripts')),
-  join(ROOT, 'index.html'), join(ROOT, 'CLAUDE.md'), join(ROOT, 'README.md')
+  join(ROOT, 'index.html'), join(ROOT, 'manual', 'index.html'), join(ROOT, 'CLAUDE.md'), join(ROOT, 'README.md')
 ].filter((path) => {
   const where = relative(ROOT, path).replaceAll(sep, '/');
   return !EXEMPT.includes(where) && (!only || where.startsWith(only.split(sep).join('/')));

@@ -75,6 +75,7 @@ describe('물러난 말이 저장소에 없다', () => {
     ...filesUnder(join(ROOT, 'docs')),
     ...filesUnder(join(ROOT, 'scripts')),
     join(ROOT, 'index.html'),
+    join(ROOT, 'manual', 'index.html'),
     join(ROOT, 'CLAUDE.md'),
     join(ROOT, 'README.md')
   ].filter((path) => !EXEMPT.includes(asPosix(path)));

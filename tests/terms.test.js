@@ -137,6 +137,7 @@ describe('화면에 쓰는 말이 하나다', () => {
     ...filesUnder(join(ROOT, 'docs'), ['.md']),
     ...filesUnder(join(ROOT, 'scripts'), ['.mjs', '.js']),
     join(ROOT, 'index.html'),
+    join(ROOT, 'manual', 'index.html'),
     join(ROOT, 'CLAUDE.md'),
     join(ROOT, 'README.md')
   ].filter((path) => !EXEMPT.includes(asPosix(path)));
