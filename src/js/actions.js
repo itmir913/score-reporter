@@ -26,6 +26,7 @@ import {
 import {renderAll, setGlobalBasis} from './report.js';
 import {choosePersonAt, renderTrend} from './ui/trendView.js';
 import {
+    closeAllModals,
     closeModal,
     currentStudent,
     handleRowClick,
@@ -49,7 +50,7 @@ const CLICK_ACTIONS = {
         const index = ST.data?.indexOf(currentStudent());
         if (index === undefined || index < 0) return;
         choosePersonAt(ST.activeExamKey, index);
-        closeModal('student-modal');
+        closeAllModals();
         switchTab('trend');
         renderTrend();
     },

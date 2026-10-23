@@ -23,9 +23,16 @@ export function openModal(modalId) {
     document.documentElement.style.overflow = 'hidden'; // html까지 확실하게 잠금
 }
 
+const MODAL_IDS = ['bin-students-modal', 'student-modal', 'csat-list-modal'];
+
+/** 열린 모달을 모두 닫는다(성적표에서 다른 탭으로 넘어갈 때 뒤에 깔린 명단까지 닫는다) */
+export function closeAllModals() {
+    MODAL_IDS.forEach(closeModal);
+}
+
 export function closeModal(modalId) {
     document.getElementById(modalId).classList.add('hidden');
-    const anyOpen = ['bin-students-modal', 'student-modal', 'csat-list-modal']
+    const anyOpen = MODAL_IDS
         .some(id => !document.getElementById(id).classList.contains('hidden'));
     if (!anyOpen) {
         document.body.style.overflow = '';
