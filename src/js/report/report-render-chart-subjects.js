@@ -1,6 +1,7 @@
 import Chart from 'chart.js/auto';
 import {ST} from '../main.js';
 import {showBinStudentsModal} from './report-modal.js';
+import {basisAvailable, missingBasisMessage} from '../core/aggregate.js';
 import {escapeAttr, sameInquirySubject} from '../utils.js';
 
 /* ───────────────────────────────────────────
@@ -12,6 +13,13 @@ export function renderSubjectsCharts() {
     const grid = document.getElementById('chart-grid');
     grid.innerHTML = '';
     const chartBasis = document.getElementById('chart-basis').value; // 'grade', 'pct', 'std'
+    // 이 차트의 기준 선택도 전역 기준과 같은 규칙: 값이 없으면 알리고 다른 기준으로 대신하지 않는다
+    if (chartBasis !== 'grade' && !basisAvailable(ST.data, chartBasis)) {
+        const note = document.createElement('p');
+        note.className = 'col-span-full p-8 text-slate-400 text-center';
+        note.textContent = missingBasisMessage(chartBasis);
+        grid.appendChild(note);
+    }
 
     if (!ST.charts) {
         ST.charts = {};

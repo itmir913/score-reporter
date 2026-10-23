@@ -3,7 +3,7 @@ import {ST} from '../main.js';
 import {labelMap} from '../report.js';
 /* 아래 마크업의 on* 속성이 부르는 함수는 모듈 스코프가 아니라 전역에서 찾는다.
  * src/main.js가 window에 올려두므로 여기서 import 하지 않는다. */
-import {escapeAttr, toFixedHalfUp} from '../utils.js';
+import {DASH, escapeAttr, toFixedHalfUp} from '../utils.js';
 
 /* ───────────────────────────────────────────
    § 선택과목 비율 분석
@@ -84,11 +84,11 @@ export function renderSubjectSelection(cache) {
         // basis에 따라 평균 컬럼 계산 방식 결정
         const getAvgScore = (d) => {
             if (cache.basis === 'std') {
-                return d.validStdCount > 0 ? toFixedHalfUp(d.sumStd / d.validStdCount, 1) : '-';
+                return d.validStdCount > 0 ? toFixedHalfUp(d.sumStd / d.validStdCount, 1) : DASH;
             } else if (cache.basis === 'pct') {
-                return d.validPctCount > 0 ? toFixedHalfUp(d.sumPct / d.validPctCount, 1) : '-';
+                return d.validPctCount > 0 ? toFixedHalfUp(d.sumPct / d.validPctCount, 1) : DASH;
             } else {
-                return d.validRawCount > 0 ? toFixedHalfUp(d.sumRaw / d.validRawCount, 1) : '-';
+                return d.validRawCount > 0 ? toFixedHalfUp(d.sumRaw / d.validRawCount, 1) : DASH;
             }
         };
 
@@ -109,7 +109,7 @@ export function renderSubjectSelection(cache) {
             const d = statsData[l];
             const pct = toFixedHalfUp((d.count / total) * 100, 1);
             const avgScore = getAvgScore(d);
-            const avgGrade = d.validGradeCount > 0 ? toFixedHalfUp(d.sumGrade / d.validGradeCount, 1) : '-';
+            const avgGrade = d.validGradeCount > 0 ? toFixedHalfUp(d.sumGrade / d.validGradeCount, 1) : DASH;
             html += `
             <tr class="hover:bg-blue-50 transition-colors cursor-pointer group"
                 data-type="${escapeAttr(type)}" data-subject="${escapeAttr(l)}"

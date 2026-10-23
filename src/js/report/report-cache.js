@@ -1,4 +1,4 @@
-import {compositeScore, lacksInquiryOnly} from '../core/aggregate.js';
+import {basisAvailable, compositeScore, lacksInquiryOnly} from '../core/aggregate.js';
 import {sameInquirySubject} from '../utils.js';
 import {_getCsatRawSums} from './report-csat-sum.js';
 
@@ -11,7 +11,7 @@ export function computeRenderCache(data, basis, {includeNoInquiry = false} = {})
     // [안전 장치] 데이터가 없으면 빈 객체 반환
     if (!data || !Array.isArray(data) || data.length === 0) {
         return {
-            korScores: [], mathScores: [], engGrades: [], studentWithSums: [], basis, includeNoInquiry, noInquiryCount: 0,
+            korScores: [], mathScores: [], engGrades: [], studentWithSums: [], basis, includeNoInquiry, noInquiryCount: 0, basisMissing: true,
             korSubjectStats: {}, mathSubjectStats: {}, inqSubjectStats: {}, csatSums: []
         };
     }
@@ -90,7 +90,7 @@ export function computeRenderCache(data, basis, {includeNoInquiry = false} = {})
     });
 
     return {
-        basis, includeNoInquiry, noInquiryCount,
+        basis, includeNoInquiry, noInquiryCount, basisMissing: !basisAvailable(data, basis),
         korScores, mathScores, engGrades,
         studentWithSums,
         korSubjectStats, mathSubjectStats, inqSubjectStats,

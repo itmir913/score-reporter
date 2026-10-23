@@ -1,4 +1,5 @@
 import {ST} from './main.js';
+import {basisAvailable, missingBasisMessage} from './core/aggregate.js';
 import {computeRenderCache} from './report/report-cache.js';
 import {renderCsatMinRequirement} from './report/report-csat-sum.js';
 import {renderSubjectsCharts} from './report/report-render-chart-subjects.js';
@@ -85,6 +86,10 @@ export function renderAll() {
         }
 
         ST.cache = cache;
+
+        // 고른 기준의 값이 이 회차에 없으면 알리고, 각 표는 숫자 자리를 — 로 둔다(다른 기준으로 바꾸지 않는다)
+        const missingNote = document.getElementById('basis-missing-note');
+        if (missingNote) missingNote.textContent = cache.basisMissing ? missingBasisMessage(cache.basis) : '';
 
         // 4. 하위 렌더링 함수 실행
         // 각 함수 내부에서도 에러가 날 수 있으므로 순차적으로 실행

@@ -69,7 +69,7 @@ describe('평균 소수점 반올림', () => {
 
 describe('요약 카드: 응시자가 없는 지표', () => {
     // 대교협(가채점)은 등급 열이 없다. 예전에는 "0.0등급" 을 보여 주었다.
-    it('등급이 하나도 없으면 영어 상위 20% 는 - 이다', () => {
+    it('등급이 하나도 없으면 영어 상위 20% 는 — 이다', () => {
         ST.data = [
             student('가', 1, {korean: score('화법과 작문', 90)}),
             student('나', 2, {korean: score('화법과 작문', 70)}),
@@ -78,7 +78,7 @@ describe('요약 카드: 응시자가 없는 지표', () => {
         const card = [...document.querySelectorAll('#stat-cards .stat-card')]
             .find(el => el.textContent.includes('영어'));
         expect(card.textContent).not.toContain('0.0');
-        expect(card.querySelector('.text-3xl').textContent.trim()).toBe('-');
+        expect(card.querySelector('.text-3xl').textContent.trim()).toBe('—');
     });
 });
 
@@ -141,12 +141,12 @@ describe('네 과목 모두 결시한 학생', () => {
         expect(cellTexts('csat-school-tbody').map(r => r[3])).toEqual(['응시']);
     });
 
-    it('명단 모달의 점수 합은 0 이 아니라 - 이다', () => {
+    it('명단 모달의 점수 합은 0 이 아니라 — 이다', () => {
         ST.data = data();
         renderAll();
         showSelectedSubjectStudents('kor', '화법과 작문');
         const row = cellTexts('bin-modal-tbody').find(r => r[2] === '결시');
-        expect(row[3]).toBe('-');
+        expect(row[3]).toBe('—');
     });
 
     it('기준 점수가 아무에게도 없으면 이전 분포를 남기지 않는다', () => {
@@ -161,9 +161,11 @@ describe('네 과목 모두 결시한 학생', () => {
         expect(ST.charts.scoreDist).toBeTruthy();
         setGlobalBasis('std');
         expect(ST.charts.scoreDist).toBeUndefined();
-        expect(cellTexts('top20-tbody').flat().join('')).not.toContain('가');
-        expect(document.getElementById('score-dist-tbody').textContent).not.toMatch(/\d+ 이상/);
+        const rows = document.querySelectorAll('#top20-tbody [data-action="row-click"]').length;
+        const distText = document.getElementById('score-dist-tbody').textContent;
         setGlobalBasis('raw');
+        expect(rows).toBe(0);
+        expect(distText).not.toMatch(/\d+ 이상/);
     });
 });
 
@@ -381,6 +383,49 @@ describe('소수 합의 2진 오차', () => {
         setGlobalBasis('std');
         const text = document.getElementById('score-dist-tbody').textContent.trim();
         setGlobalBasis('raw');
-        expect(text).toBe('표준점수가 없습니다.');
+        expect(text).toBe('이 회차에는 표준점수가 없어 표시할 수 없습니다.');
+    });
+});
+
+describe('고른 기준의 값이 이 회차에 없을 때 (원점수만 있는 가채점 등)', () => {
+    const rawOnly = (subject, raw) => ({...score(subject, raw), std: null, pct: null});
+    const data = () => [1, 2, 3].map(i => student(`학생${i}`, i, {
+        korean: rawOnly('화법과 작문', 80 + i), math: rawOnly('미적분', 70), inquiry1: rawOnly('물리학Ⅰ', 40),
+    }));
+
+    it.each([['std', '표준점수'], ['pct', '백분위']])('%s: 안내를 띄우고 숫자 자리를 — 로 두며 원점수로 대신하지 않는다', (basis, label) => {
+        ST.data = data();
+        document.getElementById('top-n-count').value = 'all';
+        setGlobalBasis(basis);
+        const message = `이 회차에는 ${label}가 없어 표시할 수 없습니다.`;
+        const banner = document.getElementById('basis-missing-note').textContent;
+        const top = document.getElementById('top20-tbody').textContent.trim();
+        const dist = document.getElementById('score-dist-tbody').textContent.trim();
+        const cards = [...document.querySelectorAll('#stat-cards .stat-card')]
+            .filter(el => /국어|수학/.test(el.textContent)).map(el => el.querySelector('.text-3xl').textContent.trim());
+        const kor = cellTexts('kor-select-stats').find(r => r[0] === '화법과 작문');
+        setGlobalBasis('raw');
+        expect(banner).toBe(message);
+        expect(top).toBe(message);
+        expect(dist).toBe(message);
+        expect(cards).toEqual(['—', '—']);
+        expect(kor[2]).toBe('—');
+        // 원점수 합(191 등)이 어디에도 새지 않는다
+        expect(top + dist + cards.join('')).not.toMatch(/\d{2,}/);
+    });
+
+    it('원점수 기준에서는 안내가 없다', () => {
+        ST.data = data();
+        setGlobalBasis('raw');
+        expect(document.getElementById('basis-missing-note').textContent).toBe('');
+    });
+
+    it('과목 분포 차트의 기준 선택에도 같은 안내를 띄운다', () => {
+        ST.data = data();
+        document.getElementById('chart-basis').value = 'pct';
+        renderAll();
+        const text = document.getElementById('chart-grid').textContent;
+        document.getElementById('chart-basis').value = 'grade';
+        expect(text).toContain('이 회차에는 백분위가 없어 표시할 수 없습니다.');
     });
 });

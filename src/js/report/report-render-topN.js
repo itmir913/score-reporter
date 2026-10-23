@@ -1,4 +1,4 @@
-import {noInquiryNote} from '../core/aggregate.js';
+import {missingBasisMessage, noInquiryNote} from '../core/aggregate.js';
 import {labelMap} from '../report.js';
 /* 아래 마크업의 on* 속성이 부르는 함수는 모듈 스코프가 아니라 전역에서 찾는다.
  * src/main.js가 window에 올려두므로 여기서 import 하지 않는다. */
@@ -69,6 +69,10 @@ export function renderTopN(cache) {
     `;
 
     const tbody = document.getElementById('top20-tbody');
+    if (cache.basisMissing) {
+        tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-slate-400 text-center">${missingBasisMessage(cache.basis)}</td></tr>`;
+        return;
+    }
     tbody.innerHTML = shown.map(({s, sum, rank}) => {
         // 탐구평균에서 .5 가 나오므로 모든 기준을 소수 1자리로 보인다
         const displaySum = toFixedHalfUp(sum, 1);

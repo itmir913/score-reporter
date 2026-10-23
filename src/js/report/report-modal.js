@@ -2,7 +2,7 @@ import {ST} from '../main.js';
 import {compositeScore} from '../core/aggregate.js';
 import {globalReportBasis, includeNoInquiry} from '../report.js';
 import {_getCsatRawSums} from './report-csat-sum.js';
-import {escapeAttr, toFixedHalfUp} from '../utils.js';
+import {DASH, escapeAttr, toFixedHalfUp} from '../utils.js';
 
 /* ───────────────────────────────────────────
    § 모달 제어 및 상세 정보 표시
@@ -124,7 +124,7 @@ export function showBinStudentsModal(label, students) {
                 <td class="border-b border-slate-200 p-3 text-slate-600">${showsStudentId(s) ? escapeAttr(s.student_id) : String(s.number ?? '').trim() ? `${escapeAttr(s.number)}번` : '-'}</td>
                 <td class="border-b border-slate-200 p-3 font-bold text-slate-800">${escapeAttr(s.name)}</td>
                 <td class="border-b border-slate-200 p-3 text-blue-600 font-bold">
-                    ${sum === null ? '-' : toFixedHalfUp(sum, 1)}
+                    ${sum === null ? DASH : toFixedHalfUp(sum, 1)}
                 </td>
                 <td class="border-b border-slate-200 p-3 text-base text-slate-400 group-hover:text-blue-500 font-medium">
                     상세보기 >
@@ -171,7 +171,7 @@ function _showStudent(s) {
         const isAbs = r.isAbs;
 
         // 통계와 같은 원점수(raw)를 보여 준다. 원점수가 없을 때만 공통+선택을 더한다
-        let totalRaw = '-';
+        let totalRaw = DASH;
         if (typeof d.raw === 'number') {
             totalRaw = d.raw;
         } else if (typeof d.common_raw === 'number' || typeof d.select_raw === 'number') {
@@ -183,9 +183,9 @@ function _showStudent(s) {
                 <td class="border border-slate-300 p-2 bg-emerald-50 font-bold">${r.label}</td>
                 <td class="border border-slate-300 p-2">${escapeAttr(d.subject) || '-'}</td>
                 <td class="border border-slate-300 p-2 font-bold">${totalRaw}</td>
-                <td class="border border-slate-300 p-2">${isAbs ? '-' : escapeAttr(d.std ?? '-')}</td>
-                <td class="border border-slate-300 p-2">${isAbs ? '-' : escapeAttr(d.pct ?? '-')}</td>
-                <td class="border border-slate-300 p-2 font-bold text-blue-600">${escapeAttr(d.grade ?? '-')}</td>
+                <td class="border border-slate-300 p-2">${isAbs ? DASH : escapeAttr(d.std ?? DASH)}</td>
+                <td class="border border-slate-300 p-2">${isAbs ? DASH : escapeAttr(d.pct ?? DASH)}</td>
+                <td class="border border-slate-300 p-2 font-bold text-blue-600">${escapeAttr(d.grade ?? DASH)}</td>
             </tr>
         `;
     }).join('');
@@ -289,7 +289,7 @@ export function printStudentDetail() {
     // 원점수 표시 헬퍼
     const fmtRaw = (subj) => {
         const d = s[subj];
-        if (!d) return '-';
+        if (!d) return DASH;
         // 합계와 한 칸짜리 값은 통계와 같은 원점수(raw)를 쓴다. 원점수가 없을 때만 공통·선택으로 낸다
         const hasRaw = typeof d.raw === 'number';
         if (typeof d.common_raw === 'number' && typeof d.select_raw === 'number') {
@@ -299,9 +299,9 @@ export function printStudentDetail() {
         if (hasRaw) return String(d.raw);
         if (typeof d.common_raw === 'number') return String(d.common_raw);
         if (typeof d.select_raw === 'number') return String(d.select_raw);
-        return '-';
+        return DASH;
     };
-    const fmtNum = (v) => (typeof v === 'number') ? String(v) : '-';
+    const fmtNum = (v) => (typeof v === 'number') ? String(v) : DASH;
     const fmtSubj = (subj) => {
         const d = s[subj];
         return (d && d.subject) ? escapeAttr(d.subject) : '-';
@@ -311,9 +311,9 @@ export function printStudentDetail() {
     const hasFl2 = s.fl2 && (s.fl2.subject || typeof s.fl2.raw === 'number' || typeof s.fl2.grade === 'number');
 
     const fl2SubjCell  = hasFl2 ? fmtSubj('fl2') : '-';
-    const fl2RawCell   = hasFl2 ? fmtRaw('fl2')  : '-';
-    const fl2DashCell = `<td>-</td>`;
-    const fl2GradeCell = hasFl2 ? fmtNum(s.fl2?.grade) : '-';
+    const fl2RawCell   = hasFl2 ? fmtRaw('fl2')  : DASH;
+    const fl2DashCell = `<td>${DASH}</td>`;
+    const fl2GradeCell = hasFl2 ? fmtNum(s.fl2?.grade) : DASH;
 
     const html = `<!DOCTYPE html>
 <html lang="ko">
@@ -389,10 +389,10 @@ export function printStudentDetail() {
   <tbody>
     <tr>
       <td class="row-label">선택과목</td>
-      <td>-</td>
+      <td>${DASH}</td>
       <td>${fmtSubj('korean')}</td>
       <td>${fmtSubj('math')}</td>
-      <td>-</td>
+      <td>${DASH}</td>
       <td>${fmtSubj('inquiry1')}</td>
       <td>${fmtSubj('inquiry2')}</td>
       <td>${fl2SubjCell}</td>
@@ -409,20 +409,20 @@ export function printStudentDetail() {
     </tr>
     <tr>
       <td class="row-label">표준점수</td>
-      <td>-</td>
+      <td>${DASH}</td>
       <td class="score-big">${fmtNum(s.korean?.std)}</td>
       <td class="score-big">${fmtNum(s.math?.std)}</td>
-      <td>-</td>
+      <td>${DASH}</td>
       <td class="score-big">${fmtNum(s.inquiry1?.std)}</td>
       <td class="score-big">${fmtNum(s.inquiry2?.std)}</td>
       ${fl2DashCell}
     </tr>
     <tr>
       <td class="row-label">백분위</td>
-      <td>-</td>
+      <td>${DASH}</td>
       <td class="score-big">${fmtNum(s.korean?.pct)}</td>
       <td class="score-big">${fmtNum(s.math?.pct)}</td>
-      <td>-</td>
+      <td>${DASH}</td>
       <td class="score-big">${fmtNum(s.inquiry1?.pct)}</td>
       <td class="score-big">${fmtNum(s.inquiry2?.pct)}</td>
       ${fl2DashCell}

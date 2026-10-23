@@ -3,7 +3,7 @@ import {ST} from '../main.js';
 import {includeNoInquiry, renderAll} from '../report.js';
 /* 아래 마크업의 on* 속성이 부르는 함수는 모듈 스코프가 아니라 전역에서 찾는다.
  * src/main.js가 window에 올려두므로 여기서 import 하지 않는다. */
-import {escapeAttr, roundHalfUp} from '../utils.js';
+import {DASH, escapeAttr, roundHalfUp} from '../utils.js';
 import {numberLabel, studentIdxAttr} from './report-modal.js';
 
 /* ───────────────────────────────────────────
@@ -54,7 +54,7 @@ export function _getCsatRawSums(student) {
 export function _getCsatSums(student) {
     const raw = _getCsatRawSums(student);
     const format = (val, subj) => val === null
-        ? '<span class="text-slate-300">-</span>'
+        ? `<span class="text-slate-300">${DASH}</span>`
         : `<div class="flex flex-col">
                <span class="font-extrabold text-base">${escapeAttr(String(val))}</span>
                <span class="text-base text-slate-500 font-normal mt-0.5">(${escapeAttr(subj)})</span>
@@ -204,7 +204,7 @@ export function renderCsatSummaryTable(cache) {
         let row = `<tr><td class="p-3 font-bold border-r border-slate-200 ${colorClass}">${label}</td>`;
         for (let i = 2; i <= maxSum; i++) {
             if (i < startIdx) {
-                row += `<td class="p-3 min-w-20 text-slate-300 bg-slate-50">-</td>`;
+                row += `<td class="p-3 min-w-20 text-slate-300 bg-slate-50">${DASH}</td>`;
             } else {
                 const val = dataArr[i];
                 row += val > 0
@@ -212,7 +212,7 @@ export function renderCsatSummaryTable(cache) {
                            data-action="csat-students" data-sum="${nSum}" data-index="${i}">
                            <span class="underline underline-offset-2 decoration-slate-300 hover:decoration-slate-500">${val}명</span>
                        </td>`
-                    : `<td class="p-3 min-w-20 text-slate-300">-</td>`;
+                    : `<td class="p-3 min-w-20 text-slate-300">${DASH}</td>`;
             }
         }
         return row + `</tr>`;
@@ -279,7 +279,7 @@ export function renderCsatClassTable(cache) {
         }
 
         const fmtCsat = (val, subj) => val === null
-            ? '<span class="text-slate-300">-</span>'
+            ? `<span class="text-slate-300">${DASH}</span>`
             : `<div class="flex flex-col">
                    <span class="font-extrabold text-base">${escapeAttr(String(val))}</span>
                    <span class="text-base text-slate-500 font-normal mt-0.5">(${escapeAttr(subj)})</span>

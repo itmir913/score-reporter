@@ -21,12 +21,15 @@ export function roundHalfUp(v, d = 0) {
 }
 
 export function toFixedHalfUp(v, d = 0) {
-    if (!Number.isFinite(v)) return '-';
+    if (!Number.isFinite(v)) return DASH;
     return roundHalfUp(v, d).toFixed(d);
 }
 
+/** 점수 자리에 값이 없을 때 쓰는 표시. 하이픈(-)은 음수·빼기와 헷갈려 긴 대시를 쓴다 */
+export const DASH = '—';
+
 export function fmt(v, d = 1) {
-    return v !== null && !isNaN(v) ? parseFloat(v).toFixed(d) : '-';
+    return v !== null && !isNaN(v) ? parseFloat(v).toFixed(d) : DASH;
 }
 
 export function dlBlob(blob, name) {

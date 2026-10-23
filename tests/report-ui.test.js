@@ -289,7 +289,7 @@ describe('탐구1·탐구2 과목이 같은 학생', () => {
         parseData();
         expect(ST.data).toHaveLength(2);
         expect(document.getElementById('toast-msg').innerText)
-            .toBe('2명의 데이터를 파싱했습니다. 1명의 탐구1·탐구2 과목이 같습니다. 원본 파일을 확인해 주세요.');
+            .toBe('2명의 데이터를 파싱했습니다. 1명의 탐구1·탐구2 과목이 같습니다. 합산에는 탐구1 값만 씁니다. 원본 파일을 확인해 주세요.');
         expect(document.getElementById('toast-icon').className).toContain('text-red-400');
     });
 
@@ -416,7 +416,7 @@ describe('원점수가 없는 파일', () => {
         report.setGlobalBasis('raw');
         load([row({inq2: '물리학Ⅰ'})]);
         expect(report.globalReportBasis).toBe('std');
-        expect(toast()).toBe('1명의 데이터를 파싱했습니다. 1명의 탐구1·탐구2 과목이 같습니다. 원본 파일을 확인해 주세요. ' +
+        expect(toast()).toBe('1명의 데이터를 파싱했습니다. 1명의 탐구1·탐구2 과목이 같습니다. 합산에는 탐구1 값만 씁니다. 원본 파일을 확인해 주세요. ' +
             '원점수가 없는 파일이라 표준점수 기준으로 보여 줍니다.');
         expect(document.getElementById('toast-icon').className).toContain('text-red-400');
         report.setGlobalBasis('raw');

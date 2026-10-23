@@ -1,6 +1,6 @@
 import {ST} from '../main.js';
 import {labelMap} from '../report.js';
-import {toFixedHalfUp} from '../utils.js';
+import {DASH, toFixedHalfUp} from '../utils.js';
 
 /* ───────────────────────────────────────────
    § 요약 통계 (과목별 고유 컬러 및 지표명 적용)
@@ -20,7 +20,7 @@ export function renderStats(cache) {
 
         // [핵심 수정] 2. 카운트 기준을 '오염된 전체 배열'이 아닌 '유효한 점수 배열'로 변경
         const count = validScores.length;
-        if (count === 0) return '-'; // 유효한 응시자가 없을 경우 (0.0 은 실제 점수처럼 보인다)
+        if (count === 0) return DASH; // 유효한 응시자가 없을 경우 (0.0 은 실제 점수처럼 보인다)
 
         // 2. 상위 20% 기준 인원 산출
         const topCount = Math.max(1, Math.ceil(count * 0.2));
@@ -39,13 +39,13 @@ export function renderStats(cache) {
         return toFixedHalfUp(sum / topSlice.length, 1); // topCount가 아닌 동점자가 포함된 topSlice.length로 나눔
     };
 
-    // 값이 없으면('-') 단위를 붙이지 않는다
+    // 값이 없으면(DASH) 단위를 붙이지 않는다
     // 총 응시 인원: 명단에만 있고 점수 칸이 모두 빈 학생(전 과목 결시)은 세지 않는다
     const takers = ST.data.filter(s =>
         ['korean', 'math', 'english', 'inquiry1', 'inquiry2', 'hist', 'fl2'].some(subj =>
             ['raw', 'std', 'pct', 'grade'].some(k => Number.isFinite(s[subj]?.[k])))).length;
 
-    const withUnit = (v, u) => v === '-' ? v : `${v}<span class="text-lg font-normal ml-0.5">${u}</span>`;
+    const withUnit = (v, u) => v === DASH ? v : `${v}<span class="text-lg font-normal ml-0.5">${u}</span>`;
 
     // 각 과목별 실제 응시자 수 기준 상위 20% 계산
     const korTop20Avg = getTop20Avg(cache.korScores);

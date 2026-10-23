@@ -1,6 +1,6 @@
 import Chart from 'chart.js/auto';
 import {ST} from '../main.js';
-import {noInquiryNote} from '../core/aggregate.js';
+import {missingBasisMessage, noInquiryNote} from '../core/aggregate.js';
 import {labelMap} from '../report.js';
 import {roundHalfUp} from '../utils.js';
 import {showBinStudentsModal} from './report-modal.js';
@@ -32,7 +32,7 @@ export function renderScoreDistribution(cache = ST.cache) {
         delete ST.charts['scoreDist'];
         document.getElementById('score-dist-thead').innerHTML = '';
         document.getElementById('score-dist-tbody').innerHTML =
-            `<tr><td class="p-8 text-slate-400 text-center">${basisLabel}가 없습니다.</td></tr>`;
+            `<tr><td class="p-8 text-slate-400 text-center">${cache.basisMissing ? missingBasisMessage(cache.basis) : `합산할 수 있는 ${basisLabel}가 없습니다.`}</td></tr>`;
         return;
     }
 

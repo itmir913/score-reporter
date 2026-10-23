@@ -57,9 +57,9 @@ describe('fmt: 표에 찍을 숫자 문자열', () => {
     });
 
     it('값이 없으면 하이픈을 찍는다', () => {
-        expect(fmt(null)).toBe('-');
-        expect(fmt(undefined)).toBe('-');
-        expect(fmt(NaN)).toBe('-');
+        expect(fmt(null)).toBe('—');
+        expect(fmt(undefined)).toBe('—');
+        expect(fmt(NaN)).toBe('—');
     });
 });
 
@@ -142,7 +142,7 @@ describe('toFixedHalfUp: 값이 없을 때', () => {
     // 예전에는 null 이 "0.0", NaN 이 "NaN" 으로 찍혔다
     it('유한한 숫자가 아니면 - 이다', () => {
         for (const v of [null, undefined, NaN, Infinity, -Infinity]) {
-            expect(toFixedHalfUp(v, 1)).toBe('-');
+            expect(toFixedHalfUp(v, 1)).toBe('—');
         }
     });
 });
