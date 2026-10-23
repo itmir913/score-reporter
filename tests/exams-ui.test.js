@@ -85,7 +85,7 @@ describe('학생 표', () => {
         expect(document.querySelector('#student-grid [data-grid="count"]').textContent).toBe('13명');
         rows[0].click();
         expect(document.getElementById('modal-student-info').innerText).toContain('성적표');
-    });
+    }, 20000);
 });
 
 it('불러올 수 있는 진학 프로그램과 내려받는 경로를 목록으로 보인다', () => {

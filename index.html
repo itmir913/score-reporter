@@ -43,8 +43,9 @@
 </header>
 
 <main id="app-main" class="min-h-0 flex-1 overflow-y-auto scroll-stable">
-<!-- 바깥 여백은 admission-outcomes 시작 화면과 같은 값이다(좁은 화면 max-w-3xl, 넓은 화면 lg:max-w-7xl) -->
-<div class="mx-auto w-full max-w-3xl px-6 pb-12 pt-6 lg:max-w-7xl">
+<!-- 바깥 여백은 admission-outcomes 시작 화면과 같은 값이다(좁은 화면 max-w-3xl, 넓은 화면 lg:max-w-7xl).
+     아래 여백은 상자가 아니라 각 탭이 갖는다: 「파일 추가」는 footer 의 py-5, 나머지 탭은 pb-12 -->
+<div class="mx-auto w-full max-w-3xl px-6 pt-6 lg:max-w-7xl">
 
     <!-- ═══════════════════════════════════
          TAB 1: 데이터 불러오기
@@ -139,7 +140,7 @@
             </div>
 
             <!-- footer 는 이 화면에만 둔다(admission-outcomes 와 같다). 보고서·통계는 표와 그래프가 높이를 다 쓴다 -->
-            <footer class="no-print border-t border-line pt-5 text-center text-base text-ink-soft">
+            <footer class="no-print border-t border-line py-5 text-center text-base text-ink-soft">
                 <p class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
                     <a class="font-medium text-brand underline underline-offset-2 hover:text-brand/80"
                        href="https://github.com/itmir913/score-reporter" target="_blank" rel="noopener noreferrer">GitHub 저장소</a>
@@ -155,7 +156,7 @@
     <!-- ═══════════════════════════════════
          TAB 2: 성적 보고서
     ═══════════════════════════════════ -->
-    <div id="tab-report" class="hidden animate-fade-in">
+    <div id="tab-report" class="hidden animate-fade-in pb-12">
         <div class="print-wrap flex flex-col gap-gutter">
         <div class="no-print flex flex-wrap items-end justify-between gap-3">
             <div class="min-w-0">
@@ -509,7 +510,7 @@
     <!-- ═══════════════════════════════════
          통계: 회차 순서대로 전교·학생 성적이 어떻게 달라졌는지
     ═══════════════════════════════════ -->
-    <div id="tab-trend" class="hidden animate-fade-in">
+    <div id="tab-trend" class="hidden animate-fade-in pb-12">
         <div class="flex flex-col gap-gutter">
         <div class="no-print flex flex-wrap items-end justify-between gap-3">
             <div class="min-w-0">
@@ -530,7 +531,7 @@
     <!-- ═══════════════════════════════════
          TAB 3: 내보내기
     ═══════════════════════════════════ -->
-    <div id="tab-export" class="hidden animate-fade-in">
+    <div id="tab-export" class="hidden animate-fade-in pb-12">
         <div class="flex flex-col gap-gutter">
         <div class="no-print flex flex-wrap items-end justify-between gap-3">
             <div class="min-w-0">
