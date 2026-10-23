@@ -84,8 +84,15 @@ export function renderTrend() {
     const keys = sortedExams(exams).map(e => e.key);
 
     root.append(el('p', {class: 'text-base text-ink-soft', text: '합산: 국어+수학+탐구평균 · 회차는 상단 회차 목록의 순서를 따릅니다.'}));
+    // 칩·드롭다운은 바뀐 부분만 다시 그린다. 화면 전체를 다시 그리면 그 사이 높이가 줄어 스크롤이 위로 튄다
+    const schoolSection = el('section', {class: 'card px-5 py-4', attrs: {id: 'trend-school'}});
+    root.append(schoolSection);
+    paintSchool(schoolSection, exams, options, keys);
+    root.append(studentSection(exams, options, keys));
+}
 
-    // ── 전교 통계 ──
+/** 전교 통계 칸을 (다시) 채운다. 기준 칩을 바꾸면 이 칸만 다시 그린다 */
+function paintSchool(section, exams, options, keys) {
     const school = schoolRows(exams, schoolBasis, options);
     const label = basisLabelOf(schoolBasis);
     const isGrade = schoolBasis === 'grade';
@@ -93,10 +100,10 @@ export function renderTrend() {
     const th = (t) => el('th', {class: 'border-b border-line bg-canvas px-2 py-2 text-left font-semibold text-ink-soft whitespace-nowrap', text: t});
     const td = (t, cls = '') => el('td', {class: `border-b border-line-soft px-2 py-2 tabular-nums whitespace-nowrap ${cls}`, text: t});
     const d = isGrade ? 2 : 1;
-    root.append(el('section', {class: 'card px-5 py-4', attrs: {id: 'trend-school'}}, [
+    section.replaceChildren(...[
         el('div', {class: 'flex flex-wrap items-center justify-between gap-3'}, [
             el('h3', {class: 'text-xl font-bold', text: '전교 통계'}),
-            basisChips(schoolBasis, (b) => { schoolBasis = b; renderTrend(); }, '전교 통계 기준'),
+            basisChips(schoolBasis, (b) => { schoolBasis = b; paintSchool(section, exams, options, keys); }, '전교 통계 기준'),
         ]),
         // 넓은 화면에서는 차트와 표를 나란히 둔다. 차트가 덜 납작해져 회차 사이 기울기가 잘 보인다
         el('div', {class: 'mt-3 grid gap-6 md:grid-cols-2 md:items-start'}, [
@@ -114,7 +121,7 @@ export function renderTrend() {
         school.some(s => s.kor === null && s.math === null)
             ? el('p', {class: 'mt-2 text-base text-wait', text: `${label}가 없는 회차는 표에 —로 표시하고 그래프에서 비워 둡니다.`})
             : null,
-    ]));
+    ].filter(Boolean));
     drawLine('trendSchool', schoolCanvas, keys, [
         // 합산은 과목보다 몇 배 커서 같은 축에 두면 과목 선이 납작해진다. 오른쪽 축을 따로 쓴다
         ...(isGrade ? [] : [{label: '합산 평균 (오른쪽 축)', data: school.map(s => s.total), borderColor: COLORS[0], backgroundColor: COLORS[0], yAxisID: 'y1'}]),
@@ -122,8 +129,10 @@ export function renderTrend() {
         {label: '수학', data: school.map(s => s.math), borderColor: COLORS[2], backgroundColor: COLORS[2]},
         ...(isGrade ? [] : [{label: '탐구평균', data: school.map(s => s.inq), borderColor: COLORS[3], backgroundColor: COLORS[3]}]),
     ], {reverse: isGrade, secondAxis: !isGrade});
+}
 
-    // ── 학생별 통계: 학급 → 학생 드롭다운 ──
+/** 학생별 통계 칸: 학급 → 학생 드롭다운. 드롭다운을 바꾸면 학생 목록과 아래 상세만 다시 그린다 */
+function studentSection(exams, options, keys) {
     const {persons, conflicts} = linkStudents(exams);
     const chosen = chosenRecords ? persons.find(p => [...recordsOf(p, exams)].some(r => chosenRecords.has(r))) ?? null : null;
     if (chosen) choose(chosen, exams);
@@ -132,22 +141,41 @@ export function renderTrend() {
     const groups = classGroups(persons, exams);
     if (chosen) chosenClass = groups.find(g => g.persons.includes(chosen))?.key ?? chosenClass;
     if (!groups.some(g => g.key === chosenClass)) chosenClass = null;
-    const group = groups.find(g => g.key === chosenClass);
+    const currentGroup = () => groups.find(g => g.key === chosenClass);
 
     const classSelect = el('select', {class: 'field', attrs: {'aria-label': '학급'}}, [
-        el('option', {text: '학급 선택', attrs: {value: '', disabled: true, selected: !group}}),
-        ...groups.map(g => el('option', {text: `${g.label} (${g.persons.length}명)`, attrs: {value: g.key, selected: g === group}})),
+        el('option', {text: '학급 선택', attrs: {value: '', disabled: true, selected: !currentGroup()}}),
+        ...groups.map(g => el('option', {text: `${g.label} (${g.persons.length}명)`, attrs: {value: g.key, selected: g.key === chosenClass}})),
     ]);
-    classSelect.addEventListener('change', () => { chosenClass = classSelect.value; choose(null, exams); renderTrend(); });
-    const studentSelect = el('select', {class: 'field', attrs: {'aria-label': '학생', disabled: !group}}, [
-        el('option', {text: group ? '학생 선택' : '학급을 먼저 선택하세요', attrs: {value: '', disabled: true, selected: !chosen}}),
-        ...(group?.persons ?? []).map((p, i) => el('option', {text: studentLabel(p, exams), attrs: {value: String(i), selected: p === chosen}})),
-    ]);
-    studentSelect.addEventListener('change', () => { choose(group.persons[Number(studentSelect.value)], exams); renderTrend(); });
-    const field = (text, control) => el('label', {class: 'flex min-w-0 flex-col gap-1'}, [el('span', {class: 'text-base text-ink-soft', text}), control]);
-
+    const studentSelect = el('select', {class: 'field', attrs: {'aria-label': '학생'}});
     const detail = el('div', {class: 'mt-4'});
-    root.append(el('section', {class: 'card px-5 py-4', attrs: {id: 'trend-student'}}, [
+    const fillStudents = (picked) => {
+        const group = currentGroup();
+        studentSelect.disabled = !group;
+        studentSelect.replaceChildren(
+            el('option', {text: group ? '학생 선택' : '학급을 먼저 선택하세요', attrs: {value: '', disabled: true, selected: !picked}}),
+            ...(group?.persons ?? []).map((p, i) => el('option', {text: studentLabel(p, exams), attrs: {value: String(i), selected: p === picked}})),
+        );
+    };
+    // 학급을 바꾸면 그 학급의 첫 학생을 바로 보인다. 상세를 비우면 페이지가 짧아져 스크롤이 위로 밀린다
+    classSelect.addEventListener('change', () => {
+        chosenClass = classSelect.value;
+        const first = currentGroup()?.persons[0] ?? null;
+        choose(first, exams);
+        fillStudents(first);
+        if (first) renderPerson(detail, first, exams, options, keys);
+        else clear(detail);
+    });
+    studentSelect.addEventListener('change', () => {
+        const p = currentGroup().persons[Number(studentSelect.value)];
+        choose(p, exams);
+        renderPerson(detail, p, exams, options, keys);
+    });
+    fillStudents(chosen);
+    if (chosen) renderPerson(detail, chosen, exams, options, keys);
+
+    const field = (text, control) => el('label', {class: 'flex min-w-0 flex-col gap-1'}, [el('span', {class: 'text-base text-ink-soft', text}), control]);
+    return el('section', {class: 'card px-5 py-4', attrs: {id: 'trend-student'}}, [
         el('h3', {class: 'text-xl font-bold', text: '학생별 통계'}),
         el('p', {class: 'mt-1 text-base text-ink-soft', text: '학번 또는 학년·반·번호가 같은 학생을 같은 사람으로 봅니다. 이름이 다르면 연결하지 않습니다.'}),
         conflicts.length
@@ -155,9 +183,7 @@ export function renderTrend() {
             : null,
         el('div', {class: 'mt-3 grid gap-3 sm:grid-cols-2'}, [field('학급', classSelect), field('학생', studentSelect)]),
         detail,
-    ]));
-
-    if (chosen) renderPerson(detail, chosen, exams, options, keys);
+    ]);
 }
 
 /** 사람의 대표 기록: 가장 나중 회차의 기록(반이 바뀌었으면 지금 반으로 묶는다) */
