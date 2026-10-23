@@ -106,3 +106,37 @@ it('회차가 없으면 보고서 인쇄 단추를 감추고, 불러오면 보�
     main.loadSampleData();
     expect(document.getElementById('report-print').classList.contains('hidden')).toBe(false);
 }, 20000);
+
+describe('보고서 제목·종합 분석은 회차마다 따로', () => {
+    const two = () => {
+        ST.exams = [];
+        main.loadSampleData();
+        const sample = ST.exams[0];
+        ST.exams = [{...sample, key: '5월', order: 0}, {...sample, key: '6월', order: 1}];
+        ST.activeExamKey = '5월';
+        main.afterExamsChanged();
+    };
+    const title = () => document.getElementById('report-title').textContent;
+    const analysis = () => document.getElementById('report-analysis');
+
+    it('기본 제목에 회차 이름이 들어가고, 고친 글은 그 회차에만 남는다', async () => {
+        const {renderReport} = await import('../src/js/report.js');
+        two();
+        renderReport();
+        expect(title()).toBe('5월 모의고사\n성적 분석 레포트');
+
+        analysis().textContent = '5월 총평';
+        analysis().dispatchEvent(new Event('input', {bubbles: true}));
+        rail.selectExam('6월');
+        expect(title()).toBe('6월 모의고사\n성적 분석 레포트');
+        expect(analysis().textContent).toContain('[이 곳을 클릭하여');
+
+        rail.selectExam('5월');
+        expect(analysis().textContent).toBe('5월 총평');
+    }, 30000);
+
+    it('회차 이름이 없으면 예전처럼 「모의고사 / 성적 분석 레포트」', async () => {
+        const {defaultReportTitle} = await import('../src/js/report.js');
+        expect(defaultReportTitle('')).toBe('모의고사\n성적 분석 레포트');
+    });
+});

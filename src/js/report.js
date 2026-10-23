@@ -60,6 +60,7 @@ export function renderReport() {
     empty.classList.add('hidden');
 
     document.getElementById('report-subtitle').innerText = `「${ST.activeExamKey}」 회차 · 총 ${ST.data.length}명`;
+    renderReportNotes();
 
     const dateStr = `분석 일시: ${new Date().toLocaleDateString()}`;
     if (document.getElementById('print-date-top')) {
@@ -138,4 +139,42 @@ window.addEventListener('resize', () => {
             renderAll();
         }
     }, 1000);
+});
+/* ───────────────────────────────────────────
+   § 보고서 제목·종합 분석: 회차마다 따로 적는다
+   적은 글은 그 회차(ST.exams 의 한 항목)에 메모리로 남긴다. 회차를 바꿔도 다른 회차의 글을 덮지 않고,
+   돌아오면 적어 둔 글이 그대로 있다. 파일이나 브라우저 저장소에는 남기지 않는다(CLAUDE.md).
+─────────────────────────────────────────── */
+export const DEFAULT_ANALYSIS = `[이 곳을 클릭하여 시험 총평 및 학습 전략을 입력하세요]
+
+※ 작성 가이드
+(보고서 PDF를 인쇄하기 전에 지워주세요)
+--------------------------------------------------
+▶ 출제 경향: 전년 대비 난이도 변화 및 주요 킬러 문항의 특징
+▶ 취약 구간: 정답률이 낮았던 유형 및 학생들이 공통적으로 실수한 개념
+▶ 향후 전략: 분석 결과를 바탕으로 한 영역별 보완법과 학습 로드맵 제언
+--------------------------------------------------`;
+
+/** 기본 제목: 「5월 모의고사 / 성적 분석 레포트」. 회차 이름이 없으면 「모의고사 / 성적 분석 레포트」 */
+export function defaultReportTitle(examKey) {
+    const key = String(examKey ?? '').trim();
+    return `${key ? `${key} ` : ''}모의고사\n성적 분석 레포트`;
+}
+
+const activeExam = () => ST.exams.find(e => e.key === ST.activeExamKey);
+
+function renderReportNotes() {
+    const exam = activeExam();
+    const title = document.getElementById('report-title');
+    const analysis = document.getElementById('report-analysis');
+    if (title) title.textContent = exam?.reportTitle ?? defaultReportTitle(exam?.key);
+    if (analysis) analysis.textContent = exam?.reportAnalysis ?? DEFAULT_ANALYSIS;
+}
+
+// 고친 글을 지금 회차에 적어 둔다
+document.addEventListener('input', (event) => {
+    const exam = activeExam();
+    if (!exam) return;
+    if (event.target.id === 'report-title') exam.reportTitle = event.target.innerText ?? event.target.textContent;
+    if (event.target.id === 'report-analysis') exam.reportAnalysis = event.target.innerText ?? event.target.textContent;
 });
