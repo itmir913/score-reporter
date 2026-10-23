@@ -39,8 +39,8 @@ export async function prepareFile({name, bytes, container}) {
     return row;
 }
 
-/** 올린 것들(File·zip) → 줄 목록 + 건너뛴 것 */
-export async function prepareUploads(files) {
+/** 올린 것들(File·zip) → 줄 목록 + 건너뛴 것. onProgress(i, n) 으로 몇 번째를 읽는지 알린다 */
+export async function prepareUploads(files, {onProgress} = {}) {
     const uploads = [];
     for (const f of files) {
         // 브라우저 File 에도 bytes() 메서드가 있다. zip 에서 꺼낸 Uint8Array 인지 형태로 가린다
@@ -49,7 +49,12 @@ export async function prepareUploads(files) {
     }
     const {files: sheets, skipped} = expandUploads(uploads);
     const rows = [];
-    for (const f of sheets) rows.push(await prepareFile(f));
+    for (const [i, f] of sheets.entries()) {
+        onProgress?.(i + 1, sheets.length);
+        // 파일 하나를 읽은 뒤 화면에 차례를 넘긴다. 쉬지 않고 이어 읽으면 그동안 화면이 멈춘다
+        await new Promise(resolve => setTimeout(resolve, 0));
+        rows.push(await prepareFile(f));
+    }
     return {rows, skipped};
 }
 
@@ -210,7 +215,7 @@ export function renderImportTable(root, state, options) {
             if (state.unlocking) return;
             state.unlocking = true;
             button.disabled = true;
-            button.textContent = '여는 중…';
+            button.textContent = '확인 중…';
             let failed = 0;
             for (const r of rows.filter(x => x.status === 'locked')) {
                 const ok = await unlock(r, all.value);
@@ -255,15 +260,18 @@ export function renderImportTable(root, state, options) {
             const input = el('input', {class: CELL_FIELD, attrs: {type: 'password', placeholder: '비밀번호', autocomplete: 'off', 'aria-label': `${row.name} 비밀번호`}});
             const go = async () => {
                 if (row.busy) return;
+                button.disabled = true;
+                button.textContent = '확인 중…';
                 await unlock(row, input.value);
                 redraw();
             };
             input.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+            const button = el('button', {class: 'btn btn-sm shrink-0 whitespace-nowrap', text: '확인', attrs: {type: 'button', 'aria-label': `${row.name} 비밀번호 확인`}, on: {click: go}});
             controls = [
                 // 비밀번호 칸은 회차 이름부터 미리보기까지 네 칸을 함께 쓴다. 칸이 좁아 단추 글자가 세로로 서던 것을 막는다
                 td([el('div', {class: 'flex max-w-md items-center gap-2'}, [
                     el('div', {class: 'min-w-0 flex-1'}, [input]),
-                    el('button', {class: 'btn btn-sm shrink-0 whitespace-nowrap', text: '확인', attrs: {type: 'button', 'aria-label': `${row.name} 비밀번호 확인`}, on: {click: go}}),
+                    button,
                 ])], '', {colspan: '4'}),
             ];
         } else if (row.status === 'ready') {
@@ -281,9 +289,10 @@ export function renderImportTable(root, state, options) {
                     })),
                 ])], 'min-w-36'),
                 td([sheetNames.length > 1
-                    ? el('select', {class: CELL_FIELD, attrs: {'aria-label': `${row.name} 시트`}, on: {change: (e) => { selectSheet(row, e.target.value); redraw(); }}},
+                    ? el('select', {class: `${CELL_FIELD} max-w-48`, attrs: {'aria-label': `${row.name} 시트`, title: row.sheet}, on: {change: (e) => { selectSheet(row, e.target.value); redraw(); }}},
                         sheetNames.map(n => el('option', {text: n, attrs: {value: n, selected: n === row.sheet}})))
-                    : el('span', {class: 'text-ink-soft', text: row.sheet})], 'min-w-28'),
+                    // 시트 이름이 길어도 표를 넓히지 않는다. 말줄임하고 전체 이름은 마우스를 올리면 보인다
+                    : el('span', {class: 'block max-w-48 truncate text-ink-soft', text: row.sheet, attrs: {title: row.sheet}})], 'min-w-28'),
                 td([el('button', {
                     class: 'btn btn-sm', text: row.preview ? '닫기' : '보기',
                     attrs: {type: 'button', 'aria-expanded': String(row.preview), 'aria-label': `${row.name} 미리보기`},

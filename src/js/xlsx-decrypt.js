@@ -163,9 +163,17 @@ function attrs(xml, tag) {
 /* 비밀번호를 spinCount 만큼 되풀이해 해시한다. 실제 파일은 10만 번이라 여기가
  * 전체 시간의 거의 전부다. 파생 키가 셋 필요하지만 회전은 셋이 공유하므로,
  * 한 번만 계산하고 blockKey 별 마지막 해시만 따로 한다. */
-function spinPassword(algo, password, salt, spinCount) {
+/* 회전은 수만 번이라 쉬지 않고 돌면 그동안 화면이 멈춘다. 이만큼마다 한 번씩 브라우저에 차례를 넘긴다.
+ * Web Worker 로 옮기지 않는 것은, 오프라인 zip 의 압축을 해제해 file:// 로 열면 브라우저가 Worker 파일을 막기 때문이다 */
+const SPIN_YIELD_EVERY = 2000;
+const yieldToBrowser = () => new Promise(resolve => setTimeout(resolve, 0));
+
+async function spinPassword(algo, password, salt, spinCount) {
     let h = hash(algo, salt, utf16le(password));
-    for (let i = 0; i < spinCount; i++) h = hash(algo, le32(i), h);
+    for (let i = 0; i < spinCount; i++) {
+        h = hash(algo, le32(i), h);
+        if (i % SPIN_YIELD_EVERY === SPIN_YIELD_EVERY - 1) await yieldToBrowser();
+    }
     return h;
 }
 
@@ -188,7 +196,7 @@ async function decryptAgile(infoBytes, packageBytes, password) {
     const encKeyBytes = Number(enc.keyBits) / 8;
     const spin = Number(enc.spinCount);
 
-    const spun = spinPassword(encAlgo, password, encSalt, spin);
+    const spun = await spinPassword(encAlgo, password, encSalt, spin);
 
     // 비밀번호 검증: 입력값을 변환해 해시한 값이 저장된 해시와 같아야 한다.
     const inputKey = deriveKey(encAlgo, spun, BLOCK_KEY_VERIFIER_INPUT, encKeyBytes);
@@ -228,10 +236,9 @@ async function decryptAgile(infoBytes, packageBytes, password) {
 
 /* 이쪽은 회전 수가 50000 으로 고정이고 해시는 언제나 SHA-1 이다. 마지막에
  * 0x36/0x5C 패딩을 얹어 두 번 해시한 값을 이어 붙인 것이 키가 된다. */
-function deriveStandardKey(password, salt, keyBytes) {
+async function deriveStandardKey(password, salt, keyBytes) {
     const sha1 = hashFn('SHA-1');
-    let h = hash(sha1, salt, utf16le(password));
-    for (let i = 0; i < 50000; i++) h = hash(sha1, le32(i), h);
+    let h = await spinPassword(sha1, password, salt, 50000);
     h = hash(sha1, h, le32(0));
 
     const x1 = hash(sha1, xorInto(new Uint8Array(64).fill(0x36), fit(h, 64)));
@@ -251,7 +258,7 @@ async function decryptStandard(infoBytes, packageBytes, password) {
     const hashSize = dv.getUint32(at + 20 + saltSize, true);
     const encVerifierHash = infoBytes.subarray(at + 24 + saltSize, at + 24 + saltSize + 32);
 
-    const key = await importAesKey(deriveStandardKey(password, salt, keyBits / 8));
+    const key = await importAesKey(await deriveStandardKey(password, salt, keyBits / 8));
     const verifier = await aesEcbDecrypt(key, encVerifier);
     const stored = await aesEcbDecrypt(key, encVerifierHash);
     const actual = hash(hashFn('SHA-1'), verifier);

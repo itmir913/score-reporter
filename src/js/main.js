@@ -138,8 +138,10 @@ export function renderImports() {
 export async function addUploads(files) {
     const input = document.getElementById('fileInput');
     if (input) input.value = '';
-    showToast('파일을 읽는 중입니다…');
-    const {rows, skipped} = await prepareUploads(files);
+    showToast('엑셀 파일을 읽는 중입니다…');
+    const {rows, skipped} = await prepareUploads(files, {
+        onProgress: (i, n) => showToast(`엑셀 파일을 읽는 중입니다 (${i}/${n})`),
+    });
     // 표에 있던 것뿐 아니라 이번 묶음 안의 같은 파일(예: a.xlsx 와 그것을 담은 zip)도 한 번만 넣는다
     const known = new Set(IMPORT.rows.map(r => r.hash));
     for (const r of rows) {
