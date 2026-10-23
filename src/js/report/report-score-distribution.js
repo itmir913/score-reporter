@@ -55,6 +55,18 @@ export function renderScoreDistribution(cache = ST.cache) {
         counts[(numBins - 1) - binIndex]++;
     });
 
+    const thead = document.getElementById('score-dist-thead');
+    const tbody = document.getElementById('score-dist-tbody');
+
+    /** index 번째 급간(높은 점수부터)의 명단을 연다. 막대와 표의 숫자가 함께 쓴다 */
+    const openBin = (index) => {
+        // 히스토그램 빈 구성과 같은 반올림한 합으로 거른다
+        const studentsInBin = binned
+            .filter(({key}) => Math.floor(key / intervalSize) === numBins - 1 - index)
+            .map(({s}) => s);
+        showBinStudentsModal(`${labels[index]} 급간`, studentsInBin);
+    };
+
     // --- 차트 그리기 ---
     const canvasId = 'score-dist-chart';
     if (ST.charts['scoreDist']) ST.charts['scoreDist'].destroy();
@@ -79,17 +91,7 @@ export function renderScoreDistribution(cache = ST.cache) {
             maintainAspectRatio: true,
             aspectRatio: 2.5,
             onClick: function (event, elements) {
-                if (elements.length > 0) {
-                    const index = elements[0].index;
-                    const label = `${this.data.labels[index]} 급간`;
-
-                    // 히스토그램 빈 구성과 같은 반올림한 합으로 거른다
-                    const studentsInBin = binned
-                        .filter(({key}) => Math.floor(key / intervalSize) === numBins - 1 - index)
-                        .map(({s}) => s);
-
-                    showBinStudentsModal(label, studentsInBin);
-                }
+                if (elements.length > 0) openBin(elements[0].index);
             },
             onHover: (event, elements) => {
                 event.native.target.style.cursor =
@@ -112,8 +114,11 @@ export function renderScoreDistribution(cache = ST.cache) {
     });
 
     // --- 표 렌더링 ---
-    const thead = document.getElementById('score-dist-thead');
-    const tbody = document.getElementById('score-dist-tbody');
+    // 표의 인원 숫자도 막대처럼 그 급간 명단을 연다. 표를 다시 그릴 때마다 처리기를 바꿔 끼운다
+    tbody.onclick = (event) => {
+        const cell = event.target.closest('[data-bin]');
+        if (cell) openBin(Number(cell.dataset.bin));
+    };
     thead.innerHTML = '';
 
     const chunkSize = 8;
@@ -135,8 +140,9 @@ export function renderScoreDistribution(cache = ST.cache) {
         </tr>
         <tr class="bg-white border-b border-slate-200">
             <td class="px-1 py-3 text-center font-bold text-slate-700 border-r border-slate-200 text-base md:text-base">인원 (명)</td>
-            ${chunkCounts.map(c =>
-            `<td class="px-1 py-3 text-center text-base md:text-base text-slate-600 ${c > 0 ? 'font-bold text-emerald-600' : ''}">${c}</td>`
+            ${chunkCounts.map((c, j) => c > 0
+            ? `<td class="px-1 py-3 text-center text-base md:text-base"><button type="button" data-bin="${i + j}" aria-label="${chunkLabels[j]} 급간 명단" class="cursor-pointer rounded px-2 font-bold text-emerald-600 underline-offset-4 hover:underline">${c}</button></td>`
+            : `<td class="px-1 py-3 text-center text-base md:text-base text-slate-600">${c}</td>`
         ).join('')}
             ${emptyCells}
         </tr>
