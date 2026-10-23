@@ -312,7 +312,7 @@
                         </div>
                         <div class="flex flex-col gap-6">
                             <!-- 국어·수학은 제목 → 차트 → 표를 세로로 쌓아 넓은 화면에서 두 열로 놓는다 -->
-                            <div class="grid gap-6 lg:grid-cols-2 print:grid-cols-1">
+                            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 print:grid-cols-1 [&>*]:min-w-0">
                             <div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-col no-print-box print:break-inside-avoid">
                                 <h3 class="text-center font-bold text-slate-700 mb-6">국어 선택 비율</h3>
                                 <div class="flex flex-col gap-4 items-center">
@@ -616,11 +616,12 @@
 <div id="student-modal"
      class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[120] flex items-center justify-center p-4 no-print transition-opacity">
     <div class="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-fade-in">
-        <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
-            <h3 id="modal-student-info" class="text-xl font-bold text-slate-800 tracking-tight">학생 성적 상세</h3>
-            <div class="flex items-center gap-2">
-                <button data-action="student-trend" class="btn btn-sm btn-brand" title="이 학생의 회차별 통계">
-                    <i class="fa-solid fa-chart-line"></i>회차별 통계
+        <div class="px-4 py-4 sm:px-8 sm:py-6 border-b border-slate-100 flex justify-between items-center gap-3 bg-slate-50/50 shrink-0">
+            <h3 id="modal-student-info" class="min-w-0 text-xl font-bold text-slate-800 tracking-tight">학생 성적 상세</h3>
+            <div class="flex shrink-0 items-center gap-2">
+                <!-- 좁은 화면에서는 글자를 숨기고 아이콘만 둔다(글자가 한 자씩 줄바꿈되지 않게) -->
+                <button data-action="student-trend" class="btn btn-sm btn-brand whitespace-nowrap" title="이 학생의 회차별 통계" aria-label="회차별 통계">
+                    <i class="fa-solid fa-chart-line"></i><span class="hidden sm:inline">회차별 통계</span>
                 </button>
                 <button data-action="print-student"
                         class="w-10 h-10 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-blue-500 hover:border-blue-200 transition-all flex items-center justify-center"
@@ -633,8 +634,10 @@
                 </button>
             </div>
         </div>
-        <div class="p-8 overflow-y-auto scroll-stable">
-            <table class="w-full text-center text-base border-hidden rounded-xl overflow-hidden">
+        <div class="p-4 sm:p-8 overflow-y-auto scroll-stable">
+            <!-- 좁은 화면에서는 표가 찌그러지지 않고 옆으로 밀어 보게 한다 -->
+            <div class="overflow-x-auto">
+            <table class="w-full min-w-[30rem] whitespace-nowrap text-center text-base border-hidden rounded-xl overflow-hidden">
                 <thead class="bg-slate-50 text-slate-500 font-bold sticky top-0 z-10 border-b border-slate-200">
                 <tr>
                     <th class="p-4">과목</th>
@@ -647,6 +650,7 @@
                 </thead>
                 <tbody id="modal-score-tbody" class="divide-y divide-slate-100 text-slate-700 font-medium"></tbody>
             </table>
+            </div>
         </div>
     </div>
 </div>

@@ -246,8 +246,8 @@ export function renderExportCards() {
 
     document.getElementById('export-cards').innerHTML = Object.values(SCHEMAS).map(s => `
             <div class="card flex items-center justify-between gap-3 px-5 py-4">
-                <p class="text-lg font-semibold">${escapeAttr(s.label)} 양식</p>
-                <button type="button" data-action="export-to" data-format="${s.id}" class="btn">
+                <p class="min-w-0 text-lg font-semibold">${escapeAttr(s.label)} 양식</p>
+                <button type="button" data-action="export-to" data-format="${s.id}" class="btn shrink-0 whitespace-nowrap">
                     <i class="fa-solid fa-download"></i>내려받기
                 </button>
             </div>

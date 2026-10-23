@@ -105,7 +105,8 @@ function paintSchool(section, exams, options, keys) {
             basisChips(schoolBasis, (b) => { schoolBasis = b; paintSchool(section, exams, options, keys); }, '전교 통계 기준'),
         ]),
         // 넓은 화면에서는 차트와 표를 나란히 둔다. 차트가 덜 납작해져 회차 사이 기울기가 잘 보인다
-        el('div', {class: 'mt-3 grid gap-6 md:grid-cols-2 md:items-start'}, [
+        // grid-cols-1·min-w-0: 한 열일 때 표·차트가 열을 넓혀 페이지가 옆으로 넘치지 않게 열 너비를 화면에 묶는다
+        el('div', {class: 'mt-3 grid grid-cols-1 gap-6 md:grid-cols-2 md:items-start [&>*]:min-w-0'}, [
             el('div', {class: 'relative h-72'}, [schoolCanvas]),
             el('div', {}, [
             el('div', {class: 'overflow-x-auto rounded-lg border border-line'}, [el('table', {class: 'w-full text-base'}, [
@@ -321,7 +322,7 @@ function renderPerson(root, person, exams, options, keys) {
             ]),
             el('div', {class: 'mt-3'}, [subjectChips]),
             // 넓은 화면에서는 차트와 표를 나란히 둔다. 영역 표는 길어서 차트가 따라 내려오게 붙여 둔다
-            el('div', {class: 'mt-3 grid gap-6 lg:grid-cols-2 lg:items-start'}, [
+            el('div', {class: 'mt-3 grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start [&>*]:min-w-0'}, [
                 el('div', {class: 'relative h-72 lg:sticky lg:top-4'}, [subjectCanvas]),
                 el('div', {class: 'overflow-x-auto rounded-lg border border-line'}, [subjectTable]),
             ]),
@@ -331,7 +332,7 @@ function renderPerson(root, person, exams, options, keys) {
                 el('h4', {class: 'text-lg font-bold', text: '회차별 합산 석차'}),
                 basisChips(rankBasis, (b) => { rankBasis = b; renderPerson(root, person, exams, options, keys); }, '합산 석차 기준'),
             ]),
-            el('div', {class: 'mt-3 grid gap-6 lg:grid-cols-2 lg:items-start'}, [
+            el('div', {class: 'mt-3 grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start [&>*]:min-w-0'}, [
             rankByGrade
                 ? el('p', {class: 'rounded-lg bg-canvas px-4 py-3 text-base text-ink-soft', text: '등급으로는 합산 석차를 매기지 않습니다. 백분위·원점수·표준점수 중 하나를 선택하세요.'})
                 : el('div', {class: 'relative h-60'}, [rankCanvas]),

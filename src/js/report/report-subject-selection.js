@@ -93,7 +93,7 @@ export function renderSubjectSelection(cache) {
         };
 
         let html = `
-        <table class="w-full text-center mt-1 border-t border-slate-100 pt-0 text-base">
+        <div class="overflow-x-auto"><table class="w-full min-w-[22rem] whitespace-nowrap text-center mt-1 border-t border-slate-100 pt-0 text-base">
             <thead>
                 <tr class="text-slate-500 font-semibold border-b border-slate-100 bg-slate-50">
                     <th class="py-2 rounded-tl-lg">과목명</th>
@@ -122,7 +122,7 @@ export function renderSubjectSelection(cache) {
             `;
         });
 
-        html += `</tbody></table>`;
+        html += `</tbody></table></div>`;
         statsContainer.innerHTML = html;
     };
 

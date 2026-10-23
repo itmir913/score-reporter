@@ -19,6 +19,8 @@ const main = await import('../src/js/main.js');
 const view = await import('../src/js/ui/trendView.js');
 const {setGlobalBasis} = await import('../src/js/report.js');
 const {ST} = main;
+const {initActions} = await import('../src/js/actions.js');
+initActions();
 
 const sc = (raw, std = null) => ({raw, std, pct: null, grade: null});
 const st = (name, number, kor, math, inq1, inq2 = sc(null)) => ({
@@ -102,6 +104,10 @@ describe('통계 화면', () => {
         subjectRows[0].click();
         expect(document.getElementById('student-modal').classList.contains('hidden')).toBe(false);
         expect(document.getElementById('modal-student-info').innerText.startsWith('3 · ')).toBe(true);
+        // 다른 회차(지금 회차가 아닌)에서 연 성적표의 「회차별 통계」도 그 학생을 연다
+        main.ST.activeExamKey = '사설';
+        document.querySelector('[data-action="student-trend"]').click();
+        expect(document.getElementById('student-modal').classList.contains('hidden')).toBe(true);
     });
 
     it('성적표의 「회차별 통계」는 그 학생을 선택한 채 통계 화면을 연다', () => {

@@ -47,9 +47,11 @@ const CLICK_ACTIONS = {
     },
     // 성적표에서 이 학생의 회차별 통계로
     'student-trend': () => {
-        const index = ST.data?.indexOf(currentStudent());
-        if (index === undefined || index < 0) return;
-        choosePersonAt(ST.activeExamKey, index);
+        // 통계 탭에서 연 성적표는 지금 회차가 아닌 회차의 기록일 수 있다. 그 기록이 든 회차에서 찾는다
+        const record = currentStudent();
+        const exam = ST.exams.find(e => e.students.includes(record));
+        if (!exam) return;
+        choosePersonAt(exam.key, exam.students.indexOf(record));
         closeAllModals();
         switchTab('trend');
         renderTrend();
