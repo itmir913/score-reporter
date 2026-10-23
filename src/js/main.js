@@ -4,6 +4,7 @@ import {addExam} from './exams/examStore.js';
 import {blockers, commitRows, prepareUploads, renderImportTable} from './ui/importer.js';
 import {renderReport} from './report.js';
 import {SCHEMAS} from './schema.js';
+import {escapeAttr} from './utils.js';
 
 export {sheetjsTo2DArray} from './ingest/files.js';
 
@@ -190,12 +191,9 @@ export function clearAll() {
     // ST.data 를 건드려 오류가 났다.
     renderReport();
     document.getElementById('export-cards').innerHTML = '';
-    document.getElementById('export-summary').innerHTML = `
-            <div class="py-8 text-center text-slate-400 text-base font-medium">
-                <i class="fa-solid fa-inbox text-4xl mb-3 block text-slate-200"></i>
-                불러온 데이터가 없습니다
-            </div>
-        `;
+    document.getElementById('export-summary').innerHTML = '';
+    document.getElementById('export-empty')?.classList.remove('hidden');
+    document.getElementById('export-body')?.classList.add('hidden');
 }
 
 // 드래그 앤 드롭
@@ -222,32 +220,20 @@ export function handleFileSelect(e) {
    § 내보내기 탭 렌더링
 ─────────────────────────────────────────── */
 export function renderExportCards() {
-    if (!ST.data) return;
+    const has = !!ST.data;
+    document.getElementById('export-empty')?.classList.toggle('hidden', has);
+    document.getElementById('export-body')?.classList.toggle('hidden', !has);
+    if (!has) return;
     document.getElementById('export-summary').innerHTML = `
-            <div class="bg-blue-50 text-blue-700 p-4 rounded-xl flex items-center justify-between">
-                <div>
-                    <span class="font-bold block">파싱 완료 데이터</span>
-                    <span class="text-base">현재 ${ST.data.length}명의 데이터가 메모리에 있습니다.</span>
-                </div>
-                <i class="fa-solid fa-database text-2xl opacity-50"></i>
-            </div>
+            <p class="font-semibold">「${escapeAttr(ST.activeExamKey)}」 회차 · ${ST.data.length}명</p>
+            <p class="text-ink-soft">이 회차를 아래 양식으로 내보냅니다. 회차는 상단에서 바꿉니다.</p>
         `;
 
     document.getElementById('export-cards').innerHTML = Object.values(SCHEMAS).map(s => `
-            <div class="bg-white border border-slate-200 rounded-xl p-5 flex items-center justify-between
-                        transition hover:border-blue-300">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-lg bg-${s.color}-100 flex items-center justify-center">
-                        <i class="fa-solid ${s.icon} text-${s.color}-600 text-lg"></i>
-                    </div>
-                    <div>
-                        <h2 class="font-bold text-slate-800">${s.label} 양식으로 내보내기</h2>
-                    </div>
-                </div>
-                <button data-action="export-to" data-format="${s.id}"
-                        class="bg-white border border-${s.color}-200 text-${s.color}-600 hover:bg-${s.color}-50
-                               px-4 py-2 rounded-lg text-base font-bold transition">
-                    <i class="fa-solid fa-download mr-1.5"></i>다운로드
+            <div class="card flex items-center justify-between gap-3 px-5 py-4">
+                <p class="text-lg font-semibold">${escapeAttr(s.label)} 양식</p>
+                <button type="button" data-action="export-to" data-format="${s.id}" class="btn">
+                    <i class="fa-solid fa-download"></i>내려받기
                 </button>
             </div>
         `).join('');
@@ -427,7 +413,7 @@ export function loadSampleData() {
     renderExportCards();
     switchTab('report');
 }
-/* 회차 목록이 바뀐 뒤: 지금 회차가 없어졌으면 첫 회차를 고르고, 머리줄을 다시 그린다.
+/* 회차 목록이 바뀐 뒤: 지금 회차가 없어졌으면 첫 회차를 고르고, 상단바를 다시 그린다.
  * 리포트는 부르는 쪽이 다시 그린다. 회차 레일은 ui/examRail.js 가 onExamsChanged 로 받는다 */
 let examsListener = () => {};
 export function onExamsChanged(listener) {

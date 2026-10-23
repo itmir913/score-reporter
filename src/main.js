@@ -31,7 +31,7 @@ import {renderExamRail} from './js/ui/examRail.js';
 import {renderTrend} from './js/ui/trendView.js';
 
 initActions();
-// 회차가 바뀔 때마다 머리줄의 회차 레일을 다시 그린다
+// 회차가 바뀔 때마다 상단바의 회차 레일을 다시 그린다
 onExamsChanged(() => {
     renderExamRail();
     if (!document.getElementById('tab-trend')?.classList.contains('hidden')) renderTrend();

@@ -10,7 +10,7 @@ import {clear, el} from './dom.js';
    § 통계 화면
    전교 통계: 회차마다 과목 평균과 합산(국어+수학+탐구평균) 평균.
    학생별 통계: 한 학생을 골라 회차마다 점수와 합산 석차. 회차 사이 동일인은 exams/identity.js 가 잇는다.
-   가로축은 회차 순서(머리줄에서 바꾼 순서)다. 값이 없는 회차는 선이 끊기고 표는 — 이다.
+   가로축은 회차 순서(상단에서 바꾼 순서)다. 값이 없는 회차는 선이 끊기고 표는 — 이다.
 ─────────────────────────────────────────── */
 
 const fmt = (v, d = 1) => (Number.isFinite(v) ? toFixedHalfUp(v, d) : DASH);
@@ -37,10 +37,9 @@ export function renderTrend() {
     if (!root) return;
     clear(root);
     const exams = ST.exams;
-    if (!exams.length) {
-        root.append(el('p', {class: 'card px-6 py-12 text-center text-lg text-ink-soft', text: '불러온 회차가 없습니다. 「파일 추가」에서 회차를 불러오세요.'}));
-        return;
-    }
+    // 빈 화면은 보고서·내보내기와 같은 꼴(index.html 의 trend-empty)을 켠다
+    document.getElementById('trend-empty')?.classList.toggle('hidden', exams.length > 0);
+    if (!exams.length) return;
     const basis = globalReportBasis;
     const options = {includeNoInquiry: includeNoInquiry()};
     const label = labelMap[basis];

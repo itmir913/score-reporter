@@ -1,11 +1,7 @@
 /* 바탕·글꼴·화면 높이는 tailwind.css 의 디자인 토큰(admission-outcomes 와 같다)이 정한다 */
 
-/* ─── details/summary 기본 마커 제거 + 셰브론 회전 ─── */
-details > summary { list-style: none; }
-details > summary::-webkit-details-marker { display: none; }
-details[open] .eg-chevron { transform: rotate(180deg); }
 
-/* ─── 머리줄 탭: 지금 보는 화면 ─── */
+/* ─── 상단바 탭: 지금 보는 화면 ─── */
 .tab-btn {
     display: inline-flex;
     align-items: center;
@@ -254,7 +250,7 @@ canvas, img {
         display: block !important;
     }
 
-    /* 화면에서는 머리줄 아래만 스크롤하지만, 인쇄는 문서 전체가 흘러야 쪽이 나뉜다 */
+    /* 화면에서는 상단바 아래만 스크롤하지만, 인쇄는 문서 전체가 흘러야 쪽이 나뉜다 */
     body {
         background: white;
         margin: 0;

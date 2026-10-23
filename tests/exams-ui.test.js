@@ -1,6 +1,6 @@
 import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
-import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 import {buildWorkbook} from './helpers/baseline-fixture.js';
 
 /* jsdom 에는 canvas 가 없어 Chart.js 가 그리지 못한다 */
@@ -124,3 +124,32 @@ describe('학생 표', () => {
         expect(document.getElementById('modal-student-info').innerText).toContain('성적표');
     });
 });
+
+describe('프로그램별 내려받는 방법', () => {
+    beforeAll(async () => {
+        (await import('../src/js/actions.js')).initActions();
+    });
+
+    it('단추를 누르면 넓은 대화상자로 네 프로그램의 단계를 보인다', () => {
+        const dialog = document.getElementById('guide-dialog');
+        dialog.showModal = vi.fn();
+        document.querySelector('[data-action="open-guide"]').click();
+        expect(dialog.showModal).toHaveBeenCalled();
+        expect(dialog.className).toContain('w-[min(64rem,94vw)]');
+        expect([...dialog.querySelectorAll('h3')].map(h => h.textContent)).toEqual(['대교협', '유니브', '김영일', '꿈꾸GO']);
+    });
+});
+
+it('처음 열면 보이는 화면(파일 추가)의 탭이 켜져 있다', () => {
+    const visible = ['upload', 'report', 'trend', 'export'].filter(t => !document.getElementById(`tab-${t}`).classList.contains('hidden'));
+    expect(visible).toEqual(['upload']);
+    expect([...document.querySelectorAll('.tab-btn.active')].map(b => b.dataset.tab)).toEqual(['upload']);
+});
+
+it('회차가 없으면 보고서 인쇄 단추를 감추고, 불러오면 보인다', async () => {
+    const {renderReport} = await import('../src/js/report.js');
+    renderReport();
+    expect(document.getElementById('report-print').classList.contains('hidden')).toBe(true);
+    main.loadSampleData();
+    expect(document.getElementById('report-print').classList.contains('hidden')).toBe(false);
+}, 20000);

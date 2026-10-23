@@ -48,7 +48,10 @@ export function setGlobalBasis(basis) {
 export function renderReport() {
     const wrap = document.getElementById('report-content');
     const empty = document.getElementById('report-empty');
-    if (!ST.data || ST.data.length === 0) {
+    const hasData = !!ST.data?.length;
+    // 인쇄할 것이 없으면 인쇄 단추도 감춘다
+    document.getElementById('report-print')?.classList.toggle('hidden', !hasData);
+    if (!hasData) {
         wrap.classList.add('hidden');
         empty.classList.remove('hidden');
         return;

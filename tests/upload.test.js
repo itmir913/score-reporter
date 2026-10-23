@@ -328,7 +328,7 @@ describe('clearAll (전체 지우기)', () => {
         expect(ST.cache).toBeNull();
         expect(document.getElementById('report-content').classList.contains('hidden')).toBe(true);
         expect(document.getElementById('export-cards').innerHTML).toBe('');
-        expect(document.getElementById('export-summary').textContent).toContain('불러온 데이터가 없습니다');
+        expect(document.getElementById('export-empty').classList.contains('hidden')).toBe(false);
     }, 20000);
 
     it('데이터가 비어 있을 때 리포트 핸들러가 오류를 내지 않는다', () => {

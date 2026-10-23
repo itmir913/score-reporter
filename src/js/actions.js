@@ -60,6 +60,13 @@ const CLICK_ACTIONS = {
         if (ST.exams.length && !confirm('불러온 회차를 모두 지울까요? 저장하지 않았다면 되돌릴 수 없습니다.')) return;
         clearAll();
     },
+    'open-guide': () => {
+        const dialog = document.getElementById('guide-dialog');
+        dialog.showModal?.();
+        // 바깥(어두운 곳)을 누르면 닫는다
+        dialog.onclick = (event) => { if (event.target === dialog) dialog.close(); };
+    },
+    'close-guide': () => document.getElementById('guide-dialog').close?.(),
     'save-project': () => saveProject(),
     'open-project': () => document.getElementById('projectInput').click(),
     'load-sample': () => loadSampleData(),
