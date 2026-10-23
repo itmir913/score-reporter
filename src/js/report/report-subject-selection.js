@@ -8,6 +8,52 @@ import {DASH, escapeAttr, toFixedHalfUp} from '../utils.js';
 /* ───────────────────────────────────────────
    § 선택과목 비율 분석
 ─────────────────────────────────────────── */
+
+/* 파이 조각 안에 과목명과 비율을 적는다(text-base 크기).
+ * 조각 바깥쪽(반지름의 2/3)에 적고, 그 자리의 조각 폭에 맞는 글만 적는다:
+ * 과목명까지 들어가면 둘 다, 비율만 들어가면 비율만, 그것도 안 되면 적지 않는다(범례와 표에 있다) */
+const NAME_FONT = '600 16px Pretendard, sans-serif';
+const PCT_FONT = '500 14px Pretendard, sans-serif';
+const sliceLabels = {
+    id: 'sliceLabels',
+    afterDatasetsDraw(chart) {
+        const {ctx} = chart;
+        const data = chart.data.datasets[0].data;
+        const total = data.reduce((a, b) => a + b, 0);
+        if (!total) return;
+        ctx.save();
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        chart.getDatasetMeta(0).data.forEach((arc, i) => {
+            if (!chart.getDataVisibility(i) || !data[i]) return;
+            const {x, y, startAngle, endAngle, outerRadius} = arc.getProps(['x', 'y', 'startAngle', 'endAngle', 'outerRadius'], true);
+            const mid = (startAngle + endAngle) / 2;
+            const r = outerRadius * 0.66;
+            // 그 반지름에서 조각이 가로로 차지하는 폭(현의 길이). 한 조각이 반을 넘으면 넉넉하다
+            const room = endAngle - startAngle >= Math.PI ? Infinity : 2 * r * Math.sin((endAngle - startAngle) / 2);
+            const cx = x + Math.cos(mid) * r;
+            const cy = y + Math.sin(mid) * r;
+            const name = String(chart.data.labels[i]);
+            const pct = `${toFixedHalfUp(data[i] / total * 100, 1)}%`;
+            ctx.font = NAME_FONT;
+            const nameW = ctx.measureText(name).width;
+            ctx.font = PCT_FONT;
+            const pctW = ctx.measureText(pct).width;
+            if (Math.max(nameW, pctW) + 8 <= room && room >= 40) {
+                ctx.font = NAME_FONT;
+                ctx.fillText(name, cx, cy - 10);
+                ctx.font = PCT_FONT;
+                ctx.fillText(pct, cx, cy + 10);
+            } else if (pctW + 6 <= room) {
+                ctx.font = PCT_FONT;
+                ctx.fillText(pct, cx, cy);
+            }
+        });
+        ctx.restore();
+    },
+};
+
 export function renderSubjectSelection(cache) {
     if (!ST.data || ST.data.length === 0) return;
     if (!ST.charts) ST.charts = {};
@@ -73,10 +119,11 @@ export function renderSubjectSelection(cache) {
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: {boxWidth: 12, padding: 8, font: {size: 11}}
+                        labels: {boxWidth: 12, padding: 8, font: {size: 13}}
                     }
                 }
-            }
+            },
+            plugins: [sliceLabels],
         });
 
         const total = counts.reduce((a, b) => a + b, 0);
