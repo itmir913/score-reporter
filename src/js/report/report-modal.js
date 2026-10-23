@@ -292,8 +292,10 @@ export function printStudentDetail() {
     const s = _printStudent;
     if (!s) return;
 
+    // 제목에는 보고서 제목처럼 회차 이름을 넣는다(「5월 모의고사 성적표」). 회차 이름이 없을 때만 학년도를 쓴다
+    const examKey = String(ST.activeExamKey ?? '').trim();
     const examYear = s.exam_year ? `${s.exam_year}학년도 ` : '';
-    const title = `${examYear}모의고사 성적표`;
+    const title = `${examKey ? `${examKey} ` : examYear}모의고사 성적표`;
 
     // 원점수 표시 헬퍼
     const fmtRaw = (subj) => {
