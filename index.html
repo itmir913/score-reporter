@@ -24,20 +24,20 @@
     <h1 class="shrink-0 whitespace-nowrap text-lg font-bold tracking-tight">
         <span class="hidden md:inline">모의고사 성적 분석</span><span class="md:hidden">모의고사</span>
     </h1>
-    <nav id="exam-rail" class="scroll-stable flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-1" aria-label="회차"></nav>
+    <nav id="exam-rail" class="no-scrollbar flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-1" aria-label="회차"></nav>
     <!-- 화면 전환 탭. 단추처럼 보이지 않게 한 묶음으로 둔다(자료를 다루는 단추는 각 화면 안에 있다) -->
     <nav class="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg bg-canvas p-1" aria-label="화면">
         <button type="button" class="tab-btn active" data-action="switch-tab" data-tab="upload" title="엑셀·zip 불러오기">
-            <i class="fa-solid fa-file-arrow-up"></i><span class="hidden sm:inline">파일 추가</span>
+            <i class="fa-solid fa-file-arrow-up"></i><span class="hidden md:inline">파일 추가</span>
         </button>
         <button type="button" class="tab-btn" data-action="switch-tab" data-tab="report">
-            <i class="fa-solid fa-chart-pie"></i><span class="hidden sm:inline">보고서</span>
+            <i class="fa-solid fa-chart-pie"></i><span class="hidden md:inline">보고서</span>
         </button>
         <button type="button" class="tab-btn" data-action="switch-tab" data-tab="trend" title="회차별 전교·학생별 통계">
-            <i class="fa-solid fa-chart-line"></i><span class="hidden sm:inline">통계</span>
+            <i class="fa-solid fa-chart-line"></i><span class="hidden md:inline">통계</span>
         </button>
         <button type="button" class="tab-btn" data-action="switch-tab" data-tab="export">
-            <i class="fa-solid fa-download"></i><span class="hidden sm:inline">내보내기</span>
+            <i class="fa-solid fa-download"></i><span class="hidden md:inline">내보내기</span>
         </button>
     </nav>
 </header>

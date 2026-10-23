@@ -163,10 +163,6 @@ function scrollToImports() {
     const area = document.getElementById('import-area');
     if (!area?.scrollIntoView) return;
     area.scrollIntoView({behavior: 'smooth', block: 'start'});
-    setTimeout(() => {
-        const box = area.getBoundingClientRect();
-        if (box.top > window.innerHeight || box.bottom < 0) area.scrollIntoView({block: 'start'});
-    }, 700);
 }
 
 /** 표에서 선택한 파일들을 회차로 넣는다 */

@@ -650,3 +650,9 @@
     border-bottom: 2px solid var(--color-ink);
   }
 }
+
+/* 회차 줄은 넘치면 옆으로 밀어 보되 스크롤바는 그리지 않는다 */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
