@@ -152,6 +152,8 @@ export async function addUploads(files) {
     // 앞 묶음의 건너뛴 안내를 덮지 않고 잇는다
     IMPORT.skipped = [...IMPORT.skipped, ...skipped];
     renderImports();
+    // 올린 파일이 드롭존 아래 표에 나타난다. 화면 밖이면 반응이 없는 줄 알기 쉬우니 표로 스크롤한다
+    if (rows.length || skipped.length) document.getElementById('import-area')?.scrollIntoView?.({block: 'start'});
     showToast(rows.length ? `${rows.length}개 파일을 목록에 추가했습니다.` : '읽을 수 있는 엑셀 파일이 없습니다.', !rows.length);
 }
 

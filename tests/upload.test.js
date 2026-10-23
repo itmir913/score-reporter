@@ -67,6 +67,13 @@ describe('표에 늘어놓기', () => {
         expect(document.getElementById('tab-report').classList.contains('hidden')).toBe(false);
     });
 
+    it('파일을 올리면 표로 스크롤한다', async () => {
+        const spy = vi.fn();
+        document.getElementById('import-area').scrollIntoView = spy;
+        await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop))]);
+        expect(spy).toHaveBeenCalledWith({block: 'start'});
+    });
+
     it('같은 파일을 또 올리면 표에 다시 넣지 않는다', async () => {
         const bytes = await xlsxOf(SCHEMAS.univcoop);
         await addUploads([fakeFile('3월.xlsx', bytes)]);
