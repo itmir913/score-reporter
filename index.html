@@ -15,49 +15,40 @@
          Vite가 번들해서 해시 붙은 파일로 내보내고 이 자리에 태그를 끼워 넣는다. -->
     <script type="module" src="/src/main.js"></script>
 </head>
-<body class="min-h-screen flex flex-col selection:bg-indigo-100 selection:text-indigo-900 text-slate-800">
+<body>
 
-<header class="no-print bg-white/80 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-50">
-    <div class="max-w-screen-xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between">
-        <div class="flex items-center gap-4">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                <i class="fa-solid fa-graduation-cap text-white text-lg"></i>
-            </div>
-            <div class="hidden md:block">
-                <h1 class="text-lg font-extrabold text-slate-900 tracking-tight leading-none">
-                    모의고사 성적 분석 시스템
-                </h1>
-            </div>
-        </div>
-
-        <nav class="flex h-full gap-1 sm:gap-2">
-            <button class="tab-btn active px-2.5 sm:px-4 h-full text-base font-semibold text-slate-500 hover:text-indigo-600 flex items-center"
-                    data-tab="upload" data-action="switch-tab" data-tab="upload">
-                <i class="fa-solid fa-file-arrow-up mr-0 sm:mr-2"></i><span class="hidden sm:inline">데이터 불러오기</span>
-            </button>
-            <button class="tab-btn px-2.5 sm:px-4 h-full text-base font-semibold text-slate-500 hover:text-indigo-600 flex items-center"
-                    data-tab="report" data-action="switch-tab" data-tab="report">
-                <i class="fa-solid fa-chart-pie mr-0 sm:mr-2"></i><span class="hidden sm:inline">성적 보고서</span>
-            </button>
-            <button class="tab-btn px-2.5 sm:px-4 h-full text-base font-semibold text-slate-500 hover:text-indigo-600 flex items-center"
-                    data-tab="export" data-action="switch-tab" data-tab="export">
-                <i class="fa-solid fa-download mr-0 sm:mr-2"></i><span class="hidden sm:inline">내보내기</span>
-            </button>
-        </nav>
-
-        <div class="flex items-center">
-            <div id="data-badge"
-                 class="flex items-center gap-1 sm:gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm text-slate-500 text-base font-bold transition-all">
-                <span class="w-2 h-2 rounded-full bg-slate-300 flex-shrink-0"></span>
-                <span id="badge-text" class="hidden sm:inline-block sm:min-w-28 text-center px-2 py-1">
-                  데이터 없음
-                </span>
-            </div>
-        </div>
+<!-- 상단바: 회차 레일이 주인이다. 화면은 머리줄 아래만 스크롤된다(admission-outcomes 와 같다) -->
+<header class="no-print flex h-bar shrink-0 items-center gap-2 border-b border-line bg-surface px-2 sm:gap-4 sm:px-5">
+    <h1 class="shrink-0 text-lg font-bold tracking-tight">
+        <span class="hidden md:inline">모의고사 성적 분석</span><span class="md:hidden">모의고사</span>
+    </h1>
+    <nav id="exam-rail" class="scroll-stable flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-1" aria-label="회차"></nav>
+    <div class="flex shrink-0 items-center gap-1.5 sm:gap-2">
+        <span id="data-badge" class="hidden text-base text-ink-soft lg:inline"><span></span><span id="badge-text">데이터 없음</span></span>
+        <button type="button" class="tab-btn btn btn-sm" data-action="switch-tab" data-tab="upload" title="엑셀·zip 불러오기">
+            <i class="fa-solid fa-file-arrow-up"></i><span class="hidden sm:inline">파일 추가</span>
+        </button>
+        <button type="button" class="tab-btn btn btn-sm" data-action="switch-tab" data-tab="report">
+            <i class="fa-solid fa-chart-pie"></i><span class="hidden sm:inline">보고서</span>
+        </button>
+        <button type="button" class="tab-btn btn btn-sm" data-action="switch-tab" data-tab="export">
+            <i class="fa-solid fa-download"></i><span class="hidden sm:inline">내보내기</span>
+        </button>
+        <button type="button" class="btn btn-sm btn-brand" data-action="save-project" title="모든 회차를 .score.json 하나로 저장">
+            <i class="fa-solid fa-floppy-disk"></i><span class="hidden xl:inline">저장</span>
+        </button>
+        <button type="button" class="btn btn-sm" data-action="open-project" title="저장한 .score.json 불러오기">
+            <i class="fa-solid fa-folder-open"></i><span class="hidden xl:inline">열기</span>
+        </button>
+        <input type="file" id="projectInput" accept=".json,application/json" class="hidden" data-change="project-select"/>
+        <button type="button" class="btn btn-sm btn-danger" data-action="clear-all" title="모든 회차를 지웁니다">
+            <i class="fa-solid fa-trash-can"></i><span class="hidden xl:inline">전체 지우기</span>
+        </button>
     </div>
 </header>
 
-<main class="w-full max-w-screen-xl mx-auto px-3 sm:px-6 py-10 flex-1">
+<main id="app-main" class="min-h-0 flex-1 overflow-y-auto">
+<div class="mx-auto w-full max-w-screen-xl px-3 py-8 sm:px-6">
 
     <!-- ═══════════════════════════════════
          TAB 1: 데이터 불러오기
@@ -68,7 +59,7 @@
             <div class="lg:col-span-8 space-y-8">
                 <div>
                     <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">데이터 불러오기</h2>
-                    <p class="text-base text-slate-500 mt-1">모의고사 성적 데이터를 불러온 후 프로그램 종류를 선택해 주세요.</p>
+                    <p class="text-base text-slate-500 mt-1">회차마다 엑셀을 하나씩, 또는 여러 개나 zip 하나로 한꺼번에 올리세요. 파일마다 양식과 회차 이름을 확인한 뒤 추가합니다.</p>
                 </div>
 
                 <div id="dropzone"
@@ -83,9 +74,9 @@
                         <p class="text-xl font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">
                             클릭하거나 파일을 이곳에 드래그하세요
                         </p>
-                        <p class="text-base text-slate-400 mt-2 font-medium">지원 형식: .xlsx, .xls, .csv 파일</p>
+                        <p class="text-base text-slate-400 mt-2 font-medium">지원 형식: .xlsx, .xls, .csv · 여러 파일 · .zip</p>
                     </div>
-                    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden"
+                    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,.zip" multiple class="hidden"
                            data-change="file-select"/>
                 </div>
 
@@ -99,11 +90,13 @@
                         <p id="file-name" class="font-bold text-slate-800 text-lg truncate"></p>
                         <p id="file-meta" class="text-base text-slate-500 mt-0.5 font-medium"></p>
                     </div>
-                    <button data-action="clear-file" class="w-10 h-10 rounded-full text-slate-400
+                    <button data-action="skip-file" title="이 파일 건너뛰기" class="w-10 h-10 rounded-full text-slate-400
                                                      hover:bg-red-50 hover:text-red-500 transition-colors flex items-center justify-center">
                         <i class="fa-solid fa-xmark text-lg"></i>
                     </button>
                 </div>
+
+                <p id="queue-note" class="text-base font-semibold text-brand empty:hidden"></p>
 
                 <div id="format-area" class="hidden space-y-5">
                     <div class="flex items-center gap-3">
@@ -178,10 +171,20 @@
                     </div>
                 </div>
 
+                <div id="exam-key-area" class="space-y-3">
+                    <label for="exam-key-input" class="flex items-center gap-3">
+                        <span class="w-7 h-7 rounded-full bg-slate-900 text-white flex items-center justify-center text-base font-bold">3</span>
+                        <span class="text-lg font-bold text-slate-800">회차 이름</span>
+                    </label>
+                    <input id="exam-key-input" class="field" autocomplete="off"
+                           placeholder="예: 2026-03, 3, 사설 (파일 이름에서 찾은 값을 미리 채웁니다)"/>
+                    <p class="text-base text-ink-soft">같은 이름은 둘 둘 수 없습니다. 순서는 머리줄의 ◀ ▶ 로 바꿀 수 있습니다.</p>
+                </div>
+
                 <button id="parse-btn" data-action="parse-data"
                         class="hidden w-full bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl py-5 text-lg shadow-[0_8px_20px_rgb(15,23,42,0.15)]
                            transform transition-all active:scale-[0.98] flex items-center justify-center gap-3">
-                    <i class="fa-solid fa-wand-magic-sparkles text-indigo-300"></i> 데이터 분석 시작하기
+                    <i class="fa-solid fa-plus text-indigo-300"></i> 이 회차로 추가하기
                 </button>
             </div>
 
@@ -336,7 +339,7 @@
             <div id="report-empty" class="flex flex-col items-center justify-center py-24">
                 <i class="fa-solid fa-chart-pie text-5xl mb-4 text-slate-200"></i>
                 <p class="font-semibold text-slate-500 text-lg">아직 불러온 데이터가 없습니다</p>
-                <p class="text-base text-slate-400 mt-1">'데이터 불러오기' 탭에서 엑셀 파일을 업로드해 주세요.</p>
+                <p class="text-base text-slate-400 mt-1">머리줄의 「파일 추가」에서 회차별 엑셀이나 zip 을 올리거나, 저장해 둔 프로젝트를 여세요.</p>
                 <button data-action="switch-tab" data-tab="upload"
                         class="mt-5 bg-blue-600 text-white px-5 py-2.5 rounded-lg text-base font-semibold hover:bg-blue-700 transition-colors no-print">
                     데이터 불러오기로 이동
@@ -389,7 +392,7 @@
 
                 <div class="relative flex flex-col gap-10">
 
-                    <section class="no-print sticky top-16 z-40" id="report_basis">
+                    <section class="no-print sticky top-0 z-40" id="report_basis">
                         <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-sm mt-4">
                             <div class="flex items-center gap-3">
                                 <i class="fa-solid fa-sliders text-slate-400 text-lg"></i>
@@ -628,6 +631,28 @@
                     </div>
                 </section>
 
+                <section id="student-grid" class="no-print">
+                    <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-1.5 h-6 rounded bg-brand inline-block"></span>
+                            <h3 class="font-bold text-ink text-xl">학생 명단</h3>
+                            <span data-grid="count" class="text-base text-ink-soft tabular-nums"></span>
+                        </div>
+                        <p class="text-base text-ink-soft">머리글을 누르면 정렬, 끌면 순서·너비가 바뀝니다. 행을 누르면 성적표가 열립니다.</p>
+                    </div>
+                    <div data-grid="scroller" class="card relative max-h-[70vh] overflow-auto">
+                        <table class="grid-table">
+                            <colgroup data-grid="cols"></colgroup>
+                            <thead>
+                            <tr data-grid="head"></tr>
+                            <tr data-grid="search"></tr>
+                            </thead>
+                            <tbody data-grid="body"></tbody>
+                        </table>
+                        <p data-grid="empty" class="hidden px-6 py-12 text-center text-ink-soft">조건에 맞는 학생이 없습니다.</p>
+                    </div>
+                </section>
+
                 <section class="print-page">
                     <div class="flex items-center justify-between mb-4 flex-wrap gap-4">
                         <div class="flex items-center gap-2">
@@ -696,8 +721,7 @@
         </div>
     </div>
 
-</main>
-
+</div>
 <!-- Footer -->
 <footer class="bg-slate-900 py-4 px-4 sm:px-6 border-t border-slate-800 no-print w-full">
     <div class="max-w-screen-xl mx-auto flex flex-row items-center justify-between gap-3 text-base">
@@ -716,6 +740,9 @@
 
     </div>
 </footer>
+</main>
+
+
 
 <!-- 토스트 -->
 <div id="toast"

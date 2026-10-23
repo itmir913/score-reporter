@@ -1,6 +1,8 @@
 import {ST} from './main.js';
 import {missingBasisMessage} from './core/aggregate.js';
 import {computeRenderCache} from './report/report-cache.js';
+import {showStudentAt} from './report/report-modal.js';
+import {mountStudentTable} from './ui/studentTable.js';
 import {renderCsatMinRequirement} from './report/report-csat-sum.js';
 import {renderSubjectsCharts} from './report/report-render-chart-subjects.js';
 import {renderStats} from './report/report-render-stats.js';
@@ -54,7 +56,7 @@ export function renderReport() {
     wrap.classList.remove('hidden');
     empty.classList.add('hidden');
 
-    document.getElementById('report-subtitle').innerText = `총 ${ST.data.length}명 분석 완료`;
+    document.getElementById('report-subtitle').innerText = `「${ST.activeExamKey}」 회차 · 총 ${ST.data.length}명`;
 
     const dateStr = `분석 일시: ${new Date().toLocaleDateString()}`;
     if (document.getElementById('print-date-top')) {
@@ -100,10 +102,25 @@ export function renderAll() {
         renderSubjectSelection(cache);
         renderSubjectsCharts();
         renderCsatMinRequirement(cache);
+        renderStudentTable(cache);
 
     } catch (error) {
         console.error("렌더링 도중 오류가 발생했습니다:", error);
     }
+}
+
+/* 학생 표. 화면(문서)이 새로 그려졌으면 다시 붙인다 */
+let studentTable = null;
+let studentTableRoot = null;
+
+function renderStudentTable(cache) {
+    const root = document.getElementById('student-grid');
+    if (!root) return;
+    if (root !== studentTableRoot) {
+        studentTableRoot = root;
+        studentTable = mountStudentTable({root, onOpen: showStudentAt});
+    }
+    studentTable.render(ST.data, cache.basis, {includeNoInquiry: cache.includeNoInquiry});
 }
 
 /* ───────────────────────────────────────────

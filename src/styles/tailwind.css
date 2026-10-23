@@ -1,3 +1,611 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* 디자인 토큰과 공용 부품. admission-outcomes 의 src/styles.css 를 그대로 옮겨 왔다(A안: 같은 손맛).
+ * 원칙과 까닭은 그쪽 주석에 그대로 남아 있다. 그쪽에만 있는 개념(합·불·충원 판정색)은
+ * 이 앱에서 「경고·주의」 색으로 쓴다. */
+@import "tailwindcss";
+
+
+/**
+ * 화면 원칙 (§7): 큼직하게 · 시원하게 · 직관적으로.
+ *
+ * 본문 16px 이상, 표 행 높이 44px 이상, 클릭 대상 44px 이상.
+ * 상담은 선생님과 학생이 한 화면을 **같이 들여다보는** 자리다.
+ * 개발자 눈높이로 촘촘하게 짜면 둘 중 한 사람은 못 읽는다.
+ *
+ * 색을 쓰는 규칙이 하나 있다. **화면에서 채도가 높은 것은 합·불·충원뿐이다.**
+ * 그 셋만 뜻을 나르고 나머지는 전부 뜻이 없는 구조물이라, 틀·단추·강조까지
+ * 선명한 색을 쓰면 정작 읽어야 할 판정이 묻힌다. 그래서 브랜드색은 채도를 낮춰
+ * 깔고, 초록·노랑·빨강에만 채도를 남긴다.
+ */
+
+@theme {
+  /*
+   * 한 벌만 쓴다. 제목용 서체를 따로 두면 글자 두 벌이 서로 밀어낸다.
+   *
+   * Pretendard를 묶어 넣지 않는다 — 배포가 단일 HTML이라 서체 파일 하나가
+   * 결과물을 두 배로 불린다(§8). 설치돼 있으면 쓰고, 없으면 OS 기본을 쓴다.
+   */
+  --font-sans: Pretendard, "Pretendard Variable", -apple-system, BlinkMacSystemFont,
+    "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", system-ui, sans-serif;
+
+  /* 종이빛. 흰색이 아니라 아주 옅은 중성 회색이라 흰 카드가 떠 보인다 */
+  --color-canvas: oklch(0.972 0.003 250);
+  --color-surface: oklch(1 0 0);
+  --color-line: oklch(0.885 0.006 250);
+  --color-line-soft: oklch(0.945 0.004 250);
+  /* 칸선보다 한 단계 진한 회색. 고정 열이 끝나는 자리처럼 "여기가 경계다"를 말하는 선에 쓴다 */
+  --color-line-strong: oklch(0.72 0.008 250);
+
+  /* 글자는 검정이 아니라 짙은 청먹이다. 종이빛 바탕과 같은 계열이라 눈이 덜 찌른다 */
+  --color-ink: oklch(0.255 0.021 253);
+  --color-ink-soft: oklch(0.505 0.016 253);
+
+  /* 구조색. 채도를 낮게 묶어 둔다 — 판정색과 겨루면 안 된다 */
+  --color-brand: oklch(0.455 0.096 253);
+  --color-brand-soft: oklch(0.955 0.017 253);
+
+  /* 판정색. 색만으로 구분하지 않는다 — 모양(●△✕)이 늘 함께 붙는다 */
+  --color-pass: oklch(0.515 0.139 153);
+  --color-pass-soft: oklch(0.955 0.035 153);
+  --color-wait: oklch(0.585 0.132 72);
+  --color-wait-soft: oklch(0.958 0.044 82);
+  --color-fail: oklch(0.535 0.181 26);
+  --color-fail-soft: oklch(0.957 0.028 26);
+
+  /*
+   * 글자로 쓰는 판정색은 한두 단계 더 진하다.
+   *
+   * 띠의 색을 글자에 그대로 쓰면 같은 색인데도 흐려 보인다 — 넓은 면을 채운 색과
+   * 가는 획으로 그린 색이 눈에 같은 세기로 들어오지 않는다. 띠와 같은 색조를
+   * 유지하면서 명도만 내려, 띠와 범례가 한 짝으로 보이게 한다.
+   */
+  --color-pass-deep: oklch(0.415 0.126 153);
+  --color-wait-deep: oklch(0.455 0.122 72);
+  --color-fail-deep: oklch(0.445 0.171 26);
+
+  /*
+   * **카드를 둘러싼 여백은 전부 이 값 하나다.** 바깥 테두리와 카드 사이,
+   * 카드와 카드 사이가 서로 다르면 어느 쪽이 기준인지 눈이 매번 다시 재야 한다.
+   * 좁은 화면에서는 한 단계 줄여 자리를 내용에 돌려준다.
+   */
+  --spacing-gutter: 1rem;    /* 16px, 좁은 화면 */
+
+  --spacing-row: 2.75rem; /* 44px */
+  --spacing-bar: 3.5rem;  /* 머리줄 높이. 사이드바·표가 이 값을 빼서 자리를 잡는다 */
+}
+
+/* 넓은 화면에서만 한 단계 키운다. 눈금이 하나라 여기 한 줄로 끝난다 */
+@media (min-width: 64rem) {
+  :root { --spacing-gutter: 1.25rem; } /* 20px */
+}
+
+@layer base {
+  html {
+    font-size: 17px;
+  }
+
+  /*
+   * 화면이 통째로 스크롤되지 않는다.
+   *
+   * 페이지가 밀리면 머리줄과 필터가 화면 밖으로 나가고, 그 순간 "지금 무엇을
+   * 보고 있는지"가 사라진다. 스크롤하는 것은 표 하나뿐이고, 표가 남은 높이를
+   * 전부 가져간다 — 뺄셈으로 높이를 어림하면 알림이 하나 뜰 때마다 어긋난다.
+   */
+  body {
+    @apply flex h-screen flex-col overflow-hidden bg-canvas text-ink font-sans antialiased;
+
+    /*
+     * **한글은 어절 단위로 끊는다.**
+     *
+     * 브라우저 기본값은 한글을 글자 단위로 끊어서 「불러옵니다」가 「불/러옵니다」로
+     * 갈라진다. 읽는 눈이 거기서 한 번 멈춘다. keep-all 이면 띄어쓰기에서만 끊는다.
+     *
+     * **둘을 반드시 함께 쓴다.** keep-all 만 두면 띄어쓰기 없는 긴 이름
+     * (「아주아주길고긴이름을가진국립대학교」, 엑셀에서 그대로 들어온다)이 끊을 자리를
+     * 잃고 상자를 뚫고 나간다. 어쩔 수 없을 때는 낱말 안에서라도 끊게 열어 둔다.
+     */
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+
+  /* 키보드로 다니는 사람에게 지금 어디인지 늘 보이게 한다 */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand;
+  }
+}
+
+@layer components {
+  /* 회차 칩(머리줄). 이름을 누르면 그 회차를 보고, 양옆 작은 단추로 순서·이름·삭제를 다룬다 */
+  .exam-chip {
+    @apply inline-flex min-h-9 shrink-0 items-center rounded-md border border-line bg-surface text-base;
+  }
+  .exam-chip.is-active {
+    @apply border-brand bg-brand-soft;
+  }
+  .exam-chip-name {
+    @apply min-h-9 px-2.5 font-semibold text-ink-soft;
+  }
+  .exam-chip.is-active .exam-chip-name {
+    @apply text-brand;
+  }
+  /* 순서·이름·삭제 단추는 지금 보는 회차 칩에만 보인다. 회차가 늘어도 머리줄이 넘치지 않게 */
+  .exam-chip:not(.is-active) .exam-chip-move {
+    @apply hidden;
+  }
+  .exam-chip-move {
+    @apply min-h-9 px-1 text-sm text-ink-soft/70 disabled:opacity-25;
+    @media (hover: hover) {
+      &:hover:not(:disabled) { @apply text-ink; }
+    }
+  }
+
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-line
+      bg-surface px-4 text-base font-medium text-ink transition-colors
+      disabled:pointer-events-none disabled:opacity-40;
+
+    /*
+     * **hover 는 마우스가 있는 기기에서만.** 손가락으로 누르는 화면에서는 hover 가
+     * 누른 뒤에도 남아서, 방금 누른 것이 아직 눌려 있는 것처럼 보인다.
+     */
+    @media (hover: hover) {
+      &:hover { @apply border-ink-soft/40 bg-canvas; }
+    }
+  }
+
+  .btn-primary {
+    @apply border-transparent bg-brand text-white;
+    @media (hover: hover) {
+      &:hover { @apply border-transparent bg-brand/90; }
+    }
+  }
+
+  /*
+   * 윤곽선만 색을 입은 단추. 머리줄에서 성격이 다른 하나를 가려 보이게 할 때 쓴다 —
+   * 채워 칠한 btn-primary 는 그 줄의 주인이 되어, 자료를 다루는 단추들을 눌러 내린다.
+   */
+  .btn-brand {
+    @apply border-brand/30 text-brand;
+    @media (hover: hover) {
+      &:hover { @apply border-brand/50 bg-brand-soft; }
+    }
+  }
+
+  .btn-danger {
+    @apply border-fail/30 text-fail;
+    @media (hover: hover) {
+      &:hover { @apply border-fail/50 bg-fail-soft; }
+    }
+  }
+
+  .btn-sm {
+    @apply min-h-9 rounded-md px-3 text-base;
+  }
+
+  .card {
+    @apply rounded-xl border border-line bg-surface;
+  }
+
+  .field {
+    @apply min-h-11 w-full rounded-lg border border-line bg-surface px-4 text-base
+      text-ink placeholder:text-ink-soft/60 focus:border-brand focus:outline-none;
+  }
+
+  /* 걸려 있는 필터 하나. 눌러서 하나씩 뗄 수 있어야 한다 (§7) */
+  /* `shrink-0`은 칩줄이 옆으로 흐르기 때문이다 — 좁다고 글자를 눌러 찌그러뜨리지 않는다 */
+  /*
+   * 칩은 **줄을 바꾼다.** 한 줄로 버티게 두었더니 「원본 파일: …(2026년2월4일).xlsx」
+   * 같은 긴 값이 화면 오른쪽을 뚫고 나갔다. 조건이 길다고 화면 밖으로 나가는 것보다
+   * 두 줄이 되는 편이 낫다. 지우는 ✕ 는 끝에 붙어 함께 접힌다.
+   */
+  /* 쪽 넘김. 단추와 입력칸의 키를 맞춰야 한 줄로 선다 */
+  .pager-btn {
+    @apply inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border border-line
+      bg-surface px-2.5 text-base text-ink-soft transition-colors
+      disabled:pointer-events-none disabled:opacity-35;
+    @media (hover: hover) {
+      &:hover { @apply bg-canvas text-ink; }
+    }
+  }
+
+  .pager-input {
+    @apply min-h-9 w-18 rounded-lg border border-line bg-surface px-2 text-right text-base
+      tabular-nums text-ink;
+  }
+
+  /* 정렬 칩의 순위 숫자. 몇째 기준인지가 칩의 첫 글자다 */
+  .chip-rank {
+    @apply inline-flex min-w-6 items-center justify-center rounded bg-pass px-1 text-base
+      font-bold tabular-nums text-white;
+  }
+
+  .chip {
+    @apply inline-flex min-h-9 shrink-0 items-center gap-2 rounded-md
+      border border-brand/25 bg-brand-soft px-3 py-1 text-base font-medium text-brand;
+    max-width: 100%;
+  }
+
+  .tag {
+    @apply inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-base font-semibold;
+  }
+  .tag-pass { @apply bg-pass-soft text-pass; }
+  .tag-wait { @apply bg-wait-soft text-wait; }
+  .tag-fail { @apply bg-fail-soft text-fail; }
+  .tag-none { @apply bg-canvas text-ink-soft; }
+  /* 못 읽은 표기. 조용히 넘어가지 않고 눈에 띄어야 한다 */
+  .tag-unknown { @apply bg-wait-soft text-wait ring-1 ring-wait/40; }
+
+  /*
+   * 요약 띠의 칸 하나.
+   *
+   * 숫자를 크게 두고 이름을 그 위에 작게 둔다 — 상담 중에 읽는 것은 숫자이고,
+   * 이름은 한 번 익히면 다시 읽지 않는다.
+   */
+  /*
+   * 통계 칸은 **격자**로 눕는다.
+   *
+   * 가로로만 늘어놓고 사이에 세로선을 그었더니, 좁은 화면에서 줄이 바뀌면
+   * 가로선이 없어 칸들이 서로 붙어 보였다. 이제 칸마다 제 둘레에 선을 두르고
+   * 1px 씩 띄워 맞닿게 한다 — 가로든 세로든 맞닿는 곳마다 선이 생긴다.
+   *
+   * 선을 바탕색으로 깔지 않는 까닭은, 칸 수가 열의 배수가 아닐 때 **남는 자리까지
+   * 선 색으로 칠해지기** 때문이다. 다섯 칸을 두 줄로 놓으면 여섯째 자리가 회색으로
+   * 남아 빈 칸처럼 보였다. 둘레선은 칸이 있는 곳에만 생긴다.
+   */
+  /*
+   * 칸 수는 **2·3·6 셋뿐이다.**
+   *
+   * 자리에 맞춰 알아서 접게 두었더니 너비에 따라 4+2처럼 어중간하게 나뉘어,
+   * 줄마다 칸 수가 달라지고 어느 칸이 어느 칸과 짝인지 알 수 없었다.
+   * 여섯을 나누어떨어지게 하는 수만 쓴다.
+   */
+  .stat-grid {
+    @apply grid grid-cols-2 gap-px bg-surface sm:grid-cols-3 lg:grid-cols-6;
+  }
+  .stat {
+    @apply flex min-w-0 flex-col justify-center gap-0.5 bg-surface px-4 py-3;
+    outline: 1px solid var(--color-line);
+  }
+  /*
+   * **이름은 자르지 않고 두 줄로 흐르게 둔다.**
+   *
+   * 「지원 (전체 241건 중)」이 1px 차이로 말줄임에 걸려 「전체 241건 …」으로
+   * 잘렸다. 무엇의 건수인지가 사라지면 옆의 숫자를 되검산할 수 없다. 칸 높이는
+   * 값 글자가 정하고 있어 한 줄 늘어날 자리가 있다 (§5).
+   */
+  .stat-name {
+    @apply text-base leading-snug text-ink-soft;
+  }
+  .stat-value {
+    @apply text-2xl font-bold tabular-nums;
+  }
+}
+
+@layer utilities {
+  /*
+   * 표 (§7).
+   *
+   * 열 너비는 사람이 드래그로 정하므로 `<col>`의 width를 자바스크립트가 직접 만진다 —
+   * 유틸리티 클래스로 표현할 수 없는 유일한 값이다.
+   * 고정 열의 left도 앞선 열들의 실제 너비 합이라 같은 이유로 인라인이다.
+   */
+  /*
+   * **칸선을 합치지 않는다**(`separate`).
+   *
+   * `collapse` 에서는 테두리가 칸이 아니라 표의 것이 된다. 그래서 머리줄을 붙여
+   * 두어도 테두리만 제자리에 남고 칸은 따라 올라가, 붙은 머리와 지나가는 자료
+   * 사이로 뒤가 비친다. 칸이 제 테두리를 들고 있어야 함께 움직인다.
+   *
+   * `border-spacing: 0` 이라 칸은 여전히 맞닿고, 테두리는 아래쪽 하나뿐이라
+   * 합치지 않아도 겹쳐 두꺼워지지 않는다.
+   */
+  .grid-table {
+    @apply w-full text-base;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+  }
+
+  /*
+   * **머리 칸과 몸 칸은 같은 쪽으로 선다. 지금은 왼쪽뿐이다.**
+   *
+   * 정렬을 양쪽에서 따로 정하면 한쪽만 고쳐도 아무것도 울지 않고 갈린다.
+   * 그래서 자리를 하나로 묶어 여기서만 정한다 — 숫자 열이라고 오른쪽으로
+   * 보내지 않는다. 자릿수는 `tabular-nums`가 맞춰 준다.
+   * `tests/table-align.spec.js`가 이 규칙을 지킨다.
+   */
+  .grid-table th,
+  .grid-table td {
+    @apply overflow-hidden border-b border-line-soft px-3 align-middle;
+    height: var(--spacing-row);
+    text-align: left;
+    text-overflow: ellipsis;
+    /*
+     * 한 줄로 자른다. 줄바꿈을 허용하면 행 높이가 들쭉날쭉해지고,
+     * 그러면 열 너비 조정이 무슨 뜻인지 알 수 없게 된다.
+     * 잘린 값은 셀에 마우스를 올리면 전부 보인다.
+     */
+    white-space: nowrap;
+  }
+
+  /*
+   * 머리줄은 옅은 띠다 (참고 UI).
+   *
+   * 흰 바탕에 흰 머리줄을 얹으면 가로로 밀 때 머리와 몸이 한 덩어리로 보인다.
+   * 그래서 바탕을 한 단계 내리고 아래에 선을 긋는다. 칸 사이에도 선을 두어
+   * 열이 80개를 넘어도 어느 칸이 어느 열인지 눈이 따라갈 수 있게 한다.
+   */
+  /*
+   * **머리는 통째로 붙는다.** 두 줄을 따로 붙이면 둘째 줄의 `top`을 첫 줄 높이와
+   * 손으로 맞춰야 하는데, 글자 크기가 바뀌면 그 값이 어긋나 둘 사이가 벌어진다.
+   * 그 틈으로 지나가던 자료 행이 비쳐 보였다. thead 하나만 붙이면 틈이 생길 자리가 없다.
+   */
+  /*
+   * 머리에도 바탕을 깐다. 칸들이 맞닿는 1px 자리가 소수점 때문에 어긋나도,
+   * 그 틈으로 보이는 것이 지나가는 자료가 아니라 머리의 바탕이 되게 한다.
+   *
+   * **붙이는 일은 칸이 한다.** `thead` 에 `sticky` 를 주는 쪽이 간단하지만
+   * 브라우저가 받아 주지 않는 자리가 있었다 — 재어 보니 머리가 그대로 흘러갔다.
+   */
+  .grid-table thead {
+    @apply bg-canvas;
+  }
+  .grid-table thead th {
+    @apply sticky top-0 z-20 select-none bg-canvas text-base font-semibold tracking-tight text-ink;
+    box-shadow: inset -1px -1px 0 var(--color-line);
+  }
+
+  /*
+   * 머리줄 **위에도 선을 긋는다.** 머리의 바탕이 위에 놓인 단추·칩 더미와 같은
+   * 색이라, 선이 없으면 표가 어디서 시작하는지 경계가 보이지 않았다.
+   *
+   * 그림자가 아니라 `border` 로 긋는다. `box-shadow` 는 쌓이지 않고 통째로
+   * 덮어쓰는데, 머리 칸의 그림자는 정렬·고정 끝·끌어 놓을 자리마다 제각각이다.
+   * 그 넷을 전부 따라다니며 윗선을 더해 두면 하나를 고칠 때 나머지가 조용히 빠진다.
+   */
+  .grid-table thead tr:first-child th {
+    border-top: 1px solid var(--color-line);
+  }
+
+  /*
+   * 머리줄 둘째 칸 — 열별 검색 (참고 UI).
+   *
+   * 첫 칸 **바로 아래**에 붙는다. 그 자리는 첫 줄의 실제 높이라, 표를 그린
+   * 뒤에 재어 `--head-row1` 로 넣어 준다 — 글자 크기나 여백이 바뀌면 함께 바뀌는
+   * 값이라 클래스로는 적을 수 없다 (§9의 예외). 손으로 적어 둔 44px 과 실제
+   * 47px 이 어긋나, 그 3px 틈으로 지나가던 자료가 비친 적이 있다.
+   */
+  .grid-table thead tr + tr th {
+    top: var(--head-row1, var(--spacing-row));
+    @apply bg-surface px-1 py-1;
+    box-shadow: inset -1px -1px 0 var(--color-line);
+  }
+
+  /*
+   * 검색칸은 **입력칸처럼 보여야 한다.** 테두리 없이 두었더니 빈 자료 행으로 읽혀서,
+   * 표가 망가진 것처럼 보였다. 눌러서 글자를 넣는 자리라는 것이 모양에 드러나야 한다.
+   */
+  .col-search {
+    @apply flex min-h-8 items-center gap-0.5 rounded border border-line bg-surface
+      focus-within:border-brand;
+  }
+  .col-search input {
+    @apply min-h-8 min-w-0 flex-1 bg-transparent px-2 text-base text-ink
+      placeholder:text-ink-soft/50 focus:outline-none;
+  }
+  .col-search button {
+    @apply flex min-h-8 w-7 shrink-0 items-center justify-center rounded-r text-ink-soft;
+  }
+  @media (hover: hover) {
+    .col-search button:hover { @apply bg-canvas text-ink; }
+  }
+  /* 값 필터가 걸린 열. 채워 칠해 두어야 여덟 열 건너편에서도 보인다 */
+  .col-search button[data-filtered="true"] {
+    @apply bg-brand font-bold text-white;
+  }
+  .col-search button[aria-expanded="true"] {
+    @apply bg-brand-soft text-brand;
+  }
+  .col-search button[aria-expanded="true"][data-filtered="true"] {
+    @apply bg-brand text-white;
+  }
+
+  /*
+   * 정렬이 걸린 열 (참고 UI).
+   *
+   * 짙은 머리줄 위라 글자색을 바꿔서는 눈에 안 든다. 아래에 선을 긋는다.
+   * 판정색(합격)과 같은 초록이지만, 판정은 늘 모양(●△✕)을 함께 달고 다니고
+   * 여기는 머리줄이라 섞일 자리가 없다.
+   */
+  .grid-table thead th.sorted {
+    box-shadow: inset 0 -3px 0 var(--color-pass);
+  }
+  .grid-table thead th.sorted,
+  .grid-table thead th.sorted .sort-mark {
+    @apply text-pass;
+  }
+
+  /*
+   * 줄무늬. 80열을 가로로 훑을 때 행을 놓치지 않게 한다.
+   *
+   * **모든 몸 칸이 불투명해야 한다.** 고정 열이 그 위를 지나가기 때문이다.
+   * 표를 감싸던 카드를 걷어낸 뒤로는 바탕을 물려받을 곳도 없다 — 칸이 직접 들고 있어야 한다.
+   */
+  .grid-table tbody td {
+    @apply bg-surface;
+  }
+  .grid-table tbody tr:nth-child(even) td {
+    @apply bg-canvas;
+  }
+
+  /*
+   * 좌측 고정. 대교협 81열을 전부 표시하면 익명 ID와 대학이 화면 밖으로 나간다.
+   *
+   * **자리만 잡고 바탕은 줄무늬 규칙에 맡긴다.** 여기서 따로 바탕을 주면
+   * 특정도가 높아 줄무늬를 덮고, 고정 열만 줄무늬가 없는 표가 된다.
+   */
+  .grid-table .pinned {
+    @apply sticky;
+    z-index: 10;
+  }
+  .grid-table thead .pinned {
+    z-index: 30;
+  }
+  /* 끌어 온 열이 어디에 떨어질지. 선이 없으면 손을 떼고 나서야 알 수 있다 */
+  .grid-table thead th.drop-mark {
+    box-shadow: inset 3px 0 0 0 var(--color-wait);
+  }
+
+  /*
+   * 고정 열이 어디서 끝나는지. 선이 없으면 겹쳐 가린 것인지 빈칸인지 모른다.
+   *
+   * 번지는 그림자를 쓰다가 **실선 하나로 바꿨다.** 그림자는 아래 깔린 글자를
+   * 흐리게 만들어, 가려진 것인지 연한 글자인지 분간이 되지 않았다.
+   *
+   * **머리 칸의 너비 손잡이와 같은 선이다.** 머리 칸에서는 손잡이의 2px 선이 이 자리에
+   * 덮여 보이는데, 아래만 1px 진한 선이면 한 줄이 중간에서 굵기와 색을 바꿔 끊겨 보였다.
+   */
+  .grid-table .pin-edge {
+    box-shadow: inset -2px 0 0 var(--color-line);
+  }
+  /*
+   * **머리 칸의 칸선을 그림자와 함께 적는다.**
+   *
+   * `box-shadow` 는 쌓이지 않고 통째로 덮어쓴다. 여기서 그림자만 적었더니
+   * 머리줄의 `inset` 칸선이 지워져, 고정 열이 끝나는 자리에만 세로선이 없었다.
+   * 선은 거기가 가장 필요한 자리다.
+   */
+  .grid-table thead .pin-edge {
+    box-shadow: inset -2px 0 0 var(--color-line), inset 0 -1px 0 var(--color-line);
+  }
+
+
+  @media (hover: hover) {
+    .grid-table tbody tr:hover td,
+    .grid-table tbody tr:hover td.pinned {
+      @apply bg-brand-soft;
+    }
+  }
+
+  /* 자릿수를 맞춘다. 정렬은 건드리지 않는다 — 표의 정렬은 한 자리에서만 정한다 */
+  .figure {
+    @apply tabular-nums;
+  }
+
+  /*
+   * 듀얼 핸들 슬라이더 (§7 내신 범위).
+   *
+   * 슬라이더 둘을 겹쳐 놓고 손잡이만 눌리게 한다. 트랙까지 눌리면
+   * 위에 깔린 쪽이 아래쪽 손잡이를 통째로 가려 잡을 수 없다.
+   */
+  .dual-range-wrap {
+    @apply relative h-6;
+  }
+  .dual-range {
+    @apply pointer-events-none absolute inset-x-0 top-2 m-0 h-1 w-full appearance-none bg-line;
+    border-radius: 9999px;
+  }
+  .dual-range-high {
+    background: transparent;
+  }
+  .dual-range::-webkit-slider-thumb {
+    @apply pointer-events-auto size-6 cursor-grab appearance-none rounded-full border-2 border-white bg-brand;
+    box-shadow: 0 1px 4px oklch(0 0 0 / 0.3);
+  }
+  .dual-range::-moz-range-thumb {
+    @apply pointer-events-auto size-6 cursor-grab rounded-full border-2 border-white bg-brand;
+    box-shadow: 0 1px 4px oklch(0 0 0 / 0.3);
+  }
+  .dual-range::-moz-range-track {
+    @apply h-1 bg-transparent;
+  }
+
+  /*
+   * 필터 패널의 표시 (#1).
+   *
+   * 기본값은 화면 폭이 정한다 — 좁으면 접고, 넓으면 편다. 사람이 한 번이라도
+   * 전환하면 그 선택이 `body`의 클래스로 올라와 기본값을 덮는다.
+   *
+   * **클래스를 뒤에 두는 것이 전부다.** 두 규칙의 특정도가 같으므로 나중에 적은 쪽이
+   * 이긴다. `!important`를 쓰지 않으려고 순서로 해결했다.
+   */
+  #필터판 { display: none; }
+  @media (min-width: 64rem) {
+    #필터판 { display: block; }
+  }
+  body.filters-on #필터판 { display: block; }
+  body.filters-off #필터판 { display: none; }
+
+  /*
+   * 요약 띠는 표와 **같은 상자 안에서** 스크롤된다 (#2).
+   *
+   * 밖에 두면 높이를 늘 점유해서 표가 그만큼 줄어든다. 안에 두면 아래로 스크롤할 때
+   * 위로 이동하여 자리를 양보하고, 그 자리를 표가 전부 쓴다.
+   *
+   * 가로로는 따라다니지 않게 왼쪽에 고정한다 — 열이 80개 넘는 표를 옆으로 밀 때
+   * 요약까지 함께 밀려 나가면 숫자를 다시 보려고 되돌아와야 한다.
+   */
+  /* 여백은 바깥 더미가 준다. 여기서 또 주면 위아래가 두 겹이 된다 */
+  .summary-rail {
+    @apply w-full;
+  }
+
+  /*
+   * 스크롤 막대 자리를 **미리 비워 둔다.**
+   *
+   * 자동으로 나타났다 사라지게 두면, 조건을 걸어 줄이 줄어드는 순간 막대가 사라지면서
+   * 안쪽 내용이 그 너비만큼 옆으로 뛴다. 방금 누르려던 단추가 손가락 밑에서 움직인다.
+   * 자리를 늘 잡아 두면 줄 수가 변해도 가로로는 아무것도 움직이지 않는다.
+   */
+  .scroll-stable {
+    scrollbar-gutter: stable;
+  }
+
+  /*
+   * **막대가 선 자리를 글과 선으로 가른다** (2026-10-22, 사용자).
+   *
+   * `scrollbar-gutter`로 비워 둔 자리는 바탕색이 같아서, 선이 없으면 그만큼이
+   * 카드의 오른쪽 여백으로 보인다. 왼쪽 여백보다 넓어 보여 카드가 한쪽으로
+   * 치우친 것처럼 읽힌다. 가는 선 하나로 「여기부터는 막대 자리」가 드러난다.
+   *
+   * 막대의 생김새까지 적는 까닭은, `::-webkit-scrollbar`를 한 줄이라도 건드리면
+   * 브라우저가 기본 막대를 그만 그리기 때문이다. 선만 긋고 두면 막대가 사라진다.
+   * 손잡이는 투명 테두리를 두르고 안쪽만 칠해, 선에 닿지 않게 띄운다.
+   */
+  .scroll-rule::-webkit-scrollbar {
+    width: 12px;
+  }
+
+  .scroll-rule::-webkit-scrollbar-track {
+    border-left: 1px solid var(--color-line);
+  }
+
+  .scroll-rule::-webkit-scrollbar-thumb {
+    background-color: var(--color-line);
+    background-clip: content-box;
+    border: 3px solid transparent;
+    border-radius: 999px;
+  }
+
+  .scroll-rule::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-ink-soft);
+  }
+
+  /* 대화상자는 화면 가운데 선다. 브라우저 기본은 위쪽에 붙는다 */
+  dialog[open] {
+    @apply fixed m-auto;
+  }
+}
+
+@media print {
+  /* 상담 자료를 출력해 쓰는 수요가 실재한다 (§7). 출력물도 익명 상태다 */
+  .no-print { display: none !important; }
+  html { font-size: 12px; }
+  /* 화면에서는 표만 스크롤하지만, 종이에는 전부 펼쳐 나와야 한다 */
+  body { display: block; height: auto; overflow: visible; }
+  .print-open { display: block !important; height: auto !important; overflow: visible !important; padding-bottom: 0 !important; }
+  .grid-table thead th {
+    position: static;
+    @apply bg-surface text-ink;
+    border-bottom: 2px solid var(--color-ink);
+  }
+}

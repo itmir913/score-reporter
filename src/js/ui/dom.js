@@ -1,0 +1,115 @@
+/* admission-outcomes 의 src/ui/dom.js 를 옮겨 왔다. */
+/**
+ * DOM 잔손질.
+ *
+ * 프레임워크를 두지 않는다. 화면 하나에 표 하나가 중심이고, 그 표는
+ * 정렬·리사이즈·고정을 우리가 직접 통제해야 해서(§8) 어차피 손으로 만든다.
+ *
+ * **모든 글자는 `textContent`로 넣는다.** 엑셀 셀 값이 곧 화면 글자라서,
+ * `innerHTML`을 쓰는 순간 원본 파일의 내용이 화면을 조종할 수 있게 된다.
+ */
+
+/**
+ * @param {string} selector
+ * @returns {HTMLElement}
+ */
+export function pick(selector) {
+  const found = document.querySelector(selector);
+  if (!found) throw new Error(`화면 요소를 찾지 못했습니다: ${selector}`);
+  return /** @type {HTMLElement} */ (found);
+}
+
+/**
+ * 요소 하나를 만든다.
+ *
+ * @param {string} tag
+ * @param {{class?: string, text?: string, attrs?: Record<string, string|number|boolean|null>, style?: Record<string, string>, on?: Record<string, EventListener>}} [options]
+ * @param {(Node|string|null|false|undefined)[]} [children]
+ */
+export function el(tag, options = {}, children = []) {
+  const node = document.createElement(tag);
+  if (options.class) node.className = options.class;
+  if (options.text !== undefined && options.text !== null) node.textContent = String(options.text);
+  for (const [name, value] of Object.entries(options.attrs ?? {})) {
+    if (value === null || value === false || value === undefined) continue;
+    node.setAttribute(name, value === true ? '' : String(value));
+  }
+  for (const [name, value] of Object.entries(options.style ?? {})) {
+    node.style.setProperty(name, value);
+  }
+  for (const [name, handler] of Object.entries(options.on ?? {})) {
+    node.addEventListener(name, handler);
+  }
+  for (const child of children) {
+    if (child === null || child === undefined || child === false) continue;
+    node.append(typeof child === 'string' ? document.createTextNode(child) : child);
+  }
+  return node;
+}
+
+/** @param {Element} node */
+export function clear(node) {
+  node.replaceChildren();
+  return node;
+}
+
+/**
+ * 대화상자를 연다. 대화상자 안쪽 틀은 매번 새로 그린다.
+ * @param {HTMLDialogElement} dialog
+ * @param {Node} content
+ */
+export function openDialog(dialog, content) {
+  clear(dialog).append(content);
+  if (!dialog.open) dialog.showModal();
+  // 바깥(backdrop)을 누르면 닫는다. 안쪽 클릭과 구분해야 한다
+  dialog.onclick = (event) => {
+    if (event.target === dialog) dialog.close();
+  };
+  return dialog;
+}
+
+/**
+ * 대화상자 공통 틀: 제목 · 내용 · 아래 단추줄.
+ *
+ * @param {{title: string, note?: string, body: Node, footer?: Node, onClose?: () => void}} options
+ */
+export function dialogFrame({ title, note, body, footer, onClose }) {
+  return el('div', { class: 'flex max-h-[86vh] flex-col' }, [
+    /*
+     * **안내 글은 상자 너비를 다 쓴다.**
+     *
+     * 제목과 안내를 한 덩어리로 묶고 그 옆에 「닫기」를 세웠더니, 단추가 차지한
+     * 너비만큼 안내까지 좁아져 좁은 화면에서 네댓 줄로 늘어졌다. 단추는 제목
+     * 줄에만 서고, 안내는 그 아래 한 줄로 내려와 전부를 쓴다.
+     */
+    el('div', { class: 'border-b border-line px-6 py-4' }, [
+      el('div', { class: 'flex items-start gap-4' }, [
+        // 제목은 줄을 고르게 나눈다. 어절 단위로 끊는 글이라 줄 끝이 들쭉날쭉해진다
+        el('h2', { class: 'min-w-0 flex-1 text-balance text-xl font-bold tracking-tight', text: title }),
+        el('button', {
+          class: 'btn btn-sm shrink-0',
+          text: '닫기',
+          attrs: { type: 'button' },
+          on: { click: () => onClose?.() }
+        })
+      ]),
+      note ? el('p', { class: 'mt-1 text-pretty text-base text-ink-soft', text: note }) : null
+    ]),
+    el('div', { class: 'min-h-0 flex-1 scroll-stable overflow-y-auto px-6 py-5' }, [body]),
+    footer ? el('div', { class: 'flex flex-wrap items-center justify-end gap-3 border-t border-line px-6 py-4' }, [footer]) : null
+  ]);
+}
+
+/**
+ * 잠깐 기다렸다 한 번만 부른다. 검색은 글자마다 다시 계산하지 않는다 (§7).
+ * @param {Function} run
+ * @param {number} delay
+ */
+export function debounce(run, delay = 180) {
+  let timer = 0;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => run(...args), delay);
+  };
+}
+

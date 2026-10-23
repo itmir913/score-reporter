@@ -282,6 +282,7 @@ describe('탐구1·탐구2 과목이 같은 학생', () => {
         const wb = new ExcelJS.Workbook();
         wb.addWorksheet('S').addRows([['머리글'], ['머리글'],
             row('가', '물리학Ⅰ', '물리학Ⅰ'), row('나', '물리학Ⅰ', '화학Ⅰ')]);
+        ST.data = null; // 회차를 비운다. 파일마다 새 회차로 들어간다
         ST.wb = wb;
         ST.fmtId = schema.id;
         document.getElementById('sheet-select').innerHTML = '<option value="S">S</option>';
@@ -302,6 +303,7 @@ describe('탐구1·탐구2 과목이 같은 학생', () => {
         r[schema._idx.kor_raw] = 80;
         const wb = new ExcelJS.Workbook();
         wb.addWorksheet('S').addRows([['머리글'], ['머리글'], r]);
+        ST.data = null; // 회차를 비운다. 파일마다 새 회차로 들어간다
         ST.wb = wb;
         ST.fmtId = schema.id;
         document.getElementById('sheet-select').innerHTML = '<option value="S">S</option>';
@@ -385,6 +387,7 @@ describe('원점수가 없는 파일', () => {
     const load = (rows) => {
         const wb = new ExcelJS.Workbook();
         wb.addWorksheet('S').addRows([['머리글'], ['머리글'], ...rows]);
+        ST.data = null; // 회차를 비운다. 파일마다 새 회차로 들어간다
         ST.wb = wb;
         ST.fmtId = schema.id;
         document.getElementById('sheet-select').innerHTML = '<option value="S">S</option>';

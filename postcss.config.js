@@ -1,5 +1,4 @@
-import autoprefixer from 'autoprefixer';
-import tailwindcss from 'tailwindcss';
+import tailwindcss from '@tailwindcss/postcss';
 
 /* Font Awesome의 @font-face는 woff2를 먼저 쓰고 ttf를 폴백으로 둔다.
  *
@@ -44,5 +43,5 @@ function splitTopLevel(value) {
 }
 
 export default {
-    plugins: [dropTrueTypeFallback(), tailwindcss(), autoprefixer()],
+    plugins: [dropTrueTypeFallback(), tailwindcss()],
 };

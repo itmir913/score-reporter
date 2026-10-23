@@ -3,7 +3,7 @@ import {resolve} from 'node:path';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import ExcelJS from 'exceljs';
 import * as XLSX from 'xlsx';
-import {clearFile, loadSampleData, processFile, selectFormat, ST} from '../src/js/main.js';
+import {clearAll, clearFile, loadSampleData, processFile, selectFormat, ST} from '../src/js/main.js';
 import {SCHEMAS} from '../src/js/schema.js';
 import {buildWorkbook} from './helpers/baseline-fixture.js';
 import {showStudentDetail} from '../src/js/report/report-modal.js';
@@ -137,7 +137,7 @@ describe('지원하지 않는 파일 형식', () => {
         // 이제 잘못된 형식은 상태를 건드리지 않는다. 앞 테스트가 불러온 파일을 먼저 비운다
         clearFile();
         await processFile(fakeFile('성적.xlsm', new ArrayBuffer(8)));
-        expect(document.getElementById('toast-msg').innerText).toBe('지원하지 않는 파일 형식입니다. (.xlsx, .xls, .csv)');
+        expect(document.getElementById('toast-msg').innerText).toBe('지원하지 않는 파일 형식입니다. (.xlsx, .xls, .csv, 여러 파일을 담은 .zip)');
         expect(ST.wb).toBeNull();
         expect(document.getElementById('dropzone').classList.contains('hidden')).toBe(false);
         expect(document.getElementById('file-info').classList.contains('hidden')).toBe(true);
@@ -151,7 +151,7 @@ describe('지원하지 않는 파일 형식', () => {
         const wb = ST.wb;
         ST.data = [{name: '가'}];
         await processFile(fakeFile('성적.xlsm', new ArrayBuffer(8)));
-        expect(document.getElementById('toast-msg').innerText).toBe('지원하지 않는 파일 형식입니다. (.xlsx, .xls, .csv)');
+        expect(document.getElementById('toast-msg').innerText).toBe('지원하지 않는 파일 형식입니다. (.xlsx, .xls, .csv, 여러 파일을 담은 .zip)');
         expect(ST.wb).toBe(wb);
         expect(ST.file.name).toBe('성적.xlsx');
         expect(ST.data).toEqual([{name: '가'}]);
@@ -173,7 +173,7 @@ describe('지원하지 않는 파일 형식', () => {
         }});
         await processFile(fakeFile('성적.xlsm', new ArrayBuffer(8)));
         expect(input.value).toBe('');
-        expect(document.getElementById('toast-msg').innerText).toBe('지원하지 않는 파일 형식입니다. (.xlsx, .xls, .csv)');
+        expect(document.getElementById('toast-msg').innerText).toBe('지원하지 않는 파일 형식입니다. (.xlsx, .xls, .csv, 여러 파일을 담은 .zip)');
         expect(ST.wb).toBe(wb);
         expect(ST.data).toEqual([{name: '가'}]);
         expect(document.getElementById('file-info').classList.contains('hidden')).toBe(false);
@@ -227,9 +227,9 @@ describe('processFile 을 겹쳐 부를 때', () => {
     });
 });
 
-describe('clearFile', () => {
-    // 새 파일을 올리면 clearFile 이 ST.data 를 비운다. 이전 리포트가 화면에 남아
-    // 있으면 그 위의 선택 상자나 학생 행이 비어 있는 ST.data 를 건드려 오류가 났다.
+describe('clearAll (전체 지우기)', () => {
+    // 데이터를 비웠는데 이전 리포트가 화면에 남아 있으면 그 위의 선택 상자나 학생 행이
+    // 비어 있는 ST.data 를 건드려 오류가 났다. 파일 하나를 건너뛰는 clearFile 은 회차를 지우지 않는다
     it('데이터를 비우면 리포트와 내보내기도 빈 상태로 돌아간다', () => {
         vi.spyOn(console, 'error').mockImplementation(() => {
         });
@@ -244,8 +244,11 @@ describe('clearFile', () => {
         expect(document.getElementById('export-cards').innerHTML).not.toBe('');
 
         clearFile();
+        expect(ST.data).toHaveLength(100);
+        clearAll();
 
         expect(ST.data).toBeNull();
+        expect(ST.exams).toEqual([]);
         expect(ST.cache).toBeNull();
         expect(document.getElementById('report-content').classList.contains('hidden')).toBe(true);
         expect(document.getElementById('report-empty').classList.contains('hidden')).toBe(false);
@@ -254,7 +257,7 @@ describe('clearFile', () => {
     }, 20000); // 샘플 100명으로 리포트 전체를 그려 기본 5초를 넘길 때가 있다
 
     it('데이터가 비어 있을 때 리포트 핸들러가 오류를 내지 않는다', () => {
-        clearFile();
+        clearAll();
         expect(() => renderSubjectsCharts()).not.toThrow();
         expect(() => showStudentDetail('홍길동', '1', '1')).not.toThrow();
     });

@@ -150,6 +150,12 @@ export function showStudentDetail(name, cls, num) {
     if (s) _showStudent(s);
 }
 
+/** 지금 회차 ST.data 의 index 번째 학생 성적표를 연다(학생 표에서 쓴다) */
+export function showStudentAt(index) {
+    const s = ST.data?.[index];
+    if (s) _showStudent(s);
+}
+
 function _showStudent(s) {
     _printStudent = s;
 

@@ -1,6 +1,7 @@
 import ExcelJS from 'exceljs';
 import {GradeExporter} from './exporter.js';
-import {loadWorkbook} from './ingest/files.js';
+import {addExam, fileHashHex, normalizeExamKey, suggestExamKey} from './exams/examStore.js';
+import {expandUploads, isSheetName, loadWorkbook} from './ingest/files.js';
 import {countOutOfRange, matchFormats} from './ingest/formatMatch.js';
 import {GradeDataParser} from './parser.js';
 import {renderReport, setGlobalBasis} from './report.js';
@@ -14,12 +15,36 @@ export {sheetjsTo2DArray} from './ingest/files.js';
        § 애플리케이션 상태 (ST) 및 로직
     ─────────────────────────────────────────── */
 export const ST = {
-    wb: null,
+    wb: null,       // 지금 확인 중인(아직 회차로 넣지 않은) 파일
     file: null,
     fmtId: null,
-    data: null, // parsed records
+    queue: [],      // 함께 올렸지만 아직 확인하지 않은 파일들 {name, size, bytes}
+    exams: [],      // 회차 목록 (exams/examStore.js)
+    activeExamKey: null,
     charts: {}
 };
+
+/* ST.data 는 지금 고른 회차의 학생 목록이다. 리포트 모듈들은 예전처럼 ST.data 만 읽는다.
+ * 대입하면 지금 회차의 학생을 바꾸고, 회차가 없으면 「현재」 회차를 만든다. null 이면 모든 회차를 비운다 */
+Object.defineProperty(ST, 'data', {
+    enumerable: true,
+    get() {
+        return ST.exams.find(e => e.key === ST.activeExamKey)?.students ?? null;
+    },
+    set(students) {
+        if (students === null || students === undefined) {
+            ST.exams = [];
+            ST.activeExamKey = null;
+            return;
+        }
+        if (ST.exams.some(e => e.key === ST.activeExamKey)) {
+            ST.exams = ST.exams.map(e => (e.key === ST.activeExamKey ? {...e, students} : e));
+        } else {
+            ST.exams = addExam(ST.exams, {key: '현재', formatId: null, fileName: '', fileHash: '', students});
+            ST.activeExamKey = '현재';
+        }
+    },
+});
 
 // ExcelJS 셀 값을 문자열·숫자 같은 평범한 값으로 푼다.
 // 수식의 계산 결과도 다시 이 함수를 거친다. 결과가 #N/A 같은 에러 객체인데 그대로
@@ -108,7 +133,6 @@ export function clearFile() {
     ST.file = null;
     ST.fmtId = null;
     ST.autoFmtId = null;
-    ST.data = null;
     const matchNote = document.getElementById('format-match-note');
     if (matchNote) matchNote.textContent = '';
     ST.cache = null;
@@ -119,9 +143,35 @@ export function clearFile() {
     document.getElementById('sheet-area').classList.add('hidden');
     document.getElementById('parse-btn').classList.add('hidden');
     document.getElementById('preview-section').classList.add('hidden');
-    document.getElementById('badge-text').innerText = '데이터 없음';
-    document.getElementById('data-badge').querySelector('span').className = 'w-2 h-2 rounded-full bg-slate-300';
+    const keyInput = document.getElementById('exam-key-input');
+    if (keyInput) keyInput.value = '';
+}
 
+/* 확인 중인 파일을 건너뛰고 다음 파일로 */
+export function skipFile() {
+    clearFile();
+    showNextQueued();
+}
+
+/* 함께 올린 파일 중 다음 것을 보인다. 없으면 아무것도 하지 않는다 */
+export function showNextQueued() {
+    renderQueueNote();
+    if (ST.wb || ST.queue.length === 0) return;
+    processFile(ST.queue.shift());
+}
+
+function renderQueueNote() {
+    const note = document.getElementById('queue-note');
+    if (note) note.textContent = ST.queue.length ? `이 파일 다음에 확인할 파일이 ${ST.queue.length}개 더 있습니다.` : '';
+}
+
+/* 모든 회차와 확인 중인 파일을 비운다 */
+export function clearAll() {
+    ST.queue = [];
+    clearFile();
+    ST.data = null;
+    ST.cache = null;
+    afterExamsChanged();
     // 데이터를 비웠으면 리포트와 내보내기 화면도 빈 상태로 되돌린다. 그대로 두면
     // 이전 파일의 리포트가 남아, 거기서 행을 누르거나 선택을 바꿀 때 비어 있는
     // ST.data 를 건드려 오류가 났다.
@@ -148,11 +198,25 @@ export function handleDragLeave() {
 export function handleDrop(e) {
     e.preventDefault();
     handleDragLeave();
-    if (e.dataTransfer.files.length > 0) processFile(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files.length > 0) processFiles([...e.dataTransfer.files]);
 }
 
 export function handleFileSelect(e) {
-    if (e.target.files.length > 0) processFile(e.target.files[0]);
+    if (e.target.files.length > 0) processFiles([...e.target.files]);
+}
+
+/* 여러 파일이나 zip 을 받는다. zip 은 펼치고, 엑셀마다 차례로 확인 화면을 띄운다.
+ * 파일 하나는 예전처럼 processFile 로 곧장 간다(형식이 맞지 않으면 그쪽이 알린다) */
+export async function processFiles(files) {
+    if (files.length === 1 && !/\.zip$/i.test(files[0].name)) return processFile(files[0]);
+    const uploads = [];
+    for (const f of files) uploads.push({name: f.name, bytes: new Uint8Array(await f.arrayBuffer())});
+    const {files: sheets, skipped} = expandUploads(uploads);
+    const input = document.getElementById('fileInput');
+    if (input) input.value = '';
+    if (skipped.length) showToast(`${skipped.length}개는 건너뛰었습니다: ${skipped.map(s => `${s.name}(${s.reason})`).join(', ')}`, true);
+    ST.queue.push(...sheets.map(f => ({name: f.name, size: f.bytes.byteLength, bytes: f.bytes})));
+    showNextQueued();
 }
 
 // 파일 읽기 차례. 앞 파일을 읽는(암호를 푸는) 동안 다른 파일을 올리면, 늦게 끝난
@@ -164,12 +228,11 @@ export async function processFile(file) {
     // 끌어다 놓기는 accept 를 거치지 않는다. 다른 형식은 빈 통합 문서가 되어
     // 시트 0개로 "성공" 을 띄웠다. 읽기 전에 막는다. 차례 번호를 올리거나 비우기 전이라
     // 지금 보던 데이터와 읽고 있던 파일은 그대로 남는다
-    const fileExt = file.name.split('.').pop().toLowerCase();
-    if (!['xlsx', 'xls', 'csv'].includes(fileExt)) {
+    if (!isSheetName(file.name)) {
         // 파일 선택 칸만 비운다. 남겨 두면 같은 파일을 다시 골라도 change 가 일지 않아 알림이 없다
         const input = document.getElementById('fileInput');
         if (input) input.value = '';
-        return showToast('지원하지 않는 파일 형식입니다. (.xlsx, .xls, .csv)', true);
+        return showToast('지원하지 않는 파일 형식입니다. (.xlsx, .xls, .csv, 여러 파일을 담은 .zip)', true);
     }
 
     const seq = ++loadSeq;
@@ -184,7 +247,7 @@ export async function processFile(file) {
     if (superseded()) return;
 
     try {
-        const bytes = new Uint8Array(await file.arrayBuffer());
+        const bytes = file.bytes ?? new Uint8Array(await file.arrayBuffer());
         if (superseded()) return;
 
         // 직접 올린 파일과 zip 안의 파일이 같은 경로(loadWorkbook)를 지난다. 암호 해제도 여기서 한다
@@ -204,7 +267,10 @@ export async function processFile(file) {
 
         // 공통 마무리 로직
         ST.wb = wb;
-        ST.file = file;
+        ST.file = {name: file.name, size: file.size, hash: fileHashHex(bytes)};
+        const keyInput = document.getElementById('exam-key-input');
+        if (keyInput) keyInput.value = suggestExamKey(file.name);
+        renderQueueNote();
 
         const sheetNames = wb.worksheets.map(ws => ws.name); // eachSheet보다 간결함
 
@@ -387,7 +453,21 @@ export function parseData() {
     try {
         const sheetName = document.getElementById('sheet-select').value;
         const parser = new GradeDataParser(SCHEMAS[ST.fmtId]);
-        ST.data = parser.parse(ST.wb, sheetName);
+        const students = parser.parse(ST.wb, sheetName);
+
+        // 회차 이름은 사람이 정한다. 파일 이름에서 제안한 값은 입력란에 미리 채워 둘 뿐이다
+        const keyInput = document.getElementById('exam-key-input');
+        const key = normalizeExamKey(keyInput?.value) || ST.file?.name || '현재';
+        try {
+            ST.exams = addExam(ST.exams, {
+                key, formatId: ST.fmtId, fileName: ST.file?.name ?? '', fileHash: ST.file?.hash ?? '', students,
+            });
+        } catch (e) {
+            showToast(e.message, true);
+            keyInput?.focus();
+            return;
+        }
+        ST.activeExamKey = key;
 
         // 원점수 열이 비어 있는 파일(대교협 실채점 등)은 원점수 기준이면 표·분포가 모두 빈다.
         // 국어·수학·탐구 원점수가 아무에게도 없으면 표준점수 기준으로 바꿔 보여 준다.
@@ -405,14 +485,19 @@ export function parseData() {
         const outOfRange = countOutOfRange(ST.data);
         if (outOfRange > 0) msg.push(`범위를 벗어난 점수가 ${outOfRange}개 있습니다. 양식이 맞는지 미리보기로 확인해 주세요.`);
         showToast(msg.join(' '), sameInq > 0 || outOfRange > 0);
-        document.getElementById('badge-text').innerText = `${ST.data.length}명 로드됨`;
-        document.getElementById('data-badge').querySelector('span').className = 'w-2 h-2 rounded-full bg-green-500';
 
+        afterExamsChanged();
         renderReport();
         if (noRaw) setGlobalBasis('std'); // 버튼 모양도 함께 바꾼다
         renderExportCards();
-        switchTab('report');
-        window.scrollTo({top: 0, behavior: 'smooth'});
+        // 함께 올린 파일이 남았으면 다음 파일을 확인한다
+        clearFile();
+        if (ST.queue.length) {
+            showNextQueued();
+        } else {
+            switchTab('report');
+            window.scrollTo?.({top: 0, behavior: 'smooth'});
+        }
     } catch (err) {
         console.error(err);
         showToast('데이터 파싱 중 오류가 발생했습니다.', true);
@@ -618,12 +703,28 @@ export function loadSampleData() {
         s.number = String(numCounter++);
     });
 
-    ST.data = dummy;
+    // 샘플은 「샘플」 회차 하나로 넣는다. 이미 있으면 그 회차를 새 샘플로 바꾼다
+    ST.exams = addExam(ST.exams.filter(e => e.key !== '샘플'), {key: '샘플', formatId: null, fileName: '', fileHash: '', students: dummy});
+    ST.activeExamKey = '샘플';
     showToast('샘플 데이터 100명이 로드되었습니다.');
-    document.getElementById('badge-text').innerText = '샘플 데이터 (100명)';
-    document.getElementById('data-badge').querySelector('span').className = 'w-2 h-2 rounded-full bg-blue-500';
 
+    afterExamsChanged();
     renderReport();
     renderExportCards();
     switchTab('report');
+}
+/* 회차 목록이 바뀐 뒤: 지금 회차가 없어졌으면 첫 회차를 고르고, 머리줄을 다시 그린다.
+ * 리포트는 부르는 쪽이 다시 그린다. 회차 레일은 ui/examRail.js 가 onExamsChanged 로 받는다 */
+let examsListener = () => {};
+export function onExamsChanged(listener) {
+    examsListener = listener;
+}
+
+export function afterExamsChanged() {
+    if (!ST.exams.some(e => e.key === ST.activeExamKey)) {
+        ST.activeExamKey = [...ST.exams].sort((a, b) => a.order - b.order)[0]?.key ?? null;
+    }
+    const badge = document.getElementById('badge-text');
+    if (badge) badge.innerText = ST.exams.length ? `${ST.exams.length}개 회차` : '데이터 없음';
+    examsListener();
 }

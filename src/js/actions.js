@@ -14,6 +14,7 @@
  */
 import {
     autoMatchFormat,
+    clearAll,
     clearFile,
     exportTo,
     handleDragLeave,
@@ -24,10 +25,12 @@ import {
     parseData,
     renderRawPreview,
     selectFormat,
+    skipFile,
     ST,
     switchTab,
 } from './main.js';
 import {renderAll, setGlobalBasis} from './report.js';
+import {openProject, saveProject} from './ui/examRail.js';
 import {
     closeModal,
     handleRowClick,
@@ -46,6 +49,13 @@ const CLICK_ACTIONS = {
     'set-basis': (el) => setGlobalBasis(el.dataset.basis),
     'close-modal': (el) => closeModal(el.dataset.modal),
     'clear-file': () => clearFile(),
+    'skip-file': () => skipFile(),
+    'clear-all': () => {
+        if (ST.exams.length && !confirm('불러온 회차를 모두 지울까요? 저장하지 않았다면 되돌릴 수 없습니다.')) return;
+        clearAll();
+    },
+    'save-project': () => saveProject(),
+    'open-project': () => document.getElementById('projectInput').click(),
     'parse-data': () => parseData(),
     'load-sample': () => loadSampleData(),
     'print-page': () => window.print(),
@@ -67,6 +77,7 @@ const CLICK_ACTIONS = {
 /** data-change 값 → 값이 바뀌었을 때 할 일. */
 const CHANGE_ACTIONS = {
     'file-select': (el, event) => handleFileSelect(event),
+    'project-select': (el) => openProject(el.files?.[0]),
     // 시트를 바꾸면 그 시트의 머리글로 양식을 다시 맞춰 본다. 맞는 양식이 없으면 고른 양식을 그대로 둔다
     'render-raw-preview': () => { autoMatchFormat(); renderRawPreview(); },
     'render-all': () => renderAll(),

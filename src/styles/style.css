@@ -1,45 +1,15 @@
-html {
-    scroll-behavior: smooth;
-    overflow-y: scroll;
-}
-
-body {
-    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-    background-color: #f8fafc;
-    color: #0f172a;
-    -webkit-font-smoothing: antialiased;
-}
+/* 바탕·글꼴·화면 높이는 tailwind.css 의 디자인 토큰(admission-outcomes 와 같다)이 정한다 */
 
 /* ─── details/summary 기본 마커 제거 + 셰브론 회전 ─── */
 details > summary { list-style: none; }
 details > summary::-webkit-details-marker { display: none; }
 details[open] .eg-chevron { transform: rotate(180deg); }
 
-/* ─── 탭 버튼 (세련된 언더라인 애니메이션) ─── */
-.tab-btn {
-    position: relative;
-    transition: color 0.3s ease;
-}
-
-.tab-btn::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 50%;
-    transform: translateX(-50%) scaleX(0);
-    width: 40%;
-    height: 3px;
-    background: #4f46e5; /* Indigo-600 */
-    border-radius: 3px 3px 0 0;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.tab-btn.active::after {
-    transform: translateX(-50%) scaleX(1);
-}
-
+/* ─── 머리줄 단추: 지금 보는 화면 ─── */
 .tab-btn.active {
-    color: #1e1b4b; /* Indigo-950 */
+    border-color: var(--color-brand);
+    background: var(--color-brand-soft);
+    color: var(--color-brand);
     font-weight: 700;
 }
 
@@ -269,10 +239,17 @@ canvas, img {
         display: block !important;
     }
 
+    /* 화면에서는 머리줄 아래만 스크롤하지만, 인쇄는 문서 전체가 흘러야 쪽이 나뉜다 */
     body {
         background: white;
         margin: 0;
         padding: 0;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    #app-main {
+        overflow: visible !important;
     }
 
     @page {
@@ -407,4 +384,8 @@ canvas, img {
         width: 50px !important;
         white-space: normal !important;
     }
+}
+/* 학생 표는 열마다 글자 검색만 쓴다. 값 목록(≡) 단추는 admission-outcomes 의 필터판 몫이라 감춘다 */
+#student-grid .col-search button {
+    display: none;
 }
