@@ -28,7 +28,7 @@ npm run dev
 
 1. **파일 추가**: 회차마다 받은 엑셀을 여러 개, 또는 zip 하나로 끌어다 놓습니다. 표에 파일이 한 줄씩 올라옵니다.
    - 양식은 머리글이 등록된 양식과 정확히 하나만 맞을 때 자동으로 고릅니다. 아니면 직접 고르고, 「보기」로 앞 5줄을 확인합니다.
-   - 회차 이름은 파일 이름에서 제안합니다(`2026-03`, `3`, `사설` 무엇이든 됩니다). 같은 이름은 둘 둘 수 없습니다.
+   - 회차 이름은 파일 이름에서 제안합니다(`2026-03`, `3`, `사설` 무엇이든 됩니다). 같은 이름은 두 번 쓸 수 없습니다.
    - 암호 걸린 파일은 그 줄에 비밀번호를 넣습니다. 여러 파일이 같은 암호면 한 번에 넣을 수 있습니다.
    - 「N개 회차 불러오기」 한 번으로 모두 회차가 됩니다.
 2. **머리줄의 회차 칩**: 칩을 눌러 회차를 고르고, ◀ ▶ 로 순서를 바꿉니다. 이 순서가 추이 화면의 가로축입니다.
@@ -73,7 +73,9 @@ vendor/             npm 레지스트리에서 받을 수 없는 의존성 (아�
 | `src/js/core/` | 숫자 판정(`score.js`), 합산·탐구평균(`aggregate.js`) |
 | `src/js/exams/` | 회차 목록·순서(`examStore.js`), 회차 사이 동일인 연결(`identity.js`), 프로젝트 파일(`projectFile.js`) |
 | `src/js/trend/trend.js` | 회차별 전교·학생 추이 계산 |
-| `src/js/ui/` | 불러오기 표, 회차 레일, 학생 표(GridTable, admission-outcomes 이식), 추이 화면 |
+| `src/js/ui/` | 불러오기 표(`importer.js`), 회차 레일·프로젝트 저장/열기(`examRail.js`), 학생 표(`studentTable.js`, `table.js` = admission-outcomes GridTable 이식), 추이 화면(`trendView.js`), DOM 잔손질(`dom.js`) |
+| `src/js/actions.js` | 마크업의 `data-action`·`data-change` → 실제 함수 |
+| `src/js/xlsx-decrypt.js`, `src/js/sha.js` | 암호 걸린 xlsx 해제와 그에 쓰는 동기 해시 |
 | `src/js/exporter.js` | 다른 양식으로 내보내기 |
 | `src/js/report.js`, `src/js/report/` | 리포트 렌더링(통계·상위권·분포·선택과목·수능최저·모달) |
 | `src/js/utils.js` | 공용 헬퍼 |
