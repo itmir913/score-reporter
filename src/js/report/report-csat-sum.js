@@ -83,7 +83,7 @@ export function compareCsatRank(a, b) {
 
 /** 전교 석차 대상과 공동순위(1,1,3). 원점수 합(국어+수학+탐구평균)이 있는 학생만 넣는다 */
 export function rankCsatSchool(data, {includeNoInquiry = false} = {}) {
-    // 소수 6자리로 다듬어 0.1+0.2 와 0.3 처럼 2진 오차만 다른 합을 같게 본다
+    // 소수 6자리로 반올림해 0.1+0.2 와 0.3 처럼 2진 오차만 다른 합을 같게 본다
     const key = (s, basis) => {
         const v = compositeScore(s, basis, {includeNoInquiry});
         return v === null ? null : roundHalfUp(v, 6);
@@ -263,7 +263,7 @@ export function renderCsatClassTable(cache) {
             // [핵심 수정] parseInt의 한계를 벗어나 문자/숫자 혼합 데이터를 자연스럽게 정렬
             const numA = String(a.s.number || "");
             const numB = String(b.s.number || "");
-            // "01" 과 "1" 처럼 글자는 달라도 같은 번호면 0 이 나온다. 그때도 이름으로 가른다
+            // "01" 과 "1" 처럼 글자는 달라도 같은 번호면 0 이 나온다. 그때도 이름으로 구분한다
             const c = numA.localeCompare(numB, undefined, {numeric: true});
             if (c) return c;
 

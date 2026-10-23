@@ -70,7 +70,7 @@ const isNoise = (entryName) => {
 };
 
 /**
- * 올린 것들을 엑셀 파일 목록으로 펼친다. zip 안의 zip 은 해제하지 않는다.
+ * 올린 것들을 엑셀 파일 목록으로 전개한다. zip 안의 zip 은 해제하지 않는다.
  * @param {{name: string, bytes: Uint8Array}[]} uploads
  * @returns {{files: {name: string, bytes: Uint8Array, container?: string}[], skipped: {name: string, reason: string}[]}}
  */
@@ -100,7 +100,7 @@ export function expandUploads(uploads, {limits = ARCHIVE_LIMITS} = {}) {
             continue;
         }
 
-        // 해제하기 전에 개수·크기를 거른다. 다 풀고 재면 이미 늦다
+        // 해제하기 전에 개수·크기를 거른다. 다 해제하고 재면 이미 늦다
         let seen = 0;
         let declaredBytes = 0;
         let tooMany = false;
@@ -175,7 +175,7 @@ export function needsPassword({name, bytes}) {
 
 /**
  * 엑셀 파일 하나를 ExcelJS 통합 문서로 읽는다. 직접 올린 파일과 zip 안의 파일이 모두 여기를 지난다.
- * 암호 걸린 xlsx 는 askPassword() 로 비밀번호를 받아 먼저 푼다. null 을 돌려주면 취소다.
+ * 암호 걸린 xlsx 는 askPassword() 로 비밀번호를 받아 먼저 해제한다. null 을 돌려주면 취소다.
  * SheetJS 로 읽은 시트(xls·csv·속이 옛 xls 인 xlsx)에는 병합 범위를 ws.sheetjsMerges 로 남긴다
  * — 양식 지문을 낼 때 병합 칸을 같은 방식으로 다루기 위해서다.
  * @returns {Promise<ExcelJS.Workbook|null>}
@@ -223,7 +223,7 @@ export async function loadWorkbook({name, bytes}, {askPassword, isCancelled = ()
     }
 
     /* 암호가 걸린 xlsx 는 zip 이 아니라 OLE2 컨테이너로 저장된다. ExcelJS 는
-     * 그걸 그대로 zip 으로 읽으려다 실패하므로, 먼저 우리가 풀어서 넘긴다. */
+     * 그걸 그대로 zip 으로 읽으려다 실패하므로, 먼저 우리가 해제해서 넘긴다. */
     let data = buffer;
     if (isEncrypted) {
         const pwd = await askPassword?.(name);

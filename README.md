@@ -31,9 +31,9 @@ npm run dev
    - 회차 이름은 파일 이름에서 제안합니다(`2026-03`, `3`, `사설` 무엇이든 됩니다). 같은 이름은 두 번 쓸 수 없습니다.
    - 암호 걸린 파일은 그 줄에 비밀번호를 넣습니다. 여러 파일이 같은 암호면 한 번에 넣을 수 있습니다.
    - 「N개 회차 불러오기」 한 번으로 모두 회차가 됩니다.
-2. **머리줄의 회차 칩**: 칩을 눌러 회차를 고르고, ◀ ▶ 로 순서를 바꿉니다. 이 순서가 추이 화면의 가로축입니다.
+2. **머리줄의 회차 칩**: 칩을 눌러 회차를 고르고, ◀ ▶ 로 순서를 바꿉니다. 이 순서가 통계 화면의 가로축입니다.
 3. **보고서**: 고른 회차의 통계·상위 N·급간 분포·수능최저·학생 명단(정렬·열 검색).
-4. **추이**: 회차별 전교 평균과, 한 학생의 회차별 점수·합산 석차.
+4. **통계**: 회차별 전교 평균과, 한 학생의 회차별 점수·합산 석차.
 5. **내보내기**: 고른 회차를 다른 프로그램 양식의 엑셀로 내보냅니다.
 6. **프로젝트 파일**: 모든 회차를 `.score.json` 하나로 저장하고 다음에 엽니다. 브라우저에는 아무것도 남지 않습니다.
    이 파일에는 학생 이름과 성적이 들어 있으니 공용 PC·메신저에 두지 마세요.
@@ -67,13 +67,13 @@ vendor/             npm 레지스트리에서 받을 수 없는 의존성 (아�
 | --- | --- |
 | `src/js/main.js` | 앱 상태(`ST`: 회차 목록, 지금 회차), 불러오기 표 상태, 탭 전환, 내보내기 |
 | `src/js/schema.js` | 양식 정의의 유일한 정본(열 매핑·머리글 줄 수·내보내기 머리글 = 양식 지문의 원천) |
-| `src/js/ingest/files.js` | 업로드 펼치기(zip), 암호 해제, ExcelJS/SheetJS 읽기 |
+| `src/js/ingest/files.js` | 업로드 전개(zip), 암호 해제, ExcelJS/SheetJS 읽기 |
 | `src/js/ingest/formatMatch.js` | 머리글 지문으로 양식 자동 매칭, 값 범위 교차검증 |
 | `src/js/parser.js` | 성적 파일 → 학생 레코드 |
 | `src/js/core/` | 숫자 판정(`score.js`), 합산·탐구평균(`aggregate.js`) |
 | `src/js/exams/` | 회차 목록·순서(`examStore.js`), 회차 사이 동일인 연결(`identity.js`), 프로젝트 파일(`projectFile.js`) |
-| `src/js/trend/trend.js` | 회차별 전교·학생 추이 계산 |
-| `src/js/ui/` | 불러오기 표(`importer.js`), 회차 레일·프로젝트 저장/열기(`examRail.js`), 학생 표(`studentTable.js`, `table.js` = admission-outcomes GridTable 이식), 추이 화면(`trendView.js`), DOM 잔손질(`dom.js`) |
+| `src/js/trend/trend.js` | 회차별 전교·학생별 통계 계산 |
+| `src/js/ui/` | 불러오기 표(`importer.js`), 회차 레일·프로젝트 저장/열기(`examRail.js`), 학생 표(`studentTable.js`, `table.js` = admission-outcomes GridTable 이식), 통계 화면(`trendView.js`), DOM 잔손질(`dom.js`) |
 | `src/js/actions.js` | 마크업의 `data-action`·`data-change` → 실제 함수 |
 | `src/js/xlsx-decrypt.js`, `src/js/sha.js` | 암호 걸린 xlsx 해제와 그에 쓰는 동기 해시 |
 | `src/js/exporter.js` | 다른 양식으로 내보내기 |
@@ -123,18 +123,18 @@ SheetJS는 0.18.5 이후 npm 레지스트리에 게시하지 않습니다. 0.19.
 
 저장소 설정이 **Settings → Pages → Source: GitHub Actions** 여야 합니다.
 
-`.github/workflows/ci.yml` 은 push와 PR마다 lint·test·build만 돌리고 배포는 하지 않습니다.
+`.github/workflows/ci.yml` 은 push와 PR마다 lint·test·build만 실행하고 배포는 하지 않습니다.
 
 ### 오프라인 번들
 
-릴리스의 `score-reporter.zip` 은 압축을 풀고 `index.html` 을 그대로 열면 동작합니다. 이를 위해 빌드가 두 가지를 지킵니다.
+릴리스의 `score-reporter.zip` 은 압축을 해제하고 `index.html` 을 그대로 열면 동작합니다. 이를 위해 빌드가 두 가지를 지킵니다.
 
 - 모든 경로가 상대 경로 (`base: './'`)
 - 번들을 iife로 내보내고 `type="module"` 과 `crossorigin` 을 걷어냄
 
 번들에 설명서는 들어 있지 않습니다. 앱의 설명서 버튼은 릴리스 자산을 가리키는 외부 링크이므로 오프라인에서는 열리지 않습니다.
 
-`file://` 은 출처가 `null` 이라 모듈 스크립트와 `crossorigin` 리소스가 CORS로 막힙니다. 이 두 가지가 지켜지지 않으면 압축을 풀어 열었을 때 빈 화면이 뜹니다. 자세한 내용은 `vite.config.js` 의 주석에 적어 두었습니다.
+`file://` 은 출처가 `null` 이라 모듈 스크립트와 `crossorigin` 리소스가 CORS로 막힙니다. 이 두 가지가 지켜지지 않으면 압축을 해제해 열었을 때 빈 화면이 뜹니다. 자세한 내용은 `vite.config.js` 의 주석에 적어 두었습니다.
 
 ---
 

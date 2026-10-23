@@ -31,8 +31,8 @@ const exams = () => [
     {key: '4', students: [st('가', 1, sc(85, 130), sc(75, 128), sc(40, 60))]},
 ].reduce((list, e) => addExam(list, {...e, formatId: null, fileName: '', fileHash: ''}), []);
 
-describe('추이 계산', () => {
-    it('전교 추이는 회차 순서대로, 합산은 국어+수학+탐구평균이다', () => {
+describe('통계 계산', () => {
+    it('전교 통계는 회차 순서대로, 합산은 국어+수학+탐구평균이다', () => {
         const t = schoolTrend(exams(), 'raw');
         expect(t.map(x => x.key)).toEqual(['3', '4', '사설']);
         // 3월: 가 80+70+35=185, 나 90+60+45=195
@@ -52,7 +52,7 @@ describe('추이 계산', () => {
         expect(of).toBe(3);
     });
 
-    it('학생 추이는 회차마다 한 줄, 없는 회차도 빈 줄로 남는다', () => {
+    it('학생별 통계는 회차마다 한 줄, 없는 회차도 빈 줄로 남는다', () => {
         const person = {name: '나', entries: {3: 1, 사설: 0}};
         const t = personTrend(person, exams(), 'raw');
         expect(t.map(r => [r.key, r.student ? r.total : null, r.rank ?? null])).toEqual([
@@ -61,7 +61,7 @@ describe('추이 계산', () => {
     });
 });
 
-describe('추이 화면', () => {
+describe('통계 화면', () => {
     beforeEach(() => {
         document.body.innerHTML = readFileSync(resolve(process.cwd(), 'index.html'), 'utf-8')
             .replace(/^[\s\S]*<body[^>]*>/, '').replace(/<\/body>[\s\S]*$/, '');
@@ -72,7 +72,7 @@ describe('추이 화면', () => {
         setGlobalBasis('raw');
     });
 
-    it('전교 추이 표와 그래프(빈 회차는 끊김)를 그린다', () => {
+    it('전교 통계 표와 그래프(빈 회차는 끊김)를 그린다', () => {
         view.renderTrend();
         const rows = [...document.querySelectorAll('#trend-school tbody tr')].map(tr => tr.children[0].textContent);
         expect(rows).toEqual(['3', '4', '사설']);
@@ -93,7 +93,7 @@ describe('추이 화면', () => {
         expect(cells[1]).toEqual(['4', '이 회차에는 없습니다']);
     });
 
-    it('성적표의 「회차별 추이」는 그 학생을 고른 채 추이 화면을 연다', () => {
+    it('성적표의 「회차별 통계」는 그 학생을 고른 채 통계 화면을 연다', () => {
         view.choosePersonAt('3', 0);
         main.switchTab('trend');
         view.renderTrend();

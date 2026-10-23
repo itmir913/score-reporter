@@ -202,7 +202,7 @@ describe('탐구·제2외국어 과목명', () => {
 
 describe('내보낸 파일을 다시 읽어도 성적이 그대로다', () => {
     // 실제 양식으로 내보내고, 같은 양식으로 다시 불러온다.
-    // 열 배치와 머리글 줄 수가 서로 맞물려야만 통과한다.
+    // 열 배치와 머리글 줄 수가 서로 맞아야만 통과한다.
     it.each(Object.values(SCHEMAS).map(s => [s.label, s]))('%s', async (_label, schema) => {
         const students = [
             student({name: '홍길동', cls: '1', number: '1', korRaw: 88, korGrade: 2, engGrade: 1}),
@@ -214,10 +214,10 @@ describe('내보낸 파일을 다시 읽어도 성적이 그대로다', () => {
         wb.addWorksheet('성적').addRows(rows);
         const back = new GradeDataParser(schema).parse(wb, '성적');
 
-        // 이름은 모든 양식이 갖는다. 파서가 이 칸으로 학생 행을 가려내기 때문이다.
+        // 이름은 모든 양식이 갖는다. 파서가 이 칸으로 학생 행을 구별하기 때문이다.
         expect(back.map(s => s.name)).toEqual(['홍길동', '김철수']);
 
-        // 나머지는 양식마다 있는 열이 다르므로, 그 양식이 지원할 때만 따진다.
+        // 나머지는 양식마다 있는 열이 다르므로, 그 양식이 지원할 때만 비교한다.
         if (schema.supports('class')) expect(back.map(s => s.class)).toEqual(['1', '2']);
         if (schema.supports('number')) expect(back.map(s => s.number)).toEqual(['1', '15']);
         if (schema.supports('kor_grade')) expect(back.map(s => s.korean.grade)).toEqual([2, 9]);

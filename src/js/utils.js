@@ -14,7 +14,7 @@ export function avgOf(arr) {
 }
 
 /* 소수 d자리 사사오입(0에서 먼 쪽). toFixed 는 80.35 처럼 2진수로 딱 떨어지지 않는
- * 값을 80.3 으로 내린다. 15자리로 다듬어 그 오차를 걷어낸 뒤 반올림한다. */
+ * 값을 80.3 으로 내린다. 15자리로 반올림해 그 오차를 걷어낸 뒤 반올림한다. */
 export function roundHalfUp(v, d = 0) {
     const scaled = Number((Math.abs(v) * 10 ** d).toPrecision(15));
     return Math.sign(v) * Math.round(scaled) / 10 ** d;

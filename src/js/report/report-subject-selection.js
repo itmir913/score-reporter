@@ -47,7 +47,7 @@ export function renderSubjectSelection(cache) {
 
         const counts = labels.map(l => statsData[l].count);
         // 탐구는 과목이 10개를 넘기 쉽다. 색이 모자라면 Chart.js 기본 회색이 칠해지므로
-        // 20색을 두고, 그보다 많으면 처음부터 돌려 쓴다.
+        // 20색을 두고, 그보다 많으면 처음부터 다시 쓴다.
         const colors = [
             '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
             '#ec4899', '#14b8a6', '#64748b', '#0ea5e9', '#d946ef',

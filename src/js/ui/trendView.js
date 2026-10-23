@@ -7,9 +7,9 @@ import {DASH, toFixedHalfUp} from '../utils.js';
 import {clear, el} from './dom.js';
 
 /* ───────────────────────────────────────────
-   § 추이 화면
-   전교 추이: 회차마다 과목 평균과 합산(국어+수학+탐구평균) 평균.
-   학생 추이: 한 학생을 골라 회차마다 점수와 합산 석차. 회차 사이 동일인은 exams/identity.js 가 잇는다.
+   § 통계 화면
+   전교 통계: 회차마다 과목 평균과 합산(국어+수학+탐구평균) 평균.
+   학생별 통계: 한 학생을 골라 회차마다 점수와 합산 석차. 회차 사이 동일인은 exams/identity.js 가 잇는다.
    가로축은 회차 순서(머리줄에서 바꾼 순서)다. 값이 없는 회차는 선이 끊기고 표는 — 이다.
 ─────────────────────────────────────────── */
 
@@ -47,14 +47,14 @@ export function renderTrend() {
     const school = schoolTrend(exams, basis, options);
     const keys = school.map(s => s.key);
 
-    root.append(el('p', {class: 'text-base text-ink-soft', text: `기준: ${label} · 합산 = 국어 + 수학 + 탐구평균 · 가로축은 머리줄의 회차 순서입니다. 기준은 보고서 화면에서 바꿉니다.`}));
+    root.append(el('p', {class: 'text-base text-ink-soft', text: `기준: ${label} · 합산: 국어+수학+탐구평균 · 회차는 상단 회차 목록의 순서를 따릅니다.`}));
 
-    // ── 전교 추이 ──
+    // ── 전교 통계 ──
     const schoolCanvas = el('canvas', {attrs: {id: 'trend-school-chart'}});
     const th = (t) => el('th', {class: 'border-b border-line px-3 py-2 text-left font-semibold text-ink-soft', text: t});
     const td = (t, cls = '') => el('td', {class: `border-b border-line-soft px-3 py-2 tabular-nums ${cls}`, text: t});
     root.append(el('section', {class: 'card px-5 py-4', attrs: {id: 'trend-school'}}, [
-        el('h3', {class: 'text-xl font-bold', text: '전교 추이'}),
+        el('h3', {class: 'text-xl font-bold', text: '전교 통계'}),
         el('div', {class: 'relative mt-3 h-72'}, [schoolCanvas]),
         el('div', {class: 'mt-4 overflow-x-auto'}, [el('table', {class: 'w-full text-base'}, [
             el('thead', {}, [el('tr', {}, [th('회차'), th('인원'), th('합산 대상'), th(`합산 평균`), th('국어'), th('수학'), th('탐구평균'), th('영어 등급')])]),
@@ -64,7 +64,7 @@ export function renderTrend() {
             ]))),
         ])]),
         school.some(s => s.kor === null && s.math === null)
-            ? el('p', {class: 'mt-2 text-base text-wait', text: `${label}가 없는 회차는 표에서 —, 그래프에서 선이 끊깁니다. 다른 기준으로 대신하지 않습니다.`})
+            ? el('p', {class: 'mt-2 text-base text-wait', text: `${label}가 없는 회차는 표에 —로 표시하고 그래프에서 비워 둡니다.`})
             : null,
     ]));
     drawLine('trendSchool', schoolCanvas, keys, [
@@ -74,7 +74,7 @@ export function renderTrend() {
         {label: '탐구평균', data: school.map(s => s.inq), borderColor: COLORS[3], backgroundColor: COLORS[3]},
     ]);
 
-    // ── 학생 추이 ──
+    // ── 학생별 통계 ──
     const {persons, conflicts} = linkStudents(exams);
     const chosen = chosenRecords ? persons.find(p => [...recordsOf(p, exams)].some(r => chosenRecords.has(r))) ?? null : null;
     if (chosen) choose(chosen, exams);
@@ -96,8 +96,8 @@ export function renderTrend() {
     search.addEventListener('input', showResults);
 
     root.append(el('section', {class: 'card px-5 py-4', attrs: {id: 'trend-student'}}, [
-        el('h3', {class: 'text-xl font-bold', text: '학생 추이'}),
-        el('p', {class: 'mt-1 text-base text-ink-soft', text: '같은 학년 안에서 학번, 없으면 학년·반·번호로 회차를 잇습니다. 이름이 다르거나 모호하면 잇지 않습니다.'}),
+        el('h3', {class: 'text-xl font-bold', text: '학생별 통계'}),
+        el('p', {class: 'mt-1 text-base text-ink-soft', text: '학번 또는 학년·반·번호가 같은 학생을 같은 사람으로 봅니다. 이름이 다르면 연결하지 않습니다.'}),
         conflicts.length
             ? el('p', {class: 'mt-2 rounded-lg bg-wait-soft px-4 py-2 text-base text-wait', text: `회차 사이를 잇지 못한 기록이 ${new Set(conflicts.map(c => `${c.examKey}|${c.index}`)).size}건(회차별) 있습니다. 그 학생은 회차마다 따로 나옵니다.`})
             : null,
@@ -143,7 +143,7 @@ function renderPerson(root, person, exams, basis, options, keys) {
     ]);
 }
 
-/** 성적표 모달 등에서: 이 학생(지금 회차의 위치)의 추이를 연다 */
+/** 성적표 모달 등에서: 이 학생(지금 회차의 위치)의 통계를 연다 */
 export function choosePersonAt(examKey, index) {
     const {persons} = linkStudents(ST.exams);
     choose(persons.find(p => p.entries[examKey] === index) ?? null, ST.exams);

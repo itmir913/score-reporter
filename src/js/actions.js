@@ -45,7 +45,7 @@ const CLICK_ACTIONS = {
         switchTab(el.dataset.tab);
         if (el.dataset.tab === 'trend') renderTrend();
     },
-    // 성적표에서 이 학생의 회차별 추이로
+    // 성적표에서 이 학생의 회차별 통계로
     'student-trend': () => {
         const index = ST.data?.indexOf(currentStudent());
         if (index === undefined || index < 0) return;

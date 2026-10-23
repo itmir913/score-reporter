@@ -3,7 +3,7 @@ import {sortedExams} from '../exams/examStore.js';
 import {roundHalfUp} from '../utils.js';
 
 /* ───────────────────────────────────────────
-   § 회차별 추이 (계산만, 화면 없음)
+   § 회차별 통계 (계산만, 화면 없음)
    가로축은 언제나 회차 순서(order)다. 값이 없는 회차는 null 로 두고 0 으로 채우지 않는다
    (빈칸은 0점이 아니다). 합산은 국어 + 수학 + 탐구평균(core/aggregate.js)이다.
 ─────────────────────────────────────────── */
@@ -36,7 +36,7 @@ export function schoolTrend(exams, basis, options) {
 
 /**
  * 한 회차 안 합산 석차(공동순위 1,1,3). 학생 위치 → 석차, 합산이 없으면 없음.
- * 비교 키는 소수 6자리로 다듬는다(2진 오차로 같은 점수가 갈리지 않게)
+ * 비교 키는 소수 6자리로 반올림한다(2진 오차로 같은 점수가 나뉘지 않게)
  */
 export function examRanks(exam, basis, options) {
     const keyed = exam.students.map((s, i) => {

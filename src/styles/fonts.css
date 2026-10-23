@@ -1,0 +1,7 @@
+/* 글꼴. 앱 스타일(main.css)과 따로 index.html 의 <link> 로 건다.
+ *
+ * Tailwind v4 는 자기가 처리하는 스타일시트 안의 @import 를 직접 이어 붙이는데, 그때
+ * 글꼴 파일의 상대 경로를 다시 계산하지 못해 빌드에서 woff2 가 빠졌다. 여기서는 Vite 가
+ * @import 를 처리하므로 Pretendard 동적 서브셋과 Font Awesome 의 woff2 가 해시를 달고 나온다. */
+@import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
+@import '@fortawesome/fontawesome-free/css/all.min.css';

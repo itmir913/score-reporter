@@ -66,7 +66,7 @@ describe('sheetjsTo2DArray (.xls/.csv)', () => {
     });
 });
 
-describe('exceljsTo2DArray 셀 값 풀기 (.xlsx)', () => {
+describe('exceljsTo2DArray 셀 값 변환 (.xlsx)', () => {
     const schema = new FormatSchema({
         id: 't', label: 't', color: 'blue', icon: 'fa-table', headerRows: 1,
         fields: {name: 'A', kor_raw: 'B', kor_subject: 'C'},
@@ -123,7 +123,7 @@ describe('exceljsTo2DArray 셀 값 풀기 (.xlsx)', () => {
 });
 
 // ExcelJS 의 cell.value 는 결과가 0 인 수식에서 result 를 빼 버린다.
-// 수식으로 낸 0점이 빈칸(미응시)으로 읽혀 통계에서 빠지면 안 된다.
+// 수식으로 낸 0점이 빈칸(미응시)으로 해석되어 통계에서 빠지면 안 된다.
 it('수식 결과가 0이면 0점으로 읽는다', async () => {
     const wb0 = new ExcelJS.Workbook();
     const ws0 = wb0.addWorksheet('S');

@@ -29,7 +29,7 @@ beforeEach(() => {
     vi.restoreAllMocks();
 });
 
-// jsdom 의 File 에는 arrayBuffer() 가 없어서 쓰는 부분만 흉내 낸다
+// jsdom 의 File 에는 arrayBuffer() 가 없어서 쓰는 부분만 대신 만든다
 const fakeFile = (name, data) => {
     const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
     return {name, size: bytes.byteLength, arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)};
@@ -139,7 +139,7 @@ describe('감사 반영', () => {
         expect(document.activeElement).not.toBe(sel); // 새로 그린 칸이다
     });
 
-    it('여는 중인 줄은 다시 풀지 않는다', async () => {
+    it('여는 중인 줄은 다시 해제하지 않는다', async () => {
         const r = {status: 'locked', busy: true, name: 'x.xlsx'};
         expect(await unlock(r, 'pw')).toBe(false);
     });

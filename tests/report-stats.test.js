@@ -315,7 +315,7 @@ describe('선택과목 원그래프 색', () => {
         expect(new Set(colors).size).toBe(13);
     });
 
-    it('팔레트보다 과목이 많으면 색을 돌려 쓴다', () => {
+    it('팔레트보다 과목이 많으면 색을 다시 쓴다', () => {
         ST.data = inquiries(25);
         renderAll();
         const colors = ST.charts.inqSelectPie.cfg.data.datasets[0].backgroundColor;
@@ -345,7 +345,7 @@ describe('소수 합의 2진 오차', () => {
         expect(rows.map(r => r[3])).toEqual(['가', '나', '다']);
     });
 
-    it('전교 석차: 백분위 합의 오차로 순위가 갈리지 않는다', () => {
+    it('전교 석차: 백분위 합의 오차로 순위가 나뉘지 않는다', () => {
         ST.data = [pctOnly('나', 2, 0.3, 0), pctOnly('가', 1, 0.1, 0.2)];
         document.getElementById('csat-top-n-count').value = 'all';
         renderAll();

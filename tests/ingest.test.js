@@ -156,7 +156,7 @@ describe('zip 과 암호 파일', () => {
         encrypted = new Uint8Array(toContainer(encryptAgile(Buffer.from(plain), {password: PASSWORD})));
     });
 
-    it('zip 안의 엑셀을 펼치고, 부산물·중첩 압축·엑셀 아닌 파일을 거른다', () => {
+    it('zip 안의 엑셀을 전개하고, 부산물·중첩 압축·엑셀 아닌 파일을 거른다', () => {
         const zip = zipSync({
             '3월.xlsx': plain,
             '폴더/4월.xls': xlsBytes(SCHEMAS.kimyoungil.exportHeaders),
@@ -170,7 +170,7 @@ describe('zip 과 암호 파일', () => {
         expect(skipped).toEqual([{name: '안쪽.zip', reason: '압축 안의 압축은 해제하지 않습니다.'}]);
     });
 
-    it('xlsx 는 zip 이어도 펼치지 않고 그대로 둔다', () => {
+    it('xlsx 는 zip 이어도 전개하지 않고 그대로 둔다', () => {
         const {files, skipped} = expandUploads([{name: '3월.xlsx', bytes: plain}, {name: '사진.png', bytes: new Uint8Array([1, 2])}]);
         expect(files.map(f => f.name)).toEqual(['3월.xlsx']);
         expect(skipped.map(s => s.name)).toEqual(['사진.png']);
@@ -183,12 +183,12 @@ describe('zip 과 암호 파일', () => {
         expect(skipped[0].reason).toContain('너무 많습니다');
     });
 
-    it('직접 올린 암호 파일을 풀어 읽는다', async () => {
+    it('직접 올린 암호 파일을 해제해 읽는다', async () => {
         const wb = await loadWorkbook({name: '3월.xlsx', bytes: encrypted}, {askPassword: async () => PASSWORD});
         expect(matchFormats(firstSheet(wb), SCHEMAS).autoId).toBe('univcoop');
     });
 
-    it('zip 안의 암호 파일도 같은 경로로 풀어 읽는다', async () => {
+    it('zip 안의 암호 파일도 같은 경로로 해제해 읽는다', async () => {
         const {files} = expandUploads([{name: 'x.zip', bytes: zipSync({'3월.xlsx': encrypted})}]);
         expect(files).toHaveLength(1);
         let asked = 0;

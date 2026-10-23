@@ -486,6 +486,6 @@ export function removeSpaces(s, baseValue) {
 // 이 함수를 0으로 반환하면 교차 포맷 변환 시 null 점수가 0으로 왜곡됨
 export function ensureNumericOrZero(s, baseValue) {
     if (baseValue === null || baseValue === undefined || baseValue === '') return '';
-    // 읽을 때(num)와 같은 규칙이다. 숫자로 읽히지 않는 값은 빈 셀로 둔다
+    // 읽을 때(num)와 같은 규칙이다. 숫자로 해석되지 않는 값은 빈 셀로 둔다
     return toScore(baseValue) ?? '';
 }

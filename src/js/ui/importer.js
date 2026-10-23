@@ -83,7 +83,7 @@ export function selectSheet(row, sheetName) {
 
 /** 비밀번호로 연다. 틀리면 그 줄에 알린다 */
 export async function unlock(row, password) {
-    // 여는 중에 또 누르면 같은 줄을 두 번 풀어, 늦게 끝난 쪽이 사람이 고른 시트·양식을 덮었다
+    // 여는 중에 또 누르면 같은 줄을 두 번 해제해, 늦게 끝난 쪽이 사람이 고른 시트·양식을 덮었다
     if (row.status !== 'locked' || !password || row.busy) return false;
     row.busy = true;
     try {
@@ -174,8 +174,8 @@ export function previewTable(ws, schema) {
         ]),
         el('p', {
             class: 'px-3 py-2 text-base text-ink-soft', text: schema
-                ? '노란 줄은 머리글이라 읽지 않습니다. 학생 점수가 노란 줄에 있거나 위의 열 이름이 값과 맞지 않으면 양식을 바꾸세요.'
-                : '양식을 고르면 어느 열을 읽는지 위에 표시합니다.',
+                ? '노란 줄은 머리글입니다. 열 이름과 값이 맞지 않으면 양식을 바꾸세요.'
+                : '양식을 선택하면 읽는 열의 이름이 표시됩니다.',
         }),
     ]);
 }
@@ -326,7 +326,7 @@ export function renderImportTable(root, state, options) {
         el('p', {
             attrs: {id: 'import-note'},
             class: problems.length ? 'mr-auto text-base font-medium text-fail' : 'mr-auto text-base text-ink-soft',
-            text: problems[0] ?? `${count}개 파일을 회차로 넣습니다. 순서는 불러온 뒤 머리줄에서 바꿀 수 있습니다.`,
+            text: problems[0] ?? `${count}개 파일을 불러옵니다.`,
         }),
         el('button', {
             class: 'btn shrink-0', text: '목록 비우기', attrs: {type: 'button'},

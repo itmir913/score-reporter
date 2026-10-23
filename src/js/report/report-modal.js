@@ -41,7 +41,7 @@ export function handleRowClick(el) {
     const cls = el.dataset.class;
     const num = el.dataset.num;
 
-    // 반·번호가 빈 양식(김영일)은 이름이 같은 학생을 이름·반·번호로 가를 수 없다.
+    // 반·번호가 빈 양식(김영일)은 이름이 같은 학생을 이름·반·번호로 구분할 수 없다.
     // 행에 적어 둔 ST.data 위치로 찾고, 그 자리의 학생이 다르면(데이터가 바뀐 뒤) 예전 방식으로 찾는다
     const s = el.dataset.idx !== undefined && el.dataset.idx !== '' ? ST.data?.[Number(el.dataset.idx)] : null;
     if (s && s.name === name) {
@@ -65,7 +65,7 @@ export function studentIdxAttr(s) {
     return i === undefined ? '' : `data-idx="${i}"`;
 }
 
-/* 번호 칸에 보일 값. 반이 빈 양식(김영일)은 번호도 비어 학생을 가를 수 없으니 학번을 보인다.
+/* 번호 칸에 보일 값. 반이 빈 양식(김영일)은 번호도 비어 학생을 구분할 수 없으니 학번을 보인다.
  * 화면 표시만 바꾼다. data-num·data-idx 와 학생 찾기는 그대로 번호를 쓴다 */
 export function showsStudentId(s) {
     return !String(s.class ?? '').trim() && !!String(s.student_id ?? '').trim();

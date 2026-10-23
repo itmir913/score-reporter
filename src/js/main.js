@@ -38,7 +38,7 @@ Object.defineProperty(ST, 'data', {
     },
 });
 
-// ExcelJS 셀 값을 문자열·숫자 같은 평범한 값으로 푼다.
+// ExcelJS 셀 값을 문자열·숫자 같은 평범한 값으로 바꾼다.
 // 수식의 계산 결과도 다시 이 함수를 거친다. 결과가 #N/A 같은 에러 객체인데 그대로
 // 두면 이름 칸이 "[object Object]" 가 되어 학생으로 섞여 들어갔다.
 function cellToPlain(val) {
@@ -149,7 +149,7 @@ export async function addUploads(files) {
     // 앞 묶음의 건너뛴 안내를 덮지 않고 잇는다
     IMPORT.skipped = [...IMPORT.skipped, ...skipped];
     renderImports();
-    showToast(rows.length ? `${rows.length}개 파일을 표에 올렸습니다. 확인한 뒤 「불러오기」를 누르세요.` : '읽을 수 있는 엑셀 파일이 없습니다.', !rows.length);
+    showToast(rows.length ? `${rows.length}개 파일을 목록에 추가했습니다.` : '읽을 수 있는 엑셀 파일이 없습니다.', !rows.length);
 }
 
 /** 표에서 고른 파일들을 회차로 넣는다 */

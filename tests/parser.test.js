@@ -4,7 +4,7 @@ import {GradeDataParser} from '../src/js/parser.js';
 import {FormatSchema} from '../src/js/schema.js';
 
 /* 진짜 ExcelJS 워크북을 만들어 넘긴다. 파서는 시트를 2차원 배열로 바꾸는
- * exceljsTo2DArray를 거치므로, 가짜 객체를 흉내 내면 그 변환이 검증에서 빠진다. */
+ * exceljsTo2DArray를 거치므로, 가짜 객체로 대신하면 그 변환이 검증에서 빠진다. */
 
 // kor_raw 를 일부러 넣지 않았다. 원점수 열이 없는 양식에서 공통+선택을 더해
 // 채우는 동작을 보기 위해서다.
@@ -39,7 +39,7 @@ describe('GradeDataParser.parse', () => {
         ]);
     });
 
-    // 이름 칸은 그 행이 학생인지 아닌지를 가르는 기준이다. 빈 행이나 소계 행이
+    // 이름 칸은 그 행이 학생인지 아닌지를 구분하는 기준이다. 빈 행이나 소계 행이
     // 학생으로 섞이면 인원수와 평균이 전부 어긋난다.
     it('이름이 없는 행은 학생으로 세지 않는다', () => {
         expect(students).toHaveLength(3);
@@ -81,7 +81,7 @@ describe('GradeDataParser.parse', () => {
             expect(students[1].korean.raw).toBe(55);
         });
 
-        // 양쪽 다 없으면 0이 아니라 null이다. 0이면 0점을 받은 것으로 읽혀
+        // 양쪽 다 없으면 0이 아니라 null이다. 0이면 0점을 받은 것으로 해석되어
         // 평균과 등급 분포가 아래로 끌려 내려간다.
         it('양쪽 다 없으면 null이다', () => {
             expect(students[2].korean.raw).toBeNull();

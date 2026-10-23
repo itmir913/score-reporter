@@ -6,7 +6,7 @@ import {buildWorkbook} from './helpers/baseline-fixture.js';
 
 /* 마이그레이션 단계 0 기준선.
  * 지금 앱이 5종 양식을 읽고, 통계·순위를 매기고, 내보내는 결과를 스냅숏으로 묶는다.
- * 재작성 뒤 이 스냅숏이 바뀌면, 의도한 변경(탐구평균 등)인지 퇴행인지를 하나씩 따진다.
+ * 재작성 뒤 이 스냅숏이 바뀌면, 의도한 변경(탐구평균 등)인지 퇴행인지를 하나씩 검토한다.
  * 가상 학생만 쓴다(tests/helpers/baseline-fixture.js). */
 
 vi.mock('chart.js/auto', () => ({

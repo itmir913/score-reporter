@@ -1,18 +1,18 @@
 import * as XLSX from 'xlsx';
 import {hashFn} from './sha.js';
 
-/* 암호가 걸린 xlsx 를 푸는 곳.
+/* 암호가 걸린 xlsx 를 해제하는 곳.
  *
  * Excel 이 암호를 걸면 결과물은 더 이상 zip 이 아니라 OLE2(CFB) 컨테이너다.
  * 그 안에 /EncryptionInfo 와 /EncryptedPackage 두 스트림이 들어 있고,
- * 후자를 풀어야 원래의 xlsx zip 이 나온다. ExcelJS 는 이 해제를 못 하고
+ * 후자를 해제해야 원래의 xlsx zip 이 나온다. ExcelJS 는 이 해제를 못 하고
  * (load 에 password 옵션 자체가 없다) SheetJS 커뮤니티 빌드도 마찬가지라,
- * "Can't find end of central directory" 로 끝난다. 그래서 직접 푼다.
+ * "Can't find end of central directory" 로 끝난다. 그래서 직접 해제한다.
  *
  * 규격은 MS-OFFCRYPTO. 두 가지를 지원한다.
  *   - Agile (버전 4.4, Excel 2010+ 기본): XML 헤더 + AES-CBC 세그먼트 암호화
  *   - Standard (버전 2.2/3.2/4.2, Excel 2007): 바이너리 헤더 + AES-ECB
- * 확장형(4.3)은 규격이 서드파티 CSP 에 맡기는 형태라 풀 수 없다.
+ * 확장형(4.3)은 규격이 서드파티 CSP 에 맡기는 형태라 해제할 수 없다.
  *
  * AES 는 WebCrypto 를 쓴다. 다만 거기에는 ECB 도, 패딩 없는 CBC 도 없어서
  * 아래 두 헬퍼로 우회한다. 해시는 sha.js 의 동기 구현을 쓴다. 회전(spin) 수가
@@ -162,7 +162,7 @@ function attrs(xml, tag) {
 
 /* 비밀번호를 spinCount 만큼 되풀이해 해시한다. 실제 파일은 10만 번이라 여기가
  * 전체 시간의 거의 전부다. 파생 키가 셋 필요하지만 회전은 셋이 공유하므로,
- * 한 번만 돌리고 blockKey 별 마지막 해시만 따로 한다. */
+ * 한 번만 계산하고 blockKey 별 마지막 해시만 따로 한다. */
 function spinPassword(algo, password, salt, spinCount) {
     let h = hash(algo, salt, utf16le(password));
     for (let i = 0; i < spinCount; i++) h = hash(algo, le32(i), h);
@@ -190,7 +190,7 @@ async function decryptAgile(infoBytes, packageBytes, password) {
 
     const spun = spinPassword(encAlgo, password, encSalt, spin);
 
-    // 비밀번호 검증: 입력값을 풀어 해시한 값이 저장된 해시와 같아야 한다.
+    // 비밀번호 검증: 입력값을 변환해 해시한 값이 저장된 해시와 같아야 한다.
     const inputKey = deriveKey(encAlgo, spun, BLOCK_KEY_VERIFIER_INPUT, encKeyBytes);
     const valueKey = deriveKey(encAlgo, spun, BLOCK_KEY_VERIFIER_VALUE, encKeyBytes);
     const verifier = await aesCbcDecrypt(await importAesKey(inputKey), encSalt, fromBase64(enc.encryptedVerifierHashInput));
@@ -198,7 +198,7 @@ async function decryptAgile(infoBytes, packageBytes, password) {
     const actual = hash(encAlgo, verifier);
     if (!sameBytes(stored, actual, actual.length)) throw new WrongPasswordError();
 
-    // 패키지를 실제로 푸는 키는 파일이 따로 들고 있다. 비밀번호로는 그 키를 꺼낸다.
+    // 패키지를 실제로 해제하는 키는 파일이 따로 들고 있다. 비밀번호로는 그 키를 꺼낸다.
     const wrapKey = deriveKey(encAlgo, spun, BLOCK_KEY_SECRET_KEY, encKeyBytes);
     const secret = (await aesCbcDecrypt(await importAesKey(wrapKey), encSalt, fromBase64(enc.encryptedKeyValue)))
         .subarray(0, encKeyBytes);
@@ -272,7 +272,7 @@ export class WrongPasswordError extends Error {
 }
 
 /* 옛 .xls(BIFF8) 의 암호는 컨테이너가 아니라 Workbook 스트림 안의 FILEPASS 레코드다.
- * /EncryptionInfo 가 없어 위 해제로는 풀 수 없고, SheetJS 는 "File is password-protected" 를 던진다 */
+ * /EncryptionInfo 가 없어 위 방법으로는 해제할 수 없고, SheetJS 는 "File is password-protected" 를 던진다 */
 export class EncryptedLegacyXlsError extends Error {
     constructor() {
         super('암호가 걸린 옛 형식(.xls) 파일입니다.');
@@ -281,7 +281,7 @@ export class EncryptedLegacyXlsError extends Error {
 }
 
 /**
- * 암호가 걸린 xlsx 를 풀어 원래의 xlsx(zip) 바이트로 돌려준다.
+ * 암호가 걸린 xlsx 를 해제해 원래의 xlsx(zip) 바이트로 돌려준다.
  *
  * @param {ArrayBuffer|Uint8Array} buffer 사용자가 올린 파일 그대로
  * @param {string} password 사용자가 입력한 비밀번호

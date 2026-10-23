@@ -19,7 +19,7 @@ export function renderScoreDistribution(cache = ST.cache) {
 
     // ★ 캐시의 studentWithSums 재사용 — ST.data 재순회 없음
     // cache.basis 기준 합산이 이미 되어 있으므로 합산 기준도 상위 N명 테이블과 완전히 일치
-    // 급간은 소수 6자리로 다듬은 합으로 나눈다. 상위 N명과 같은 비교용 합이라, 49.99999999999999
+    // 급간은 소수 6자리로 반올림한 합으로 나눈다. 상위 N명과 같은 비교용 합이라, 49.99999999999999
     // 처럼 2진 오차만 있는 합이 화면에는 50.0 인데 40~49 급간에 들어가지 않는다
     const binned = cache.studentWithSums
         .filter(({sum}) => Number.isFinite(sum) && sum >= 0)
@@ -83,7 +83,7 @@ export function renderScoreDistribution(cache = ST.cache) {
                     const index = elements[0].index;
                     const label = `${this.data.labels[index]} 급간`;
 
-                    // 히스토그램 빈 구성과 같은 다듬은 합으로 거른다
+                    // 히스토그램 빈 구성과 같은 반올림한 합으로 거른다
                     const studentsInBin = binned
                         .filter(({key}) => Math.floor(key / intervalSize) === numBins - 1 - index)
                         .map(({s}) => s);

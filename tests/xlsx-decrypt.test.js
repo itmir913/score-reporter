@@ -98,18 +98,18 @@ describe('xlsx 암호 해제', () => {
         expect(isEncryptedOfficeFile(xls.buffer)).toBe(false);
     });
 
-    it('Agile(4.4) 파일을 풀어 원본 xlsx 를 돌려준다', async () => {
+    it('Agile(4.4) 파일을 해제해 원본 xlsx 를 돌려준다', async () => {
         const out = await decryptXlsx(toContainer(encryptAgile(plain)), PASSWORD);
         expect(Buffer.from(out).equals(plain)).toBe(true);
 
-        // 푼 결과를 ExcelJS 가 실제로 읽는지까지 본다
+        // 해제한 결과를 ExcelJS 가 실제로 읽는지까지 본다
         const wb = new ExcelJS.Workbook();
         await wb.xlsx.load(out);
         expect(wb.worksheets.map((ws) => ws.name)).toEqual(['성적']);
         expect(wb.getWorksheet('성적').getRow(2).getCell(4).value).toBe('학생1');
     });
 
-    it('Standard(3.2) 파일을 풀어 원본 xlsx 를 돌려준다', async () => {
+    it('Standard(3.2) 파일을 해제해 원본 xlsx 를 돌려준다', async () => {
         const out = await decryptXlsx(toContainer(encryptStandard(plain)), PASSWORD);
         expect(Buffer.from(out).equals(plain)).toBe(true);
     });
