@@ -88,9 +88,15 @@ describe('통계 화면', () => {
         search.dispatchEvent(new Event('input'));
         const button = [...document.querySelectorAll('#trend-student button')].find(b => b.textContent.startsWith('나'));
         button.click();
-        const cells = [...document.querySelectorAll('#trend-student tbody tr')].map(tr => [...tr.children].map(td => td.textContent));
+        const cells = [...document.querySelectorAll('#trend-rank-table tbody tr')].map(tr => [...tr.children].map(td => td.textContent));
         expect(cells[0].slice(0, 3)).toEqual(['3', '195.0', '1 / 2']);
         expect(cells[1]).toEqual(['4', '이 회차에는 없습니다']);
+        // 영역 표는 회차마다 영역 줄을 둔다. 줄을 누르면 그 회차의 성적표가 열린다
+        const subjectRows = [...document.querySelectorAll('#trend-subject-table tbody tr')];
+        expect(subjectRows[0].children[1].textContent).toBe('국어');
+        subjectRows[0].click();
+        expect(document.getElementById('student-modal').classList.contains('hidden')).toBe(false);
+        expect(document.getElementById('modal-student-info').innerText.startsWith('3 · ')).toBe(true);
     });
 
     it('성적표의 「회차별 통계」는 그 학생을 선택한 채 통계 화면을 연다', () => {

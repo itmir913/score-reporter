@@ -166,11 +166,16 @@ export function showStudentAt(index) {
     if (s) _showStudent(s);
 }
 
-function _showStudent(s) {
+/** 다른 회차의 학생 기록도 연다(통계 탭). 제목 앞에 회차 이름을 붙인다 */
+export function showStudentRecord(s, examKey) {
+    if (s) _showStudent(s, examKey);
+}
+
+function _showStudent(s, examKey = '') {
     _printStudent = s;
 
     const who = classNumberText(s);
-    document.getElementById('modal-student-info').innerText = `${who ? `${who} ` : ''}${s.name} 성적표`;
+    document.getElementById('modal-student-info').innerText = `${examKey ? `${examKey} · ` : ''}${who ? `${who} ` : ''}${s.name} 성적표`;
 
     const rows = [{label: '국어', data: s.korean}, {label: '수학', data: s.math}, {
         label: '영어',

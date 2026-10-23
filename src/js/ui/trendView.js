@@ -4,6 +4,7 @@ import {ST} from '../main.js';
 import {globalReportBasis, includeNoInquiry, labelMap} from '../report.js';
 import {personTrend, schoolTrend} from '../trend/trend.js';
 import {DASH, toFixedHalfUp} from '../utils.js';
+import {showStudentRecord} from '../report/report-modal.js';
 import {clear, el} from './dom.js';
 
 /* ───────────────────────────────────────────
@@ -21,16 +22,25 @@ let chosenRecords = null;
 const recordsOf = (p, exams) => new Set(exams.flatMap(e => (p.entries[e.key] === undefined ? [] : [e.students[p.entries[e.key]]])));
 const choose = (p, exams) => { chosenRecords = p ? recordsOf(p, exams) : null; };
 
-function drawLine(key, canvas, labels, datasets) {
+/* reverse: 작을수록 좋은 값(등급·석차)은 축을 뒤집어 좋은 쪽을 위에 둔다 */
+function drawLine(key, canvas, labels, datasets, {reverse = false, legend = true, tooltipLabel, min} = {}) {
     ST.charts[key]?.destroy();
     ST.charts[key] = new Chart(canvas.getContext('2d'), {
         type: 'line',
-        data: {labels, datasets: datasets.map(d => ({...d, spanGaps: false, tension: 0.2, pointRadius: 4}))},
-        options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {position: 'bottom'}}, scales: {
-            // 회차가 하나면 점이 왼쪽 끝에 붙지 않게 가운데에 찍는다
-            x: {offset: labels.length === 1},
-            y: {beginAtZero: false},
-        }},
+        data: {labels, datasets: datasets.map(d => ({spanGaps: false, tension: 0.2, pointRadius: 4, ...d}))},
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: {mode: 'index', intersect: false},
+            plugins: {
+                legend: {display: legend, position: 'bottom'},
+                tooltip: tooltipLabel ? {callbacks: {label: tooltipLabel}} : {},
+            },
+            scales: {
+                // 회차가 하나면 점이 왼쪽 끝에 붙지 않게 가운데에 찍는다
+                x: {offset: labels.length === 1},
+                y: {beginAtZero: false, reverse, ...(min === undefined ? {} : {min}), ...(reverse ? {ticks: {precision: 0}} : {})},
+            },
+        },
     });
 }
 
@@ -121,29 +131,120 @@ function describe(p, exams) {
     return `${s?.name ?? ''}${who ? ` · ${who}` : ''} · ${Object.keys(p.entries).length}회`;
 }
 
+/* 학생별 영역 성적 차트에서 선택한 기준과 끈 과목. 학생을 바꾸거나 다시 그려도 유지한다 */
+const SUBJECT_BASES = [['pct', '백분위'], ['grade', '등급'], ['raw', '원점수'], ['std', '표준점수']];
+const SUBJECT_LINES = [['korean', '국어'], ['math', '수학'], ['inquiry1', '탐구1'], ['inquiry2', '탐구2']];
+const SUBJECT_COLORS = {korean: '#0d9488', math: '#7c3aed', inquiry1: '#ea580c', inquiry2: '#0369a1'};
+let subjectBasis = 'pct';
+const hiddenSubjects = new Set();
+
+/** 성적 표의 영역 줄. 영어·한국사는 절대평가라 원점수·등급만 있다 */
+const TABLE_AREAS = [['korean', '국어'], ['math', '수학'], ['english', '영어'], ['inquiry1', '탐구1'], ['inquiry2', '탐구2'], ['hist', '한국사']];
+
+/** 원점수: 원점수 열이 없으면 공통+선택(성적표와 같은 규칙) */
+function rawOf(d) {
+    if (!d) return null;
+    if (Number.isFinite(d.raw)) return d.raw;
+    if (Number.isFinite(d.common_raw) || Number.isFinite(d.select_raw)) return (d.common_raw || 0) + (d.select_raw || 0);
+    return null;
+}
+const valueOf = (d, basis) => (basis === 'raw' ? rawOf(d) : (Number.isFinite(d?.[basis]) ? d[basis] : null));
+const plain = (v) => (Number.isFinite(v) ? String(v) : DASH);
+
+/** 줄을 누르면 그 회차의 이 학생 성적표를 연다 */
+const openRecord = (r) => showStudentRecord(r.student, r.key);
+const clickableRow = (r, cells) => el('tr', {
+    class: 'cursor-pointer hover:bg-brand-soft', attrs: {tabindex: '0', title: `${r.key} 성적표 열기`},
+    on: {click: () => openRecord(r), keydown: (e) => { if (e.key === 'Enter') openRecord(r); }},
+}, cells);
+
 function renderPerson(root, person, exams, basis, options, keys) {
     clear(root);
     const rows = personTrend(person, exams, basis, options);
-    const canvas = el('canvas', {attrs: {id: 'trend-student-chart'}});
-    const th = (t) => el('th', {class: 'border-b border-line px-3 py-2 text-left font-semibold text-ink-soft', text: t});
+    const th = (t, cls = '') => el('th', {class: `border-b border-line px-3 py-2 text-left font-semibold text-ink-soft ${cls}`, text: t});
     const td = (t, cls = '') => el('td', {class: `border-b border-line-soft px-3 py-2 tabular-nums ${cls}`, text: t});
+    const absent = (r, span) => el('tr', {}, [td(r.key, 'font-semibold'), el('td', {class: 'border-b border-line-soft px-3 py-2 text-ink-soft', attrs: {colspan: String(span)}, text: '이 회차에는 없습니다'})]);
+
+    // ── 회차별 영역 성적: 기준 칩과 과목 칩으로 선택한다 ──
+    const subjectCanvas = el('canvas', {attrs: {id: 'trend-student-chart'}});
+    const basisChips = el('div', {class: 'flex flex-wrap gap-2', attrs: {role: 'group', 'aria-label': '점수 기준'}});
+    const subjectChips = el('div', {class: 'flex flex-wrap gap-2', attrs: {role: 'group', 'aria-label': '과목'}});
+    const drawSubjects = () => {
+        clear(basisChips);
+        clear(subjectChips);
+        SUBJECT_BASES.forEach(([b, text]) => basisChips.append(el('button', {
+            class: `rounded-full border px-4 py-1 text-base font-semibold ${b === subjectBasis ? 'border-brand bg-brand text-white' : 'border-line bg-surface text-ink-soft hover:text-ink'}`,
+            text, attrs: {type: 'button', 'aria-pressed': String(b === subjectBasis)},
+            on: {click: () => { subjectBasis = b; drawSubjects(); }},
+        })));
+        SUBJECT_LINES.forEach(([k, text]) => {
+            const on = !hiddenSubjects.has(k);
+            subjectChips.append(el('button', {
+                class: `inline-flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-1 text-base font-medium ${on ? 'text-ink' : 'text-ink-soft'}`,
+                attrs: {type: 'button', 'aria-pressed': String(on)},
+                on: {click: () => { if (on) hiddenSubjects.add(k); else hiddenSubjects.delete(k); drawSubjects(); }},
+            }, [el('span', {class: 'inline-block size-3 rounded-full', style: {background: on ? SUBJECT_COLORS[k] : '#9ca3af'}}), el('span', {text})]));
+        });
+        const basisLabel = SUBJECT_BASES.find(([b]) => b === subjectBasis)[1];
+        drawLine('trendStudent', subjectCanvas, keys,
+            SUBJECT_LINES.filter(([k]) => !hiddenSubjects.has(k)).map(([k, text]) => ({
+                label: text, data: rows.map(r => (r.student ? valueOf(r.student[k], subjectBasis) : null)),
+                borderColor: SUBJECT_COLORS[k], backgroundColor: '#fff', pointBorderColor: SUBJECT_COLORS[k], pointBorderWidth: 2,
+            })),
+            {
+                // 등급은 1등급이 가장 좋으니 위로 둔다
+                reverse: subjectBasis === 'grade',
+                legend: false,
+                tooltipLabel: (ctx) => ` ${ctx.dataset.label} ${ctx.formattedValue} ${basisLabel}`,
+            });
+    };
+
+    const subjectTable = el('table', {class: 'w-full text-base', attrs: {id: 'trend-subject-table'}}, [
+        el('thead', {}, [el('tr', {}, [th('회차'), th('영역'), th('과목명'), th('원점수', 'text-right'), th('표준점수', 'text-right'), th('백분위', 'text-right'), th('등급', 'text-right')])]),
+        el('tbody', {}, rows.flatMap(r => (r.student
+            ? TABLE_AREAS.map(([k, text]) => {
+                const d = r.student[k] ?? {};
+                return clickableRow(r, [td(r.key, 'font-semibold'), td(text), td(d.subject || DASH),
+                    td(plain(rawOf(d)), 'text-right'), td(plain(d.std), 'text-right'), td(plain(d.pct), 'text-right'), td(plain(d.grade), 'text-right')]);
+            })
+            : [absent(r, 6)]))),
+    ]);
+
+    // ── 합산 석차: 1등이 위로 가게 축을 뒤집는다 ──
+    const rankCanvas = el('canvas', {attrs: {id: 'trend-rank-chart'}});
+
     root.append(
         el('p', {class: 'text-lg font-semibold', text: describe(person, exams)}),
-        el('div', {class: 'relative mt-3 h-72'}, [canvas]),
-        el('div', {class: 'mt-4 overflow-x-auto'}, [el('table', {class: 'w-full text-base'}, [
-            el('thead', {}, [el('tr', {}, [th('회차'), th('합산'), th('합산 석차'), th('국어'), th('수학'), th('탐구평균'), th('영어 등급')])]),
-            el('tbody', {}, rows.map(r => el('tr', {}, r.student ? [
-                td(r.key, 'font-semibold'), td(fmt(r.total)), td(r.rank ? `${r.rank} / ${r.of}` : DASH),
-                td(fmt(r.kor)), td(fmt(r.math)), td(fmt(r.inq)), td(fmt(r.engGrade, 0)),
-            ] : [td(r.key, 'font-semibold'), el('td', {class: 'border-b border-line-soft px-3 py-2 text-ink-soft', attrs: {colspan: '6'}, text: '이 회차에는 없습니다'})]))),
-        ])]),
+        el('div', {class: 'mt-3 rounded-xl border border-line p-4'}, [
+            el('div', {class: 'flex flex-wrap items-center justify-between gap-3'}, [
+                el('h4', {class: 'text-lg font-bold', text: '회차별 영역 성적'}),
+                basisChips,
+            ]),
+            el('div', {class: 'mt-3'}, [subjectChips]),
+            el('div', {class: 'relative mt-3 h-72'}, [subjectCanvas]),
+            el('div', {class: 'mt-4 overflow-x-auto'}, [subjectTable]),
+        ]),
+        el('div', {class: 'mt-4 rounded-xl border border-line p-4'}, [
+            el('h4', {class: 'text-lg font-bold', text: `회차별 합산 석차 (${labelMap[basis]} 기준)`}),
+            el('div', {class: 'relative mt-3 h-60'}, [rankCanvas]),
+            el('div', {class: 'mt-4 overflow-x-auto'}, [el('table', {class: 'w-full text-base', attrs: {id: 'trend-rank-table'}}, [
+                el('thead', {}, [el('tr', {}, [th('회차'), th('합산'), th('합산 석차'), th('국어'), th('수학'), th('탐구평균'), th('영어 등급')])]),
+                el('tbody', {}, rows.map(r => (r.student ? clickableRow(r, [
+                    td(r.key, 'font-semibold'), td(fmt(r.total)), td(r.rank ? `${r.rank} / ${r.of}` : DASH),
+                    td(fmt(r.kor)), td(fmt(r.math)), td(fmt(r.inq)), td(fmt(r.engGrade, 0)),
+                ]) : absent(r, 6)))),
+            ])]),
+        ]),
     );
-    drawLine('trendStudent', canvas, keys, [
-        {label: '합산', data: rows.map(r => r.total ?? null), borderColor: COLORS[0], backgroundColor: COLORS[0]},
-        {label: '국어', data: rows.map(r => r.kor ?? null), borderColor: COLORS[1], backgroundColor: COLORS[1]},
-        {label: '수학', data: rows.map(r => r.math ?? null), borderColor: COLORS[2], backgroundColor: COLORS[2]},
-        {label: '탐구평균', data: rows.map(r => r.inq ?? null), borderColor: COLORS[3], backgroundColor: COLORS[3]},
-    ]);
+    drawSubjects();
+    drawLine('trendRank', rankCanvas, keys, [
+        {label: '합산 석차', data: rows.map(r => r.rank ?? null), borderColor: COLORS[0], backgroundColor: COLORS[0]},
+    ], {
+        reverse: true,
+        legend: false,
+        min: 1,
+        tooltipLabel: (ctx) => ` ${ctx.formattedValue}등 / ${rows[ctx.dataIndex].of}명`,
+    });
 }
 
 /** 성적표 모달 등에서: 이 학생(지금 회차의 위치)의 통계를 연다 */
