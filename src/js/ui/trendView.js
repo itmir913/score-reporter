@@ -318,24 +318,29 @@ function renderPerson(root, person, exams, options, keys) {
                 subjectBasisChips,
             ]),
             el('div', {class: 'mt-3'}, [subjectChips]),
-            el('div', {class: 'relative mt-3 h-72'}, [subjectCanvas]),
-            el('div', {class: 'mt-4 overflow-x-auto rounded-lg border border-line'}, [subjectTable]),
+            // 넓은 화면에서는 차트와 표를 나란히 둔다. 영역 표는 길어서 차트가 따라 내려오게 붙여 둔다
+            el('div', {class: 'mt-3 grid gap-6 lg:grid-cols-2 lg:items-start'}, [
+                el('div', {class: 'relative h-72 lg:sticky lg:top-4'}, [subjectCanvas]),
+                el('div', {class: 'overflow-x-auto rounded-lg border border-line'}, [subjectTable]),
+            ]),
         ]),
         el('div', {class: 'mt-4 rounded-xl border border-line p-4'}, [
             el('div', {class: 'flex flex-wrap items-center justify-between gap-3'}, [
                 el('h4', {class: 'text-lg font-bold', text: '회차별 합산 석차'}),
                 basisChips(rankBasis, (b) => { rankBasis = b; renderPerson(root, person, exams, options, keys); }, '합산 석차 기준'),
             ]),
+            el('div', {class: 'mt-3 grid gap-6 lg:grid-cols-2 lg:items-start'}, [
             rankByGrade
-                ? el('p', {class: 'mt-3 rounded-lg bg-canvas px-4 py-3 text-base text-ink-soft', text: '등급으로는 합산 석차를 매기지 않습니다. 백분위·원점수·표준점수 중 하나를 선택하세요.'})
-                : el('div', {class: 'relative mt-3 h-60'}, [rankCanvas]),
-            el('div', {class: 'mt-4 overflow-x-auto rounded-lg border border-line'}, [el('table', {class: 'w-full text-base', attrs: {id: 'trend-rank-table'}}, [
+                ? el('p', {class: 'rounded-lg bg-canvas px-4 py-3 text-base text-ink-soft', text: '등급으로는 합산 석차를 매기지 않습니다. 백분위·원점수·표준점수 중 하나를 선택하세요.'})
+                : el('div', {class: 'relative h-60'}, [rankCanvas]),
+            el('div', {class: 'overflow-x-auto rounded-lg border border-line'}, [el('table', {class: 'w-full text-base', attrs: {id: 'trend-rank-table'}}, [
                 el('thead', {}, [el('tr', {}, [th('회차'), th('합산'), th('합산 석차'), th('국어'), th('수학'), th('탐구평균'), th('영어 등급')])]),
                 el('tbody', {}, rows.map(r => (r.student ? clickableRow(r, [
                     td(r.key, 'font-semibold'), td(fmt(r.total)), td(r.rank ? `${r.rank} / ${r.of}` : DASH),
                     td(fmt(r.kor)), td(fmt(r.math)), td(fmt(r.inq)), td(fmt(r.engGrade, 0)),
                 ]) : absent(r, 6)))),
             ])]),
+            ]),
         ]),
     );
     drawSubjects();
