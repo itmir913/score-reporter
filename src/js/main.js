@@ -245,7 +245,7 @@ export function renderExportCards() {
         `;
 
     document.getElementById('export-cards').innerHTML = Object.values(SCHEMAS).map(s => `
-            <div class="card flex items-center justify-between gap-3 px-5 py-4">
+            <div class="card flex flex-col items-start gap-3 px-5 py-4 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
                 <p class="min-w-0 text-lg font-semibold">${escapeAttr(s.label)} 양식</p>
                 <button type="button" data-action="export-to" data-format="${s.id}" class="btn shrink-0 whitespace-nowrap">
                     <i class="fa-solid fa-download"></i>내려받기

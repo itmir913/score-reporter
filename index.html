@@ -129,8 +129,8 @@
                             <i class="fa-solid fa-file-pdf"></i>매뉴얼
                         </a>
                         <!-- 지금 상태와 초기화 단추는 한 묶음이다. 넓은 화면에서는 오른쪽 끝에 붙인다 -->
-                        <div class="flex items-center gap-2 sm:ml-auto">
-                            <span id="badge-text" class="text-ink-soft">데이터 없음</span>
+                        <div class="flex w-full flex-col items-start gap-2 sm:ml-auto sm:w-auto sm:flex-row sm:items-center">
+                            <span id="badge-text" class="whitespace-nowrap text-ink-soft">데이터 없음</span>
                             <button type="button" class="btn btn-sm btn-danger" data-action="clear-all">
                                 <i class="fa-solid fa-trash-can"></i>데이터 초기화
                             </button>
@@ -207,7 +207,7 @@
                             <h3 class="font-bold text-slate-800 text-xl">Key Statistics / 주요 지표 요약</h3>
                         </div>
 
-                        <div id="stat-cards" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+                        <div id="stat-cards" class="grid grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-4 gap-4"></div>
                     </div>
                 </section>
 
@@ -219,12 +219,12 @@
                                 <i class="fa-solid fa-sliders text-slate-400 text-lg"></i>
                                 <span class="text-base font-bold text-slate-700">전체 통계 기준</span>
                             </div>
-                            <label class="flex items-center gap-2 text-base font-semibold text-slate-700 cursor-pointer select-none ml-auto mr-4">
+                            <label class="flex items-center gap-2 whitespace-nowrap text-base font-semibold text-slate-700 cursor-pointer select-none ml-auto mr-4">
                                 <input type="checkbox" id="include-no-inquiry" data-change="render-all"
                                        class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
                                 탐구 미응시 학생도 포함
                             </label>
-                            <div class="flex rounded-lg bg-canvas p-0.5">
+                            <div class="flex shrink-0 rounded-lg bg-canvas p-0.5 [&>button]:whitespace-nowrap">
                                 <button id="btn-basis-raw" data-action="set-basis" data-basis="raw"
                                         class="px-3 py-1 text-base font-semibold rounded-md bg-white text-blue-600 transition-all">
                                     원점수
@@ -249,8 +249,8 @@
                                 <h3 id="top-n-title" class="font-bold text-slate-800 text-xl">상위 학생 명단</h3>
                             </div>
                             <p id="top-n-note" class="basis-full text-base text-amber-700 empty:hidden"></p>
-                            <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl no-print">
-                                <label for="top-n-count" class="text-base font-semibold text-slate-700 pl-2">표시
+                            <div class="flex w-full flex-col items-stretch gap-1 sm:w-auto sm:flex-row sm:items-center sm:gap-2 bg-slate-100 p-1.5 rounded-xl no-print">
+                                <label for="top-n-count" class="shrink-0 whitespace-nowrap text-base font-semibold text-slate-700 pl-2">표시
                                     인원:</label>
                                 <select id="top-n-count" data-change="render-top-n"
                                         class="rounded-lg border-none bg-white text-base py-1.5 pl-3 pr-8 focus:ring-2 focus:ring-blue-500">
@@ -282,8 +282,8 @@
                                     인원 분포</h3>
                             </div>
                             <p id="dist-note" class="basis-full text-base text-amber-700 empty:hidden"></p>
-                            <div class="flex items-center gap-2 bg-white border border-slate-200 p-1.5 rounded-xl no-print">
-                                <label for="interval-size" class="text-base font-bold text-slate-600 pl-3">급간
+                            <div class="flex w-full flex-col items-stretch gap-1 sm:w-auto sm:flex-row sm:items-center sm:gap-2 bg-white border border-slate-200 p-1.5 rounded-xl no-print">
+                                <label for="interval-size" class="shrink-0 whitespace-nowrap text-base font-bold text-slate-600 pl-3">급간
                                     크기:</label>
                                 <select id="interval-size" data-change="render-score-distribution"
                                         class="rounded-lg border-none bg-slate-50 text-base py-1.5 pl-3 pr-8 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
@@ -381,16 +381,17 @@
 
 
                         <div class="flex items-center justify-between mb-4 flex-wrap gap-4">
-                            <h3 class="text-lg font-bold mb-3 flex items-center gap-2">
+                            <!-- 좁은 화면에서는 제목 아래로 설명이 내려간다(제목이 한 글자씩 쪼개지지 않게) -->
+                            <h3 class="text-lg font-bold mb-3 flex flex-wrap items-center gap-x-2 gap-y-1">
                                 <span class="w-1 h-5 bg-brand rounded"></span>
-                                전교 석차 기준
-                                <span class="text-base text-slate-500 font-normal">(국어+수학+탐구평균 · 원점수 > 표준점수 > 백분위 순)</span>
+                                <span class="whitespace-nowrap">전교 석차 기준</span>
+                                <span class="basis-full pl-3 text-base text-slate-500 font-normal sm:basis-auto sm:pl-0">(국어+수학+탐구평균 · 원점수 > 표준점수 > 백분위 순)</span>
                             </h3>
                             <p id="csat-school-note" class="basis-full text-base text-amber-700 empty:hidden"></p>
 
 
-                            <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl no-print">
-                                <label for="csat-top-n-count" class="text-base font-semibold text-slate-700 pl-2">표시
+                            <div class="flex w-full flex-col items-stretch gap-1 sm:w-auto sm:flex-row sm:items-center sm:gap-2 bg-slate-100 p-1.5 rounded-xl no-print">
+                                <label for="csat-top-n-count" class="shrink-0 whitespace-nowrap text-base font-semibold text-slate-700 pl-2">표시
                                     인원:</label>
                                 <select id="csat-top-n-count" data-change="render-csat-school"
                                         class="rounded-lg border-none bg-white text-base py-1.5 pl-3 pr-8 focus:ring-2 focus:ring-blue-500">
@@ -407,7 +408,7 @@
 
                         <div class="bg-white border border-slate-200/80 rounded-xl overflow-hidden">
                             <div class="overflow-x-auto overflow-y-auto max-h-96">
-                                <table class="data-table w-full text-base min-w-[600px]">
+                                <table class="data-table w-full text-base min-w-[56rem] whitespace-nowrap">
                                     <thead class="bg-slate-50/80 backdrop-blur-sm text-slate-500 font-bold border-b border-slate-200 sticky top-0 z-10 uppercase tracking-wider">
                                     <tr>
                                         <th class="p-3 text-center w-16">석차</th>
@@ -428,16 +429,17 @@
 
                     <div class="bg-white border border-slate-200 rounded-xl p-6 mt-6 no-print">
                         <div class="flex justify-between items-center mb-3 flex-wrap gap-2">
-                            <h3 class="text-lg font-bold flex items-center gap-2">
+                            <h3 class="text-lg font-bold flex flex-wrap items-center gap-x-2 gap-y-1">
                                 <span class="w-1 h-5 bg-brand rounded"></span>
-                                학급 기준 <span class="text-base text-slate-500 font-normal">(학번 > 이름 순)</span>
+                                <span class="whitespace-nowrap">학급 기준</span>
+                                <span class="text-base text-slate-500 font-normal">(학번 > 이름 순)</span>
                             </h3>
                             <select id="class-select" data-change="class-change"
                                     class="border border-slate-300 rounded-lg p-1.5 text-base bg-slate-50 focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 outline-none"></select>
                         </div>
                         <div class="bg-white border border-slate-200/80 rounded-xl overflow-hidden">
                             <div class="overflow-x-auto overflow-y-auto max-h-96">
-                                <table class="data-table w-full text-base min-w-[500px]">
+                                <table class="data-table w-full text-base min-w-[52rem] whitespace-nowrap">
                                     <thead class="bg-slate-50/80 backdrop-blur-sm text-slate-500 font-bold border-b border-slate-200 sticky top-0 z-10 uppercase tracking-wider">
                                     <tr>
                                         <th class="p-3 text-center w-20">번호</th>
@@ -483,11 +485,10 @@
                             <span class="w-1.5 h-6 rounded bg-brand inline-block"></span>
                             <h3 class="font-bold text-slate-800 text-xl">과목별 성적 분포 종합</h3>
                         </div>
-                        <div class="flex items-center gap-4 no-print">
+                        <div class="flex w-full items-center gap-4 no-print sm:w-auto">
                             <span class="text-base text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg font-medium hidden md:block">탐구 과목은 선택 1, 2를 통합 집계</span>
-                            <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl">
-                                <label for="chart-basis" class="text-base font-semibold text-slate-700 pl-2">분석
-                                    지표:</label>
+                            <div class="flex w-full flex-col items-stretch gap-1 sm:w-auto sm:flex-row sm:items-center sm:gap-2 bg-slate-100 p-1.5 rounded-xl">
+                                <label for="chart-basis" class="shrink-0 whitespace-nowrap text-base font-semibold text-slate-700 pl-2">분석 지표:</label>
                                 <select id="chart-basis" data-change="render-subjects-charts"
                                         class="rounded-lg border-none bg-white text-base py-1.5 pl-3 pr-8 focus:ring-2 focus:ring-violet-500">
                                     <option value="grade" selected>등급 분포 (1~9)</option>
