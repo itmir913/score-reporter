@@ -105,13 +105,13 @@
                 <section class="card flex flex-col items-start gap-3 px-6 py-5 sm:flex-row sm:items-center sm:gap-x-4">
                     <div class="min-w-0 flex-1">
                         <p class="text-lg font-medium">아직 성적 파일이 없으신가요?</p>
-                        <p class="mt-1 text-base text-ink-soft">가상 학생 100명으로 만든 「샘플」 회차로 먼저 둘러볼 수 있습니다.</p>
+                        <p class="mt-1 text-base text-ink-soft">가상 학생 100명으로 만든 「샘플」 회차로 기능을 먼저 확인할 수 있습니다.</p>
                     </div>
-                    <button type="button" data-action="load-sample" class="btn btn-brand w-full shrink-0 sm:w-auto">샘플로 둘러보기</button>
+                    <button type="button" data-action="load-sample" class="btn btn-brand w-full shrink-0 sm:w-auto">샘플 불러오기</button>
                 </section>
             </div>
 
-            <!-- 올린 파일 표: 줄마다 회차 이름·진학 프로그램·암호를 확인하고 한 번에 불러온다 -->
+            <!-- 올린 파일 표: 줄마다 회차 이름·진학 프로그램·비밀번호를 확인하고 한 번에 불러온다 -->
             <div id="import-area" class="empty:hidden"></div>
 
             <div class="grid gap-gutter">
@@ -467,7 +467,7 @@
                             <h3 class="font-bold text-ink text-xl">학생 명단</h3>
                             <span data-grid="count" class="text-base text-ink-soft tabular-nums"></span>
                         </div>
-                        <p class="text-base text-ink-soft">머리글을 누르면 정렬, 끌면 순서·너비가 바뀝니다. 행을 누르면 성적표가 열립니다.</p>
+                        <p class="text-base text-ink-soft">헤더를 누르면 정렬, 끌면 순서·너비가 바뀝니다. 행을 누르면 성적표가 열립니다.</p>
                     </div>
                     <div data-grid="scroller" class="card relative max-h-[70vh] overflow-auto">
                         <table class="grid-table">
@@ -552,7 +552,7 @@
                     <h3 class="text-lg font-semibold">알아 둘 점</h3>
                     <ul class="list-disc space-y-1 pl-5 text-base text-ink-soft">
                         <li>대상 양식에 없는 열은 빈 칸으로 내보냅니다.</li>
-                        <li>대상 양식의 머리글 줄을 함께 만듭니다.</li>
+                        <li>대상 양식의 헤더 줄을 함께 만듭니다.</li>
                         <li>xlsx 로만 내보냅니다. CSV 를 쓰는 프로그램이면 엑셀에서 다른 이름으로 저장해 바꾸세요.</li>
                     </ul>
                 </section>

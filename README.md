@@ -27,9 +27,9 @@ npm run dev
 ## 쓰는 법
 
 1. **파일 추가**: 회차마다 받은 엑셀을 여러 개, 또는 zip 하나로 끌어다 놓습니다. 표에 파일이 한 줄씩 올라옵니다.
-   - 양식은 머리글이 등록된 양식과 정확히 하나만 맞을 때 자동으로 고릅니다. 아니면 직접 고르고, 「보기」로 앞 5줄을 확인합니다.
+   - 양식은 헤더가 등록된 양식과 정확히 하나만 맞을 때 자동으로 고릅니다. 아니면 직접 고르고, 「보기」로 앞 5줄을 확인합니다.
    - 회차 이름은 파일 이름에서 제안합니다(`2026-03`, `3`, `사설` 무엇이든 됩니다). 같은 이름은 두 번 쓸 수 없습니다.
-   - 암호 걸린 파일은 그 줄에 비밀번호를 넣습니다. 여러 파일이 같은 암호면 한 번에 넣을 수 있습니다.
+   - 비밀번호 걸린 파일은 그 줄에 비밀번호를 넣습니다. 여러 파일이 같은 비밀번호면 한 번에 넣을 수 있습니다.
    - 「N개 회차 불러오기」 한 번으로 모두 회차가 됩니다.
 2. **상단바의 회차 칩**: 칩을 눌러 회차를 고르고, ◀ ▶ 로 순서를 바꿉니다. 이 순서가 통계 화면의 가로축입니다.
 3. **보고서**: 선택한 회차의 통계·상위 N·급간 분포·수능최저·학생 명단(정렬·열 검색).
@@ -64,16 +64,16 @@ vendor/             npm 레지스트리에서 받을 수 없는 의존성 (아�
 | 파일 | 역할 |
 | --- | --- |
 | `src/js/main.js` | 앱 상태(`ST`: 회차 목록, 지금 회차), 불러오기 표 상태, 탭 전환, 내보내기 |
-| `src/js/schema.js` | 양식 정의의 유일한 정본(열 매핑·머리글 줄 수·내보내기 머리글 = 양식 지문의 원천) |
-| `src/js/ingest/files.js` | 업로드 전개(zip), 암호 해제, ExcelJS/SheetJS 읽기 |
-| `src/js/ingest/formatMatch.js` | 머리글 지문으로 양식 자동 매칭, 값 범위 교차검증 |
+| `src/js/schema.js` | 양식 정의의 유일한 정본(열 매핑·헤더 줄 수·내보내기 헤더 = 양식 지문의 원천) |
+| `src/js/ingest/files.js` | 업로드 전개(zip), 비밀번호 해제, ExcelJS/SheetJS 읽기 |
+| `src/js/ingest/formatMatch.js` | 헤더 지문으로 양식 자동 매칭, 값 범위 교차검증 |
 | `src/js/parser.js` | 성적 파일 → 학생 레코드 |
 | `src/js/core/` | 숫자 판정(`score.js`), 합산·탐구평균(`aggregate.js`) |
 | `src/js/exams/` | 회차 목록·순서(`examStore.js`), 회차 사이 동일인 연결(`identity.js`) |
 | `src/js/trend/trend.js` | 회차별 전교·학생별 통계 계산 |
 | `src/js/ui/` | 불러오기 표(`importer.js`), 회차 레일(`examRail.js`), 학생 표(`studentTable.js`, `table.js` = admission-outcomes GridTable 이식), 통계 화면(`trendView.js`), DOM 잔손질(`dom.js`) |
 | `src/js/actions.js` | 마크업의 `data-action`·`data-change` → 실제 함수 |
-| `src/js/xlsx-decrypt.js`, `src/js/sha.js` | 암호 걸린 xlsx 해제와 그에 쓰는 동기 해시 |
+| `src/js/xlsx-decrypt.js`, `src/js/sha.js` | 비밀번호 걸린 xlsx 해제와 그에 쓰는 동기 해시 |
 | `src/js/exporter.js` | 다른 양식으로 내보내기 |
 | `src/js/report.js`, `src/js/report/` | 리포트 렌더링(통계·상위권·분포·선택과목·수능최저·모달) |
 | `src/js/utils.js` | 공용 헬퍼 |

@@ -267,7 +267,7 @@ export function renderCsatClassTable(cache) {
             const c = numA.localeCompare(numB, undefined, {numeric: true});
             if (c) return c;
 
-            // 번호가 같거나 비어 있으면 표 머리글(학번 > 이름 순)대로 이름순이다
+            // 번호가 같거나 비어 있으면 표 헤더(학번 > 이름 순)대로 이름순이다
             return String(a.s.name || "").localeCompare(String(b.s.name || ""));
         });
 

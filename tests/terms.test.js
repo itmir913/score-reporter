@@ -41,8 +41,17 @@ const RETIRED = Object.freeze({
   머리줄: '상단바',
   // 목록에서 없애는 단추. 「빼기」는 「제거」로 바뀌었다(2026-10-23, 사용자).
   빼기: '제거',
-  빼고: '제외하고'
+  빼고: '제외하고',
+  '목록 비우기': '전체 제거',
+  // 엑셀 첫 줄들의 이름. 「머리글」은 「헤더」로 바뀌었다(2026-10-23, 사용자).
+  머리글: '헤더'
 });
+
+/*
+ * 「암호」는 「비밀번호」로 바뀌었다(2026-10-23, 사용자). 「암호화(encryption)」·「암호문」은 다른 뜻이라
+ * 줄기로는 물 수 없어 정규식으로 따로 본다.
+ */
+const RETIRED_PATTERNS = [[/암호(?!화|문)/u, '암호', '비밀번호']];
 
 /**
  * 옛 말을 **인용하는** 줄. 역사이지 사용이 아니다.
@@ -50,7 +59,7 @@ const RETIRED = Object.freeze({
  * 지우면 "언제 무엇에서 무엇으로 바꿨는가"가 사라지고, 그러면 다음 사람이 같은
  * 낱말을 다시 지어도 아무도 그게 되돌아온 것인 줄 모른다.
  */
-const QUOTED = ['→ 필터', '→ 선택', '→ 판정 미상', '「필터」로 바뀌었다', '「통계」로 바뀌었다', '「상단바」로 바뀌었다', '「제거」로 바뀌었다', '물러난 말'];
+const QUOTED = ['「비밀번호」로 바뀌었다', '「헤더」로 바뀌었다', '→ 필터', '→ 선택', '→ 판정 미상', '「필터」로 바뀌었다', '「통계」로 바뀌었다', '「상단바」로 바뀌었다', '「제거」로 바뀌었다', '물러난 말'];
 
 /** 이 검사 자신과, 그 말이 왜 물러났는지를 적어 둔 판례. */
 const EXEMPT = ['tests/terms.test.js'];
@@ -83,6 +92,9 @@ export function retiredWordsIn(lines) {
     if (QUOTED.some((quote) => text.includes(quote))) return;
     for (const [word, instead] of Object.entries(RETIRED)) {
       if (text.includes(word)) found.push({ line: index + 1, word, instead });
+    }
+    for (const [pattern, word, instead] of RETIRED_PATTERNS) {
+      if (pattern.test(text)) found.push({ line: index + 1, word, instead });
     }
   });
   return found;
@@ -177,5 +189,10 @@ describe('화면에 쓰는 말이 하나다', () => {
 
   it('검사기가 줄바꿈에 쪼개진 말을 잡는다', () => {
     expect(retiredWordsAcrossLines('회차별\n추이 화면')).toEqual(['추이']);
+  });
+
+  it('「암호화」는 잡지 않고 「암호」만 잡는다', () => {
+    expect(retiredWordsIn(['비밀번호 걸린 파일을 암호화한다'])).toEqual([]);
+    expect(retiredWordsIn(['암호 필요']).map((hit) => hit.word)).toEqual(['암호']);
   });
 });

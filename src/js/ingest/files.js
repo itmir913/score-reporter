@@ -11,8 +11,8 @@ import {
 /* ───────────────────────────────────────────
    § 업로드 → 통합 문서
    엑셀 여러 개든, 그것들을 담은 zip 이든 같은 경로를 탄다. zip 은 해제하는 단계가
-   하나 더 있을 뿐이다. 분기를 만들면 zip 경로만 조용히 낡는다(암호 해제가 빠지는 등).
-   admission-outcomes 의 src/ingest/files.js 를 옮겨 왔고, 암호 걸린 xlsx 처리를 더했다.
+   하나 더 있을 뿐이다. 분기를 만들면 zip 경로만 조용히 낡는다(비밀번호 해제가 빠지는 등).
+   admission-outcomes 의 src/ingest/files.js 를 옮겨 왔고, 비밀번호 걸린 xlsx 처리를 더했다.
 ─────────────────────────────────────────── */
 
 export const SHEET_EXTENSIONS = ['.xlsx', '.xls', '.csv'];
@@ -79,7 +79,7 @@ export function expandUploads(uploads, {limits = ARCHIVE_LIMITS} = {}) {
     const skipped = [];
 
     for (const {name, bytes} of uploads) {
-        // zip 이 아니면(xls, csv, 암호 걸린 xlsx 는 OLE2·텍스트다) 확장자로만 거른다
+        // zip 이 아니면(xls, csv, 비밀번호 걸린 xlsx 는 OLE2·텍스트다) 확장자로만 거른다
         if (!isZipBytes(bytes)) {
             if (isSheetName(name)) files.push({name, bytes});
             else skipped.push({name, reason: '엑셀 파일이 아닙니다.'});
@@ -158,14 +158,14 @@ export function expandUploads(uploads, {limits = ARCHIVE_LIMITS} = {}) {
 // SheetJS 시트를 A1 부터 시작하는 2차원 배열로 바꾼다.
 // sheet_to_json 은 !ref 의 시작 칸부터 읽는다. 1행이나 A열이 통째로 비어 있으면
 // !ref 가 A2·B1 같은 곳에서 시작하고, 그만큼 행·열이 앞으로 당겨진다. 그러면
-// 머리글 행 수와 열 문자가 어긋나 첫 학생이 빠지거나 옆 열을 읽는다. 시작을 A1 로 고정한다.
+// 헤더 행 수와 열 문자가 어긋나 첫 학생이 빠지거나 옆 열을 읽는다. 시작을 A1 로 고정한다.
 export function sheetjsTo2DArray(sheet) {
     if (!sheet || !sheet['!ref']) return [];
     const {e} = XLSX.utils.decode_range(sheet['!ref']);
     return XLSX.utils.sheet_to_json(sheet, {header: 1, defval: null, range: {s: {r: 0, c: 0}, e}});
 }
 
-/** 암호가 걸린 xlsx 인가(열려면 비밀번호가 필요한가). 읽기 전에 카드에 「암호 필요」를 띄우려고 쓴다 */
+/** 비밀번호가 걸린 xlsx 인가(열려면 비밀번호가 필요한가). 읽기 전에 카드에 「비밀번호 필요」를 띄우려고 쓴다 */
 export function needsPassword({name, bytes}) {
     if (!String(name).toLowerCase().endsWith('.xlsx')) return false;
     const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
@@ -175,7 +175,7 @@ export function needsPassword({name, bytes}) {
 
 /**
  * 엑셀 파일 하나를 ExcelJS 통합 문서로 읽는다. 직접 올린 파일과 zip 안의 파일이 모두 여기를 지난다.
- * 암호 걸린 xlsx 는 askPassword() 로 비밀번호를 받아 먼저 해제한다. null 을 돌려주면 취소다.
+ * 비밀번호 걸린 xlsx 는 askPassword() 로 비밀번호를 받아 먼저 해제한다. null 을 돌려주면 취소다.
  * SheetJS 로 읽은 시트(xls·csv·속이 옛 xls 인 xlsx)에는 병합 범위를 ws.sheetjsMerges 로 남긴다
  * — 양식 지문을 낼 때 병합 칸을 같은 방식으로 다루기 위해서다.
  * @returns {Promise<ExcelJS.Workbook|null>}
@@ -185,8 +185,8 @@ export async function loadWorkbook({name, bytes}, {askPassword, isCancelled = ()
     const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
     const wb = new ExcelJS.Workbook();
 
-    // 확장자는 .xlsx 인데 속은 옛 .xls(OLE2) 인 파일이 있다. 암호 정보가 없으면 .xls 처럼 읽는다.
-    // 컨테이너는 한 번만 읽어 암호 확인과 해제가 함께 쓴다
+    // 확장자는 .xlsx 인데 속은 옛 .xls(OLE2) 인 파일이 있다. 비밀번호 정보가 없으면 .xls 처럼 읽는다.
+    // 컨테이너는 한 번만 읽어 비밀번호 확인과 해제가 함께 쓴다
     const cfb = ext === 'xlsx' ? readCfb(buffer) : null;
     const isEncrypted = !!cfb && isEncryptedOfficeFile(buffer, cfb);
     const isLegacyXls = !!cfb && !isEncrypted;
@@ -205,8 +205,8 @@ export async function loadWorkbook({name, bytes}, {askPassword, isCancelled = ()
             try {
                 xlsWorkbook = XLSX.read(buffer, {type: 'array'});
             } catch (e) {
-                // 암호가 걸린 옛 .xls 는 "손상된 파일" 이 아니다. 무엇을 하면 되는지 알린다.
-                // 암호 정보(/EncryptionInfo)가 있는 것은 새 형식이 이름만 .xls 인 파일이라 뺀다
+                // 비밀번호가 걸린 옛 .xls 는 "손상된 파일" 이 아니다. 무엇을 하면 되는지 알린다.
+                // 비밀번호 정보(/EncryptionInfo)가 있는 것은 새 형식이 이름만 .xls 인 파일이라 뺀다
                 if (/password-protected/i.test(e?.message) && (isLegacyXls || !isEncryptedOfficeFile(buffer))) {
                     throw new EncryptedLegacyXlsError();
                 }
@@ -222,7 +222,7 @@ export async function loadWorkbook({name, bytes}, {askPassword, isCancelled = ()
         return wb;
     }
 
-    /* 암호가 걸린 xlsx 는 zip 이 아니라 OLE2 컨테이너로 저장된다. ExcelJS 는
+    /* 비밀번호가 걸린 xlsx 는 zip 이 아니라 OLE2 컨테이너로 저장된다. ExcelJS 는
      * 그걸 그대로 zip 으로 읽으려다 실패하므로, 먼저 우리가 해제해서 넘긴다. */
     let data = buffer;
     if (isEncrypted) {

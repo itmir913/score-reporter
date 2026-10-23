@@ -105,7 +105,7 @@ describe.each(FORMATS)('자동 매칭: %s', (id) => {
 });
 
 describe('자동 매칭: 고르지 않는 경우', () => {
-    it('머리글이 하나 다르면 아무 양식도 고르지 않는다', async () => {
+    it('헤더가 하나 다르면 아무 양식도 고르지 않는다', async () => {
         const headers = SCHEMAS.daegyohyeop.exportHeaders.map(r => [...r]);
         headers[1][5] = '원점수(수정)';
         const wb = await loadWorkbook({name: 'a.xlsx', bytes: await xlsxBytes(headers)});
@@ -145,7 +145,7 @@ describe('왼쪽 빈 열', () => {
     });
 });
 
-describe('zip 과 암호 파일', () => {
+describe('zip 과 비밀번호 파일', () => {
     const PASSWORD = '비밀1234';
     let plain;
     let encrypted;
@@ -183,12 +183,12 @@ describe('zip 과 암호 파일', () => {
         expect(skipped[0].reason).toContain('너무 많습니다');
     });
 
-    it('직접 올린 암호 파일을 해제해 읽는다', async () => {
+    it('직접 올린 비밀번호 파일을 해제해 읽는다', async () => {
         const wb = await loadWorkbook({name: '3월.xlsx', bytes: encrypted}, {askPassword: async () => PASSWORD});
         expect(matchFormats(firstSheet(wb), SCHEMAS).autoId).toBe('univcoop');
     });
 
-    it('zip 안의 암호 파일도 같은 경로로 해제해 읽는다', async () => {
+    it('zip 안의 비밀번호 파일도 같은 경로로 해제해 읽는다', async () => {
         const {files} = expandUploads([{name: 'x.zip', bytes: zipSync({'3월.xlsx': encrypted})}]);
         expect(files).toHaveLength(1);
         let asked = 0;

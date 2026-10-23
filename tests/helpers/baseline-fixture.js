@@ -57,7 +57,7 @@ export const BASELINE_STUDENTS = [
     full({student_id: 'S14', class: 2, number: 8, name: ''}),
 ];
 
-/** 양식 정의의 exportHeaders 를 머리글로, BASELINE_STUDENTS 를 본문으로 하는 워크북 */
+/** 양식 정의의 exportHeaders 를 헤더로, BASELINE_STUDENTS 를 본문으로 하는 워크북 */
 export function buildWorkbook(schema, students = BASELINE_STUDENTS) {
     const width = Math.max(...schema.exportHeaders.map(r => r.length),
         ...Object.values(schema.fields).filter(Boolean).map(c => colToIdx(c) + 1));

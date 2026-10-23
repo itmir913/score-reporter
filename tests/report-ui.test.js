@@ -84,7 +84,7 @@ describe('학급 기준 반 선택', () => {
         expect(classRowNames()).toEqual(['가']);
     });
 
-    // 머리글은 "학번 > 이름 순" 인데 번호로만 정렬해, 번호가 같거나 빈 학생은 파일 순서대로 나왔다
+    // 헤더는 "학번 > 이름 순" 인데 번호로만 정렬해, 번호가 같거나 빈 학생은 파일 순서대로 나왔다
     it('번호가 같거나 비어 있으면 이름순이다', () => {
         ST.data = [student('하', '1', ''), student('가', '1', ''), student('다', '1', '2'), student('나', '1', '2')];
         renderAll();
@@ -286,7 +286,7 @@ describe('탐구1·탐구2 과목이 같은 학생', () => {
             return r;
         };
         const wb = new ExcelJS.Workbook();
-        wb.addWorksheet('S').addRows([['머리글'], ['머리글'],
+        wb.addWorksheet('S').addRows([['헤더'], ['헤더'],
             row('가', '물리학Ⅰ', '물리학Ⅰ'), row('나', '물리학Ⅰ', '화학Ⅰ')]);
         ST.data = null; // 회차를 비운다. 파일마다 새 회차로 들어간다
         window.scrollTo = () => {};
@@ -305,7 +305,7 @@ describe('탐구1·탐구2 과목이 같은 학생', () => {
         r[schema._idx.inq2_subject] = '화학Ⅰ';
         r[schema._idx.kor_raw] = 80;
         const wb = new ExcelJS.Workbook();
-        wb.addWorksheet('S').addRows([['머리글'], ['머리글'], r]);
+        wb.addWorksheet('S').addRows([['헤더'], ['헤더'], r]);
         ST.data = null; // 회차를 비운다. 파일마다 새 회차로 들어간다
         window.scrollTo = () => {};
         importSheet(wb, schema.id);
@@ -386,7 +386,7 @@ describe('원점수가 없는 파일', () => {
     const schema = SCHEMAS.daegyohyeop;
     const load = (rows) => {
         const wb = new ExcelJS.Workbook();
-        wb.addWorksheet('S').addRows([['머리글'], ['머리글'], ...rows]);
+        wb.addWorksheet('S').addRows([['헤더'], ['헤더'], ...rows]);
         ST.data = null; // 회차를 비운다. 파일마다 새 회차로 들어간다
         window.scrollTo = () => {};
         importSheet(wb, schema.id);

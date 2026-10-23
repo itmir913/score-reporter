@@ -24,13 +24,14 @@ export function hasExamKey(exams, key) {
 /* 처음 자리를 정하는 순위: YYYY-MM → 숫자(월) → 그 밖의 문자열(넣은 순서대로 끝에).
  * 연월끼리, 숫자끼리만 크기를 비교한다. 서로 다른 종류의 앞뒤는 사람이 정한다(옮기기) */
 const YEAR_MONTH = /^(\d{4})[-./](\d{1,2})$/;
-const NUMBER = /^\d+$/;
+const NUMBER = /^(\d+)\s*월?$/;
 
 export function keyRank(key) {
     const k = normalizeExamKey(key);
     const ym = k.match(YEAR_MONTH);
     if (ym) return [0, Number(ym[1]) * 100 + Number(ym[2])];
-    if (NUMBER.test(k)) return [1, Number(k)];
+    const num = k.match(NUMBER);
+    if (num) return [1, Number(num[1])];
     return [2, null];
 }
 
@@ -91,7 +92,7 @@ export function renameExam(exams, key, newKey) {
 
 /**
  * 파일 이름에서 회차 이름을 제안한다. 확신이 없으면 '' — 사람이 채운다.
- * `2026-03`, `2026.3`, `2026년 3월` → '2026-03', `3월` → '3', `사설` 이 들어 있으면 '사설'.
+ * `2026-03`, `2026.3`, `2026년 3월` → '2026-03', `3월` → '3월', `사설` 이 들어 있으면 '사설'.
  */
 export function suggestExamKey(fileName) {
     const name = String(fileName ?? '').normalize('NFC').replace(/\.[^.]+$/, '');
@@ -99,7 +100,7 @@ export function suggestExamKey(fileName) {
     const ym = name.match(/(20\d{2})\s*(?:[-./]|년\s*)\s*(\d{1,2})(?:\s*월)?(?!\d)/);
     if (ym && Number(ym[2]) >= 1 && Number(ym[2]) <= 12) return `${ym[1]}-${pad(ym[2])}`;
     const m = name.match(/(?<!\d)(\d{1,2})\s*월/);
-    if (m && Number(m[1]) >= 1 && Number(m[1]) <= 12) return String(Number(m[1]));
+    if (m && Number(m[1]) >= 1 && Number(m[1]) <= 12) return `${Number(m[1])}월`;
     if (name.includes('사설')) return '사설';
     return '';
 }

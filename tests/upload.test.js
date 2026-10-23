@@ -60,10 +60,10 @@ describe('표에 늘어놓기', () => {
     it('「불러오기」 한 번으로 모두 회차로 넣는다', async () => {
         await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop)), fakeFile('4월.xlsx', await xlsxOf(SCHEMAS.kkumkugo))]);
         document.getElementById('import-commit').click();
-        expect(ST.exams.map(e => [e.key, e.formatId, e.students.length])).toEqual([['3', 'univcoop', 13], ['4', 'kkumkugo', 13]]);
+        expect(ST.exams.map(e => [e.key, e.formatId, e.students.length])).toEqual([['3월', 'univcoop', 13], ['4월', 'kkumkugo', 13]]);
         expect(IMPORT.rows).toEqual([]);
         // 가상 학생 중 한 명은 탐구 과목이 같아 경고가 붙는다
-        expect(document.getElementById('toast-msg').innerText).toMatch(/^2개 회차를 불러왔습니다. 「3」 탐구 과목 중복 1명/);
+        expect(document.getElementById('toast-msg').innerText).toMatch(/^2개 회차를 불러왔습니다\. 「3월」 탐구 과목 중복 1명/);
         expect(document.getElementById('tab-report').classList.contains('hidden')).toBe(false);
     });
 
@@ -123,7 +123,7 @@ describe('감사 반영', () => {
 
     it('양식을 잘못 고르면 불러오기 전에 그 줄에 범위 밖 점수를 알린다', async () => {
         await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop))]);
-        const sel = document.querySelector('[aria-label="3월.xlsx 진학 프로그램"]');
+        const sel = document.querySelector('[aria-label="3월.xlsx 진학 프로그램 양식"]');
         sel.value = 'kkumkugo';
         sel.dispatchEvent(new Event('change'));
         expect(tableText()).toMatch(/범위 밖 점수 \d+개/);
@@ -131,11 +131,11 @@ describe('감사 반영', () => {
 
     it('칸을 바꿔 표를 다시 그려도 포커스가 그 칸에 남는다', async () => {
         await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop))]);
-        const sel = document.querySelector('[aria-label="3월.xlsx 진학 프로그램"]');
+        const sel = document.querySelector('[aria-label="3월.xlsx 진학 프로그램 양식"]');
         sel.focus();
         sel.value = 'kkumkugo';
         sel.dispatchEvent(new Event('change'));
-        expect(document.activeElement.getAttribute('aria-label')).toBe('3월.xlsx 진학 프로그램');
+        expect(document.activeElement.getAttribute('aria-label')).toBe('3월.xlsx 진학 프로그램 양식');
         expect(document.activeElement).not.toBe(sel); // 새로 그린 칸이다
     });
 
@@ -146,15 +146,15 @@ describe('감사 반영', () => {
 });
 
 describe('양식', () => {
-    it('머리글이 맞지 않으면 고르지 않고, 고를 때까지 불러오기를 막는다. 사람이 고를 수 있다', async () => {
+    it('헤더가 맞지 않으면 고르지 않고, 고를 때까지 불러오기를 막는다. 사람이 고를 수 있다', async () => {
         const headers = SCHEMAS.univcoop.exportHeaders.map(r => [...r]);
         headers[1][5] = '변경';
         await addUploads([fakeFile('3월.xlsx', new Uint8Array(await buildWorkbook({...SCHEMAS.univcoop, exportHeaders: headers}).xlsx.writeBuffer()))]);
         expect(row().formatId).toBeNull();
         expect(tableText()).toContain('확인 필요');
         expect(document.getElementById('import-commit').disabled).toBe(true);
-        expect(document.getElementById('import-note').textContent).toBe('3월.xlsx: 진학 프로그램을 선택하세요.');
-        const sel = document.querySelector('[aria-label="3월.xlsx 진학 프로그램"]');
+        expect(document.getElementById('import-note').textContent).toBe('3월.xlsx: 진학 프로그램 양식을 선택하세요.');
+        const sel = document.querySelector('[aria-label="3월.xlsx 진학 프로그램 양식"]');
         sel.value = 'univcoop';
         sel.dispatchEvent(new Event('change'));
         expect(row().formatId).toBe('univcoop');
@@ -167,7 +167,7 @@ describe('양식', () => {
         const preview = document.querySelector('#import-area tbody tr:not([data-import]) table');
         expect(preview.querySelectorAll(':scope > tbody > tr')).toHaveLength(SCHEMAS.univcoop.headerRows + 5);
         expect(preview.querySelector('thead').textContent).toContain('국어 원점수');
-        const sel = document.querySelector('[aria-label="3월.xlsx 진학 프로그램"]');
+        const sel = document.querySelector('[aria-label="3월.xlsx 진학 프로그램 양식"]');
         sel.value = 'kkumkugo';
         sel.dispatchEvent(new Event('change'));
         expect(row().formatId).toBe('kkumkugo');
@@ -176,15 +176,15 @@ describe('양식', () => {
 
 it('양식 칸의 안내용 첫 항목은 고를 수 없다', async () => {
     await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop))]);
-    const first = document.querySelector('[aria-label="3월.xlsx 진학 프로그램"]').options[0];
-    expect(first.textContent).toBe('진학 프로그램 선택');
+    const first = document.querySelector('[aria-label="3월.xlsx 진학 프로그램 양식"]').options[0];
+    expect(first.textContent).toBe('양식 선택');
     expect(first.disabled).toBe(true);
 });
 
 describe('회차 이름', () => {
     it('비었거나 겹치면 불러오기를 막는다', async () => {
         await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop)), fakeFile('3월 재시험.xlsx', await xlsxOf(SCHEMAS.kkumkugo))]);
-        expect(blockers(IMPORT.rows, ST.exams)).toEqual(['회차 이름 「3」이 겹칩니다.']);
+        expect(blockers(IMPORT.rows, ST.exams)).toEqual(['회차 이름 「3월」이 겹칩니다.']);
         const input = document.querySelector('[aria-label="3월 재시험.xlsx 회차 이름"]');
         input.value = '';
         input.dispatchEvent(new Event('change'));
@@ -204,18 +204,18 @@ describe('회차 이름', () => {
     }, 20000);
 });
 
-describe('암호 파일', () => {
+describe('비밀번호 파일', () => {
     const PASSWORD = '비밀1234';
     const encrypted = async (schema, password = PASSWORD) =>
         new Uint8Array(toContainer(encryptAgile(Buffer.from(await xlsxOf(schema)), {password})));
 
-    it('열지 않고 「암호 필요」로 두고, 그 줄에서 비밀번호를 넣어 연다', async () => {
+    it('열지 않고 「비밀번호 필요」로 두고, 그 줄에서 비밀번호를 넣어 연다', async () => {
         await addUploads([fakeFile('3월.xlsx', await encrypted(SCHEMAS.univcoop))]);
         expect(row().status).toBe('locked');
-        expect(tableText()).toContain('암호 필요');
+        expect(tableText()).toContain('비밀번호 필요');
         expect(document.getElementById('import-note').textContent).toBe('3월.xlsx: 비밀번호를 넣어 주세요.');
         document.querySelector('[aria-label="3월.xlsx 비밀번호"]').value = PASSWORD;
-        document.querySelector('[aria-label="3월.xlsx 열기"]').click();
+        document.querySelector('[aria-label="3월.xlsx 비밀번호 확인"]').click();
         await vi.waitFor(() => expect(row().status).toBe('ready'));
         expect(row().formatId).toBe('univcoop');
     });
@@ -231,22 +231,22 @@ describe('암호 파일', () => {
         await addUploads([
             fakeFile('3월.xlsx', await encrypted(SCHEMAS.univcoop)),
             fakeFile('4월.xlsx', await encrypted(SCHEMAS.kkumkugo)),
-            fakeFile('5월.xlsx', await encrypted(SCHEMAS.kimyoungil, '다른암호')),
+            fakeFile('5월.xlsx', await encrypted(SCHEMAS.kimyoungil, '다른비밀번호')),
         ]);
-        expect(tableText()).toContain('암호가 걸린 파일 3개');
-        document.querySelector('[aria-label="모든 암호 파일 비밀번호"]').value = PASSWORD;
-        [...document.querySelectorAll('#import-area button')].find(b => b.textContent === '모두 열기').click();
+        expect(tableText()).toContain('비밀번호가 걸린 파일 3개');
+        document.querySelector('[aria-label="모든 비밀번호 파일 비밀번호"]').value = PASSWORD;
+        [...document.querySelectorAll('#import-area button')].find(b => b.textContent === '모두 확인').click();
         await vi.waitFor(() => expect(IMPORT.rows.map(r => r.status)).toEqual(['ready', 'ready', 'locked']), {timeout: 10000});
     });
 
     // 예전에는 "파일이 손상되었을 수 있습니다" 로 끝나 무엇을 해야 할지 알 수 없었다
-    it('암호가 걸린 옛 .xls 는 그 줄에 암호를 풀거나 .xlsx 로 저장하라고 알린다(이름만 .xlsx 여도)', async () => {
+    it('비밀번호가 걸린 옛 .xls 는 그 줄에 비밀번호를 풀거나 .xlsx 로 저장하라고 알린다(이름만 .xlsx 여도)', async () => {
         for (const name of ['성적.xls', '성적2.xlsx']) {
             clearAll();
             await addUploads([fakeFile(name, encryptedXls())]);
             expect(row().status).toBe('error');
             expect(row().include).toBe(false);
-            expect(tableText()).toContain('암호가 걸린 옛 형식(.xls)은 열 수 없습니다.');
+            expect(tableText()).toContain('비밀번호가 걸린 옛 형식(.xls)은 열 수 없습니다.');
         }
     });
 
@@ -264,7 +264,7 @@ describe('암호 파일', () => {
     });
 });
 
-// 암호가 걸린 옛 .xls: SheetJS 가 쓴 BIFF8 의 Workbook 스트림 첫 BOF 뒤에 FILEPASS(0x002F,
+// 비밀번호가 걸린 옛 .xls: SheetJS 가 쓴 BIFF8 의 Workbook 스트림 첫 BOF 뒤에 FILEPASS(0x002F,
 // RC4) 레코드를 끼워 넣는다. SheetJS 는 password 옵션이 없으면 "File is password-protected" 를 던진다
 function encryptedXls() {
     const book = XLSX.utils.book_new();
@@ -281,11 +281,11 @@ function encryptedXls() {
 }
 
 describe('목록 다루기', () => {
-    it('「제거」는 그 줄을, 「목록 비우기」는 표를 비운다. 회차는 건드리지 않는다', async () => {
+    it('「제거」는 그 줄을, 「전체 제거」는 표의 파일을 모두 제거한다. 회차는 건드리지 않는다', async () => {
         await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop)), fakeFile('4월.xlsx', await xlsxOf(SCHEMAS.kkumkugo))]);
         document.querySelector('[aria-label="3월.xlsx 목록에서 제거"]').click();
         expect(IMPORT.rows.map(r => r.name)).toEqual(['4월.xlsx']);
-        [...document.querySelectorAll('#import-area button')].find(b => b.textContent === '목록 비우기').click();
+        [...document.querySelectorAll('#import-area button')].find(b => b.textContent === '전체 제거').click();
         expect(IMPORT.rows).toEqual([]);
         expect(document.getElementById('import-area').textContent).toBe('');
     });
@@ -296,7 +296,7 @@ describe('목록 다루기', () => {
         box.checked = false;
         box.dispatchEvent(new Event('change'));
         document.getElementById('import-commit').click();
-        expect(ST.exams.map(e => e.key)).toEqual(['3']);
+        expect(ST.exams.map(e => e.key)).toEqual(['3월']);
         expect(IMPORT.rows.map(r => r.name)).toEqual(['4월.xlsx']);
     });
 
@@ -305,7 +305,7 @@ describe('목록 다루기', () => {
         row().formatId = 'kkumkugo'; // 일부러 맞지 않는 양식
         renderImports();
         document.getElementById('import-commit').click();
-        expect(document.getElementById('toast-msg').innerText).toMatch(/^1개 회차를 불러왔습니다\. 「3」 .*범위를 벗어난 점수/);
+        expect(document.getElementById('toast-msg').innerText).toMatch(/^1개 회차를 불러왔습니다\. 「3월」 .*범위를 벗어난 점수/);
         expect(document.getElementById('toast-icon').className).toContain('text-red-400');
     });
 

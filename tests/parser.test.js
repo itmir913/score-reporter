@@ -46,7 +46,7 @@ describe('GradeDataParser.parse', () => {
         expect(students.map(s => s.name)).toEqual(['홍길동', '김철수', '이영희']);
     });
 
-    it('머리글 행만큼 건너뛴다', () => {
+    it('헤더 행만큼 건너뛴다', () => {
         expect(students[0].grade_year).toBe('3');
         expect(students[0].name).not.toBe('이름');
     });

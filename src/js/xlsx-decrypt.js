@@ -1,9 +1,9 @@
 import * as XLSX from 'xlsx';
 import {hashFn} from './sha.js';
 
-/* 암호가 걸린 xlsx 를 해제하는 곳.
+/* 비밀번호가 걸린 xlsx 를 해제하는 곳.
  *
- * Excel 이 암호를 걸면 결과물은 더 이상 zip 이 아니라 OLE2(CFB) 컨테이너다.
+ * Excel 이 비밀번호를 걸면 결과물은 더 이상 zip 이 아니라 OLE2(CFB) 컨테이너다.
  * 그 안에 /EncryptionInfo 와 /EncryptedPackage 두 스트림이 들어 있고,
  * 후자를 해제해야 원래의 xlsx zip 이 나온다. ExcelJS 는 이 해제를 못 하고
  * (load 에 password 옵션 자체가 없다) SheetJS 커뮤니티 빌드도 마찬가지라,
@@ -21,7 +21,7 @@ import {hashFn} from './sha.js';
 
 const SUBTLE = () => {
     const s = globalThis.crypto && globalThis.crypto.subtle;
-    if (!s) throw new Error('이 브라우저에서는 암호 해제를 지원하지 않습니다. (WebCrypto 없음)');
+    if (!s) throw new Error('이 브라우저에서는 비밀번호 해제를 지원하지 않습니다. (WebCrypto 없음)');
     return s;
 };
 
@@ -35,7 +35,7 @@ export function isCfbContainer(buffer) {
 }
 
 /** OLE2(CFB) 컨테이너를 한 번 읽어 둔다. 컨테이너가 아니거나 읽지 못하면 null.
- *  업로드 한 번에 암호 여부 확인과 해제가 같은 결과를 나눠 쓴다 (큰 파일을 여러 번 읽지 않는다) */
+ *  업로드 한 번에 비밀번호 여부 확인과 해제가 같은 결과를 나눠 쓴다 (큰 파일을 여러 번 읽지 않는다) */
 export function readCfb(buffer) {
     if (!isCfbContainer(buffer)) return null;
     try {
@@ -45,9 +45,9 @@ export function readCfb(buffer) {
     }
 }
 
-/* 암호가 걸린 Office 파일인지 본다. 옛 .xls 도 같은 OLE2 컨테이너라서 시그니처만
+/* 비밀번호가 걸린 Office 파일인지 본다. 옛 .xls 도 같은 OLE2 컨테이너라서 시그니처만
  * 보면 확장자만 .xlsx 로 바뀐 평범한 .xls 에도 비밀번호를 물었다. 컨테이너 안에
- * /EncryptionInfo 스트림이 있어야 암호 파일로 본다. cfb 는 readCfb 로 미리 읽은 것 */
+ * /EncryptionInfo 스트림이 있어야 비밀번호 파일로 본다. cfb 는 readCfb 로 미리 읽은 것 */
 export function isEncryptedOfficeFile(buffer, cfb = readCfb(buffer)) {
     return !!cfb && !!XLSX.CFB.find(cfb, '/EncryptionInfo');
 }
@@ -154,7 +154,7 @@ const BLOCK_KEY_SECRET_KEY = new Uint8Array([0x14, 0x6e, 0x0b, 0xe7, 0xab, 0xac,
 /** 헤더 XML 에서 태그 하나를 찾아 속성을 객체로 뽑는다. */
 function attrs(xml, tag) {
     const m = xml.match(new RegExp(`<(?:\\w+:)?${tag}\\b([^>]*)>`));
-    if (!m) throw new Error(`암호 정보(${tag})를 찾지 못했습니다.`);
+    if (!m) throw new Error(`비밀번호 정보(${tag})를 찾지 못했습니다.`);
     const out = {};
     for (const a of m[1].matchAll(/(\w+)="([^"]*)"/g)) out[a[1]] = a[2];
     return out;
@@ -271,17 +271,17 @@ export class WrongPasswordError extends Error {
     }
 }
 
-/* 옛 .xls(BIFF8) 의 암호는 컨테이너가 아니라 Workbook 스트림 안의 FILEPASS 레코드다.
+/* 옛 .xls(BIFF8) 의 비밀번호는 컨테이너가 아니라 Workbook 스트림 안의 FILEPASS 레코드다.
  * /EncryptionInfo 가 없어 위 방법으로는 해제할 수 없고, SheetJS 는 "File is password-protected" 를 던진다 */
 export class EncryptedLegacyXlsError extends Error {
     constructor() {
-        super('암호가 걸린 옛 형식(.xls) 파일입니다.');
+        super('비밀번호가 걸린 옛 형식(.xls) 파일입니다.');
         this.name = 'EncryptedLegacyXlsError';
     }
 }
 
 /**
- * 암호가 걸린 xlsx 를 해제해 원래의 xlsx(zip) 바이트로 돌려준다.
+ * 비밀번호가 걸린 xlsx 를 해제해 원래의 xlsx(zip) 바이트로 돌려준다.
  *
  * @param {ArrayBuffer|Uint8Array} buffer 사용자가 올린 파일 그대로
  * @param {string} password 사용자가 입력한 비밀번호

@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import * as XLSX from 'xlsx';
 
-/* 암호 걸린 xlsx 를 테스트에서 규격대로 직접 만든다(xlsx-decrypt.test.js 에서 옮김).
+/* 비밀번호 걸린 xlsx 를 테스트에서 규격대로 직접 만든다(xlsx-decrypt.test.js 에서 옮김).
  * 모듈이 쓰는 WebCrypto 와 달리 node:crypto 를 써서 구현이 서로를 베끼지 않는다. */
 
 export function le32(n) {

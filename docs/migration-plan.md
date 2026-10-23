@@ -152,7 +152,7 @@ UI 재작성은 가장 크지만 가장 덜 위험하므로(틀리면 눈에 보
 ```
 src/
   core/      score.js(toScore·blankIfAllZero), rank.js(공동순위·상위N), aggregate.js(국+수+탐구평균)
-  ingest/    files.js(xlsx·zip·암호), headerBlock/headerHash/profile  ← admission-outcomes에서 이식(resolveColumns 제외)
+  ingest/    files.js(xlsx·zip·비밀번호), headerBlock/headerHash/profile  ← admission-outcomes에서 이식(resolveColumns 제외)
              toRecord.js(양식 정의 → 학생 레코드, `schema.num`/`str` 사용)
   schema.js  양식 정의의 유일한 정본(열 매핑·지문·헤더 줄 수·내보내기 헤더·getter)
   exams/     examStore.js(회차 목록, 정렬, 저장/불러오기 .json), identity.js(회차 간 학생 연결)
@@ -162,7 +162,7 @@ src/
 - 프레임워크 없이 vanilla JS 유지(두 프로젝트 모두 그렇다). Tailwind는 admission-outcomes에 맞춰 v4로,
   Vite도 맞춘다 — 단 이는 P4에서, 별도 커밋으로.
 - 전역 `ST` 상태 대신 `examStore`가 단일 출처. 리포트 함수는 `(students, options)`를 받는 순수 함수로 바꾼다.
-- 암호 걸린 xlsx 해제(`xlsx-decrypt.js`), SHA(`sha.js`)는 그대로 가져간다. **암호 해제가 없어지면 회귀다.**
+- 비밀번호 걸린 xlsx 해제(`xlsx-decrypt.js`), SHA(`sha.js`)는 그대로 가져간다. **비밀번호 해제가 없어지면 회귀다.**
   직접 올린 파일이든 zip 안의 파일이든 같은 경로를 거친다: OLE2 바이트면 먼저 `xlsx-decrypt`로 해제를 시도하고(현행 main.js:240과 같은 동작), 안 되면 xls로 판정한다.
   admission-outcomes `files.js`는 OLE2를 xls로만 판정하므로(files.js:45) 이 분기를 넣어 고쳐서 이식한다.
 - 내보내기(`exporter.js`)는 같은 정본(`schema.js`)의 열 위치를 계속 쓴다. 동작은 바꾸지 않는다.
@@ -190,8 +190,8 @@ src/
 - 이 단계는 **현 앱에 먼저 적용**해 독립 릴리스할 수 있다(원하면 master로 별도 반영).
 
 **단계 2 — 입력 계층 이식** (결정 1)
-- admission-outcomes의 `files.js`(zip 포함), `headerBlock`, `headerHash`, `profile` 이식. `matchProfile`은 §1-B 2번대로, `files.js`는 §3의 암호 해제 분기를 넣어 고쳐서 이식한다.
-- 테스트: 직접 올린 암호 파일, **zip 안의 암호 파일**, 암호가 틀린 파일.
+- admission-outcomes의 `files.js`(zip 포함), `headerBlock`, `headerHash`, `profile` 이식. `matchProfile`은 §1-B 2번대로, `files.js`는 §3의 비밀번호 해제 분기를 넣어 고쳐서 이식한다.
+- 테스트: 직접 올린 비밀번호 파일, **zip 안의 비밀번호 파일**, 비밀번호가 틀린 파일.
 - 기존 `SCHEMAS` 5종에 `extraColumns`·`unmappedNote`를 더하고 지문은 `exportHeaders`에서 로드 시 계산한다(§1-B, 기존 값 불변, 커밋 전 소유자 diff 승인). **동일성 테스트**: 레코드와 내보내기 출력이 같다.
 - 매칭 정책: §1-B 매칭 흐름. 수동 선택과 5줄 미리보기는 유지한다.
 - `sumParts`(공통+선택 빈칸 0 처리) 예외는 그대로 유지.
@@ -223,7 +223,7 @@ src/
 ## 5. 기능 동등성 체크리스트 (단계 4·5 완료 조건)
 
 현 앱의 모든 기능을 단계 5 전에 목록화해 하나씩 체크한다(`actions.js`의 동작 목록 전수 포함):
-양식 5종 읽기·수동 선택·5줄 미리보기, 암호 파일, 샘플 데이터, 원/표/백 기준 전환,
+양식 5종 읽기·수동 선택·5줄 미리보기, 비밀번호 파일, 샘플 데이터, 원/표/백 기준 전환,
 과목별 통계·분포 차트, 선택과목별 집계(국어·수학·탐구), 영어 등급 분포, 상위 N(개수 선택, 동점 포함),
 4과목 합 순위·급간(구간 클릭 → 학생 명단 모달), 반별 필터, 수능최저 n합 표·반별 표·전교 석차,
 학번/번호 표시 분기(`showsStudentId`), 학생 상세 모달, 내보내기(로마자 과목명 규칙 포함), 인쇄(Tailwind v4 전환 후 인쇄 스타일 회귀 확인).
@@ -240,6 +240,6 @@ src/
 
 ## 7. 검토자에게
 
-1차 차단 조건 7개, 2차 3개(§1-A A10, §1-B 1·2번), 3차 4개(§1-B 정본 1개 원칙, `toScore` 위치, §3 암호 해제 경로, A11), 4차 3개(§1-B 지문 원천 = `exportHeaders`·생성자 변경 범위·승인 게이트, §1-C), 5차 1개(§1-B 1번 병합 셀 처리)는 §1-A, §1-B, 단계 0·1·2·7, §5에 반영했다.
+1차 차단 조건 7개, 2차 3개(§1-A A10, §1-B 1·2번), 3차 4개(§1-B 정본 1개 원칙, `toScore` 위치, §3 비밀번호 해제 경로, A11), 4차 3개(§1-B 지문 원천 = `exportHeaders`·생성자 변경 범위·승인 게이트, §1-C), 5차 1개(§1-B 1번 병합 셀 처리)는 §1-A, §1-B, 단계 0·1·2·7, §5에 반영했다.
 승인 판정 시 특히 볼 것: §1-A 규칙이 목적(1과목 응시자 불이익·누락 방지)을 빠짐없이 달성하는지, §1-B 매칭 흐름에 오인 경로가 남는지, §1 결정이 단계에 빠짐없이 반영됐는지, §2 순서가 타당한지, 단계 2의 "스키마 값 불변 이전"이
 CLAUDE.md의 스키마 규칙과 충돌하지 않는지, 단계 1의 탐구평균 정의에 빈 구멍이 없는지.

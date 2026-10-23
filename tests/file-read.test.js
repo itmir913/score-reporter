@@ -28,7 +28,7 @@ function parseSheet(sheet, schema) {
 }
 
 describe('sheetjsTo2DArray (.xls/.csv)', () => {
-    // 가채점 양식은 1행이 비어 있다. !ref 가 A2 에서 시작해도 머리글 3행을
+    // 가채점 양식은 1행이 비어 있다. !ref 가 A2 에서 시작해도 헤더 3행을
     // 건너뛴 뒤 첫 학생부터 읽어야 한다.
     it('1행이 비어 있어도 첫 학생을 잃지 않는다', () => {
         const sheet = xlsRoundTrip({

@@ -69,7 +69,7 @@ const target = new FormatSchema({
 });
 
 describe('GradeExporter.toXlsx', () => {
-    it('머리글을 먼저 쓰고 그 아래에 학생을 쓴다', async () => {
+    it('헤더를 먼저 쓰고 그 아래에 학생을 쓴다', async () => {
         const rows = await exportAndRead([student({name: '홍길동'})], target);
         expect(rows[0]).toEqual(['학년', '반', '번호', '이름', '국어선택', '국어원점수', '국어등급', '영어등급']);
         expect(rows).toHaveLength(2);
@@ -175,7 +175,7 @@ describe('탐구·제2외국어 과목명', () => {
         r[univ._idx.inq2_subject] = '생활과 윤리';
         r[univ._idx.fl2_subject] = '일본어1';
         const wb = new ExcelJS.Workbook();
-        wb.addWorksheet('S').addRows([...Array(univ.headerRows).fill(['머리글']), r]);
+        wb.addWorksheet('S').addRows([...Array(univ.headerRows).fill(['헤더']), r]);
         const [back] = new GradeDataParser(univ).parse(wb, 'S');
         expect(back.inquiry1.subject).toBe('물리학1');
 
@@ -202,7 +202,7 @@ describe('탐구·제2외국어 과목명', () => {
 
 describe('내보낸 파일을 다시 읽어도 성적이 그대로다', () => {
     // 실제 양식으로 내보내고, 같은 양식으로 다시 불러온다.
-    // 열 배치와 머리글 줄 수가 서로 맞아야만 통과한다.
+    // 열 배치와 헤더 줄 수가 서로 맞아야만 통과한다.
     it.each(Object.values(SCHEMAS).map(s => [s.label, s]))('%s', async (_label, schema) => {
         const students = [
             student({name: '홍길동', cls: '1', number: '1', korRaw: 88, korGrade: 2, engGrade: 1}),

@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 import {aesEncrypt, encryptAgile as encryptAgileWith, le32, pad16, toContainer, utf16le} from './helpers/office-encrypt.js';
 import {decryptXlsx, isCfbContainer, isEncryptedOfficeFile, readCfb, WrongPasswordError} from '../src/js/xlsx-decrypt.js';
 
-/* 암호가 걸린 진짜 파일을 저장소에 넣어 두는 대신, 테스트에서 규격대로 직접
+/* 비밀번호가 걸린 진짜 파일을 저장소에 넣어 두는 대신, 테스트에서 규격대로 직접
  * 암호화해 만든다. 모듈이 쓰는 WebCrypto 와 달리 여기서는 node:crypto 를 쓰므로
  * 구현이 서로를 베끼지 않는다. */
 
@@ -72,7 +72,7 @@ function encryptStandard(plain) {
     };
 }
 
-describe('xlsx 암호 해제', () => {
+describe('xlsx 비밀번호 해제', () => {
     let plain;
 
     beforeAll(async () => {
@@ -89,8 +89,8 @@ describe('xlsx 암호 해제', () => {
         expect(isEncryptedOfficeFile(new Uint8Array([0x50]).buffer)).toBe(false);
     });
 
-    // 옛 .xls 도 같은 OLE2 컨테이너다. 암호 정보가 없으면 암호 파일이 아니다.
-    it('암호 정보가 없는 OLE2 파일(평범한 .xls)은 암호 파일로 보지 않는다', () => {
+    // 옛 .xls 도 같은 OLE2 컨테이너다. 비밀번호 정보가 없으면 비밀번호 파일이 아니다.
+    it('비밀번호 정보가 없는 OLE2 파일(평범한 .xls)은 비밀번호 파일로 보지 않는다', () => {
         const book = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet([['이름'], ['학생1']]), 'S');
         const xls = new Uint8Array(XLSX.write(book, {type: 'array', bookType: 'biff8'}));
@@ -116,10 +116,10 @@ describe('xlsx 암호 해제', () => {
 
     it('비밀번호가 틀리면 WrongPasswordError 를 던진다', async () => {
         const bytes = toContainer(encryptAgile(plain));
-        await expect(decryptXlsx(bytes, '틀린암호')).rejects.toThrow(WrongPasswordError);
+        await expect(decryptXlsx(bytes, '틀린비밀번호')).rejects.toThrow(WrongPasswordError);
     });
 
-    // 업로드 한 번에 암호 확인과 해제가 각자 컨테이너를 다시 읽었다
+    // 업로드 한 번에 비밀번호 확인과 해제가 각자 컨테이너를 다시 읽었다
     it('미리 읽은 컨테이너를 넘기면 다시 읽지 않는다', async () => {
         const bytes = toContainer(encryptAgile(plain));
         const cfb = readCfb(new Uint8Array(bytes).buffer);
