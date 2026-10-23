@@ -33,9 +33,9 @@ export function setGlobalBasis(basis) {
 
     Object.keys(buttons).forEach(key => {
         if (key === basis) {
-            buttons[key].className = 'px-4 py-2 text-base font-bold rounded-md bg-white text-blue-600 shadow-sm transition-all';
+            buttons[key].className = 'px-3 py-1 text-base font-bold rounded-md bg-white text-blue-600 shadow-sm transition-all';
         } else {
-            buttons[key].className = 'px-4 py-2 text-base font-medium rounded-md text-slate-500 hover:text-slate-700 transition-all';
+            buttons[key].className = 'px-3 py-1 text-base font-medium rounded-md text-slate-500 hover:text-slate-700 transition-all';
         }
     });
 

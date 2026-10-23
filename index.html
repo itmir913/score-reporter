@@ -221,7 +221,7 @@
                 <div class="relative flex flex-col gap-10">
 
                     <section class="no-print sticky top-0 z-40" id="report_basis">
-                        <div class="bg-white border-2 border-slate-200 rounded-xl p-4 flex items-center justify-between mt-4">
+                        <div class="card mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-2">
                             <div class="flex items-center gap-3">
                                 <i class="fa-solid fa-sliders text-slate-400 text-lg"></i>
                                 <span class="text-base font-bold text-slate-700">전체 통계 기준</span>
@@ -231,17 +231,17 @@
                                        class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
                                 탐구 미응시 학생도 포함
                             </label>
-                            <div class="flex bg-slate-100 p-1 rounded-lg">
+                            <div class="flex rounded-lg bg-canvas p-0.5">
                                 <button id="btn-basis-raw" data-action="set-basis" data-basis="raw"
-                                        class="px-4 py-2 text-base font-semibold rounded-md bg-white text-blue-600 transition-all">
+                                        class="px-3 py-1 text-base font-semibold rounded-md bg-white text-blue-600 transition-all">
                                     원점수
                                 </button>
                                 <button id="btn-basis-std" data-action="set-basis" data-basis="std"
-                                        class="px-4 py-2 text-base font-semibold rounded-md text-slate-500 hover:text-slate-700 transition-all">
+                                        class="px-3 py-1 text-base font-semibold rounded-md text-slate-500 hover:text-slate-700 transition-all">
                                     표준점수
                                 </button>
                                 <button id="btn-basis-pct" data-action="set-basis" data-basis="pct"
-                                        class="px-4 py-2 text-base font-semibold rounded-md text-slate-500 hover:text-slate-700 transition-all">
+                                        class="px-3 py-1 text-base font-semibold rounded-md text-slate-500 hover:text-slate-700 transition-all">
                                     백분위
                                 </button>
                             </div>
