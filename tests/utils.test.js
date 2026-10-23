@@ -146,3 +146,24 @@ describe('toFixedHalfUp: 값이 없을 때', () => {
         }
     });
 });
+
+describe('응시 여부(과목명 대신 점수로)', async () => {
+    const {hasScore, subjectName, sameInquirySubject} = await import('../src/js/utils.js');
+
+    it('「미응시」·「결시」·「-」 같은 과목명은 빈 과목명으로 읽는다', () => {
+        for (const v of ['미응시', ' 미응시 ', '결시', '미선택', '-', '없음']) expect(subjectName(v)).toBe('');
+        expect(subjectName('물리학Ⅰ')).toBe('물리학Ⅰ');
+    });
+
+    it('점수가 하나라도 있으면 응시, 다 비면 미응시다(0점은 응시)', () => {
+        expect(hasScore({raw: null, std: null, pct: null, grade: null})).toBe(false);
+        expect(hasScore({raw: 0})).toBe(true);
+        expect(hasScore({grade: 3})).toBe(true);
+    });
+
+    it('탐구 과목명이 같아도 점수가 없으면 중복이 아니다', () => {
+        const empty = {subject: '미응시', raw: null, std: null, pct: null, grade: null};
+        expect(sameInquirySubject({inquiry1: empty, inquiry2: empty})).toBe(false);
+        expect(sameInquirySubject({inquiry1: {subject: '물리학Ⅰ', raw: 40}, inquiry2: {subject: '물리학Ⅰ', raw: 30}})).toBe(true);
+    });
+});

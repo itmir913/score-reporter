@@ -41,10 +41,27 @@ export function dlBlob(blob, name) {
     URL.revokeObjectURL(url);
 }
 
-// 탐구1·탐구2 과목명이 같은가 (원본 입력 실수). 선택 비율·과목 분포에서 한 번만 센다
+/* 응시 여부는 과목명이 아니라 점수로 판단한다. 원점수·표준점수·백분위·등급(공통·선택 원점수 포함) 중
+ * 하나라도 있으면 응시한 과목이다. 넷 다 비어 있으면 과목명이 무엇이든 응시하지 않은 과목이다 */
+export function hasScore(d) {
+    return ['raw', 'std', 'pct', 'grade', 'common_raw', 'select_raw'].some(k => Number.isFinite(d?.[k]));
+}
+
+/* 응시하지 않았다는 뜻으로 과목명 칸에 적는 말. 유니브처럼 「미응시」를 적는 양식이 있고, 빈칸으로 두는
+ * 양식도 있다. 읽을 때 빈 과목명으로 바꿔 선택과목 집계에 과목처럼 끼지 않게 한다 */
+const NOT_TAKEN = new Set(['미응시', '결시', '미선택', '선택안함', '-', '—', '없음']);
+
+export function subjectName(v) {
+    const t = String(v ?? '').trim();
+    return NOT_TAKEN.has(t.replace(/\s+/g, '')) ? '' : t;
+}
+
+// 탐구1·탐구2 과목명이 같은가 (원본 입력 실수). 선택 비율·과목 분포에서 한 번만 센다.
+// 둘 다 점수가 있을 때만 중복이다. 과목명만 같고 점수가 없으면 응시하지 않은 것이다
 export function sameInquirySubject(s) {
     const a = s?.inquiry1?.subject;
-    return typeof a === 'string' && a.trim() !== '' && a === s?.inquiry2?.subject;
+    return typeof a === 'string' && a.trim() !== '' && a === s?.inquiry2?.subject
+        && hasScore(s.inquiry1) && hasScore(s.inquiry2);
 }
 
 // HTML 속성용 안전한 이스케이프 함수

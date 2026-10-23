@@ -1,4 +1,5 @@
 import {exceljsTo2DArray} from './main.js';
+import {subjectName} from './utils.js';
 
 /* 값이 있는 점수 칸이 모두 0인 학생은 미응시로 보고 점수를 모두 비운다.
  * (대교협 실채점은 결시생의 탐구 원점수를 0으로 적는다.) 0이 하나라도 아닌 값과 섞여
@@ -48,7 +49,7 @@ export class GradeDataParser {
             number: s.str(r, 'number'),
             name: s.str(r, 'name'),
             korean: {
-                subject: s.str(r, 'kor_subject'),
+                subject: subjectName(s.str(r, 'kor_subject')),
                 common_raw: korCommon,
                 select_raw: korSelect,
                 raw: s.num(r, 'kor_raw') ?? sumParts(korCommon, korSelect),
@@ -57,7 +58,7 @@ export class GradeDataParser {
                 grade: s.num(r, 'kor_grade'),
             },
             math: {
-                subject: s.str(r, 'math_subject'),
+                subject: subjectName(s.str(r, 'math_subject')),
                 common_raw: mathCommon,
                 select_raw: mathSelect,
                 raw: s.num(r, 'math_raw') ?? sumParts(mathCommon, mathSelect),
@@ -72,14 +73,14 @@ export class GradeDataParser {
                 grade: s.num(r, 'eng_grade')
             },
             inquiry1: {
-                subject: s.str(r, 'inq1_subject'),
+                subject: subjectName(s.str(r, 'inq1_subject')),
                 raw: s.num(r, 'inq1_raw'),
                 std: s.num(r, 'inq1_std'),
                 pct: s.num(r, 'inq1_pct'),
                 grade: s.num(r, 'inq1_grade')
             },
             inquiry2: {
-                subject: s.str(r, 'inq2_subject'),
+                subject: subjectName(s.str(r, 'inq2_subject')),
                 raw: s.num(r, 'inq2_raw'),
                 std: s.num(r, 'inq2_std'),
                 pct: s.num(r, 'inq2_pct'),
@@ -92,7 +93,7 @@ export class GradeDataParser {
                 grade: s.num(r, 'hist_grade')
             },
             fl2: {
-                subject: s.str(r, 'fl2_subject'),
+                subject: subjectName(s.str(r, 'fl2_subject')),
                 raw: s.num(r, 'fl2_raw'),
                 std: s.num(r, 'fl2_std'),
                 pct: s.num(r, 'fl2_pct'),

@@ -282,6 +282,9 @@ describe('탐구1·탐구2 과목이 같은 학생', () => {
             r[schema._idx.name] = name;
             r[schema._idx.inq1_subject] = inq1;
             r[schema._idx.inq2_subject] = inq2;
+            // 과목명이 같아도 점수가 없으면 미응시라 중복이 아니다. 두 과목 모두 점수를 둔다
+            r[schema._idx.inq1_raw] = 40;
+            r[schema._idx.inq2_raw] = 30;
             r[schema._idx.kor_raw] = 80; // 원점수가 있어야 기준 전환 안내가 붙지 않는다
             return r;
         };
@@ -398,6 +401,8 @@ describe('원점수가 없는 파일', () => {
         r[schema._idx.kor_std] = std;
         r[schema._idx.inq1_subject] = inq1;
         r[schema._idx.inq2_subject] = inq2;
+        r[schema._idx.inq1_std] = 60;
+        r[schema._idx.inq2_std] = 58;
         return r;
     };
     const toast = () => document.getElementById('toast-msg').innerText;
