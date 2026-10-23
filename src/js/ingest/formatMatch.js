@@ -83,18 +83,30 @@ const RANGES = {
 };
 const RAW_MAX = {korean: 100, math: 100, english: 100, inquiry1: 50, inquiry2: 50, hist: 50, fl2: 50};
 
-/** 범위를 벗어난 값의 개수 */
-export function countOutOfRange(records) {
-    let count = 0;
+const SUBJECT_LABEL = {korean: '국어', math: '수학', english: '영어', inquiry1: '탐구1', inquiry2: '탐구2', hist: '한국사', fl2: '제2외국어'};
+const KIND_LABEL = {raw: '원점수', pct: '백분위', grade: '등급'};
+
+/** 범위를 벗어난 값을 열(과목·종류)별로 센다. 예: {'영어 등급': 120}. 많은 열부터 */
+export function outOfRangeByColumn(records) {
+    const counts = new Map();
+    const add = (subj, kind) => {
+        const label = `${SUBJECT_LABEL[subj]} ${KIND_LABEL[kind]}`;
+        counts.set(label, (counts.get(label) ?? 0) + 1);
+    };
     for (const s of records) {
         for (const [subj, rawMax] of Object.entries(RAW_MAX)) {
             const d = s[subj];
             if (!d) continue;
-            if (Number.isFinite(d.raw) && (d.raw < 0 || d.raw > rawMax)) count++;
+            if (Number.isFinite(d.raw) && (d.raw < 0 || d.raw > rawMax)) add(subj, 'raw');
             for (const [k, [min, max]] of Object.entries(RANGES)) {
-                if (Number.isFinite(d[k]) && (d[k] < min || d[k] > max)) count++;
+                if (Number.isFinite(d[k]) && (d[k] < min || d[k] > max)) add(subj, k);
             }
         }
     }
-    return count;
+    return [...counts].sort((a, b) => b[1] - a[1]);
+}
+
+/** 범위를 벗어난 값의 개수 */
+export function countOutOfRange(records) {
+    return outOfRangeByColumn(records).reduce((sum, [, n]) => sum + n, 0);
 }

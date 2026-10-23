@@ -1,6 +1,6 @@
 import {addExam, fileHashHex, normalizeExamKey, suggestExamKey} from '../exams/examStore.js';
 import {expandUploads, loadWorkbook, needsPassword} from '../ingest/files.js';
-import {countOutOfRange, matchFormats} from '../ingest/formatMatch.js';
+import {countOutOfRange, matchFormats, outOfRangeByColumn} from '../ingest/formatMatch.js';
 import {exceljsTo2DArray} from '../main.js';
 import {GradeDataParser} from '../parser.js';
 import {FIELD_LABELS, SCHEMAS} from '../schema.js';
@@ -107,14 +107,15 @@ export async function unlock(row, password) {
 }
 
 /** 선택한 양식으로 읽었을 때 범위를 벗어나는 점수 개수. 불러오기 전에 표에서 알린다(§1-B 3번) */
+/** 선택한 양식으로 읽었을 때 범위를 벗어나는 점수: 열별 [이름, 개수]. 불러오기 전에 표에서 알린다(§1-B 3번) */
 export function rowOutOfRange(row) {
-    if (row.status !== 'ready' || !row.formatId) return 0;
+    if (row.status !== 'ready' || !row.formatId) return [];
     const memo = `${row.sheet}|${row.formatId}`;
     if (row.rangeMemo !== memo) {
         row.rangeMemo = memo;
-        row.rangeCount = countOutOfRange(new GradeDataParser(SCHEMAS[row.formatId]).parse(row.wb, row.sheet));
+        row.rangeColumns = outOfRangeByColumn(new GradeDataParser(SCHEMAS[row.formatId]).parse(row.wb, row.sheet));
     }
-    return row.rangeCount;
+    return row.rangeColumns;
 }
 
 /** 불러오기를 막는 까닭들. 비면 불러올 수 있다 */
@@ -157,6 +158,16 @@ export function commitRows(rows, exams) {
 
 /* 표 안의 입력란·드롭다운은 단추(btn-sm)와 같은 높이 하나로 둔다. 줄마다 높이가 다르면 칸이 들쭉날쭉해 보인다 */
 const CELL_FIELD = 'field min-h-9 py-0';
+
+/* 범위 밖 점수: 가장 많은 열을 보이고, 전체 목록은 마우스를 올리면 보인다 */
+function outOfRangeTag(columns) {
+    if (!columns.length) return null;
+    const total = columns.reduce((sum, [, n]) => sum + n, 0);
+    const [top, n] = columns[0];
+    const node = tag('fail', `범위 밖 점수 ${total}개 (${top} ${n}개${columns.length > 1 ? ' 외' : ''})`);
+    node.title = columns.map(([label, c]) => `${label} ${c}개`).join(', ');
+    return node;
+}
 
 const tag = (kind, text) => el('span', {class: `tag tag-${kind} whitespace-nowrap`, text});
 
@@ -245,7 +256,9 @@ export function renderImportTable(root, state, options) {
     }
 
     // 헤더는 줄을 바꾸지 않는다. 좁은 화면에서 글자가 한 자씩 세로로 서던 것을 막는다
-    const th = (text) => el('th', {class: 'whitespace-nowrap border-b border-line px-3 py-2 text-left font-semibold text-ink-soft', text});
+    const th = (text, cls = '') => el('th', {class: `whitespace-nowrap border-b border-line px-3 py-2 text-left font-semibold text-ink-soft ${cls}`, text});
+    // 미리보기 칸 왼쪽의 구분선. 파일마다 정하는 칸(회차 이름~시트명)과 보기·제거 단추를 나눈다
+    const PREVIEW_CELL = 'border-l border-line';
     const td = (children, cls = '', attrs = {}) => el('td', {class: `border-b border-line-soft px-3 py-2 align-middle ${cls}`, attrs}, children);
     const body = el('tbody');
     for (const row of rows) {
@@ -268,11 +281,12 @@ export function renderImportTable(root, state, options) {
             input.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
             const button = el('button', {class: 'btn btn-sm shrink-0 whitespace-nowrap', text: '확인', attrs: {type: 'button', 'aria-label': `${row.name} 비밀번호 확인`}, on: {click: go}});
             controls = [
-                // 비밀번호 칸은 회차 이름부터 미리보기까지 네 칸을 함께 쓴다. 칸이 좁아 단추 글자가 세로로 서던 것을 막는다
+                // 비밀번호 칸은 회차 이름부터 시트명까지 세 칸을 함께 쓴다. 칸이 좁아 단추 글자가 세로로 서던 것을 막는다
                 td([el('div', {class: 'flex max-w-md items-center gap-2'}, [
                     el('div', {class: 'min-w-0 flex-1'}, [input]),
                     button,
-                ])], '', {colspan: '4'}),
+                ])], '', {colspan: '3'}),
+                td([], PREVIEW_CELL),
             ];
         } else if (row.status === 'ready') {
             const sheetNames = row.wb.worksheets.map(ws => ws.name);
@@ -280,7 +294,7 @@ export function renderImportTable(root, state, options) {
                 td([el('input', {
                     class: CELL_FIELD, attrs: {value: row.key, placeholder: '예: 2026-03, 3, 사설', autocomplete: 'off', 'aria-label': `${row.name} 회차 이름`},
                     on: {change: (e) => { row.key = e.target.value; redraw(); }},
-                })], 'min-w-40'),
+                })], 'min-w-32'),
                 td([el('select', {class: CELL_FIELD, attrs: {'aria-label': `${row.name} 진학 프로그램 양식`}, on: {change: (e) => { row.formatId = e.target.value || null; redraw(); }}}, [
                     // 안내용 첫 항목은 고를 수 없다. 고를 수 있으면 인식된 양식이 빈 값으로 풀려 버린다
                     el('option', {text: '양식 선택', attrs: {value: '', disabled: true, selected: !row.formatId}}),
@@ -297,10 +311,10 @@ export function renderImportTable(root, state, options) {
                     class: 'btn btn-sm', text: row.preview ? '닫기' : '보기',
                     attrs: {type: 'button', 'aria-expanded': String(row.preview), 'aria-label': `${row.name} 미리보기`},
                     on: {click: () => { row.preview = !row.preview; redraw(); }},
-                })]),
+                })], PREVIEW_CELL),
             ];
         } else {
-            controls = [td([el('span', {class: 'text-fail', text: row.error})], '', {colspan: '4'})];
+            controls = [td([el('span', {class: 'text-fail', text: row.error})], '', {colspan: '3'}), td([], PREVIEW_CELL)];
         }
 
         body.append(el('tr', {attrs: {'data-import': row.id}}, [
@@ -314,10 +328,10 @@ export function renderImportTable(root, state, options) {
                 row.container ? el('span', {class: 'block text-ink-soft', text: `${row.container} 안`}) : null,
                 row.error && row.status === 'locked' ? el('span', {class: 'block text-fail', text: row.error}) : null,
             ]),
-            td([el('div', {class: 'flex flex-col items-start gap-1', attrs: {'aria-live': 'polite'}}, [
+            td([el('div', {class: 'flex min-w-36 flex-col items-start gap-1', attrs: {'aria-live': 'polite'}}, [
                 statusTag,
                 dupFile ? tag('wait', '이미 불러온 파일') : null,
-                rowOutOfRange(row) ? tag('fail', `범위 밖 점수 ${rowOutOfRange(row)}개`) : null,
+                outOfRangeTag(rowOutOfRange(row)),
             ])]),
             ...controls,
             td([el('button', {
@@ -334,7 +348,7 @@ export function renderImportTable(root, state, options) {
     // 좁은 화면에서는 칸을 짜부라뜨리지 않고 표 안에서 가로로 스크롤한다
     root.append(el('div', {class: 'card scroll-stable overflow-x-auto'}, [
         el('table', {class: 'w-full min-w-[56rem] text-base'}, [
-            el('thead', {}, [el('tr', {}, [th(''), th('파일명'), th('상태'), th('회차 이름'), th('진학 프로그램 양식'), th('시트명'), th('미리보기'), th('')])]),
+            el('thead', {}, [el('tr', {}, [th(''), th('파일명'), th('상태'), th('회차 이름'), th('진학 프로그램 양식'), th('시트명'), th('미리보기', PREVIEW_CELL), th('')])]),
             body,
         ]),
     ]));

@@ -213,3 +213,11 @@ describe('값 범위 교차검증', () => {
         expect(countOutOfRange([s({korean: {raw: 130, pct: 101, grade: 0}, inquiry1: {raw: 51}})])).toBe(4);
     });
 });
+
+describe('범위 밖 점수의 열별 개수', () => {
+    it('어느 과목·종류에서 몇 개인지 많은 순으로 알린다', async () => {
+        const {outOfRangeByColumn} = await import('../src/js/ingest/formatMatch.js');
+        const s = {english: {grade: 0}, hist: {grade: 0, raw: 60}, korean: {pct: 120}};
+        expect(outOfRangeByColumn([s, {english: {grade: 0}}])).toEqual([['영어 등급', 2], ['국어 백분위', 1], ['한국사 원점수', 1], ['한국사 등급', 1]]);
+    });
+});
