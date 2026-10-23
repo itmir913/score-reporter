@@ -1,5 +1,6 @@
+import {compositeScore, lacksInquiryOnly, noInquiryNote} from '../core/aggregate.js';
 import {ST} from '../main.js';
-import {renderAll} from '../report.js';
+import {includeNoInquiry, renderAll} from '../report.js';
 /* 아래 마크업의 on* 속성이 부르는 함수는 모듈 스코프가 아니라 전역에서 찾는다.
  * src/main.js가 window에 올려두므로 여기서 import 하지 않는다. */
 import {escapeAttr, roundHalfUp} from '../utils.js';
@@ -66,21 +67,36 @@ export function _getCsatSums(student) {
     };
 }
 
-export function _getScoreSum(student, basis) {
-    let sum = 0;
-    ['korean', 'math', 'inquiry1', 'inquiry2'].forEach(subj => {
-        const val = student[subj]?.[basis];
-        if (typeof val === 'number' && !Number.isNaN(val)) {
-            sum += val;
-        }
-    });
-    return sum;
+/* 전교 석차 비교: 원점수 합 → 표준점수 합 → 백분위 합 순(사전식).
+ * 표준점수·백분위 합이 없는 학생은 그 단계에서 맨 뒤로 가고, 없음끼리는 같다고 본다.
+ * 가채점처럼 원점수만 있는 회차가 흔해서, 표·백 합이 없다고 석차에서 빼지 않는다 */
+const byKeyDesc = (a, b) => {
+    if (a === b) return 0;
+    if (a === null) return 1;
+    if (b === null) return -1;
+    return b - a;
+};
+
+export function compareCsatRank(a, b) {
+    return byKeyDesc(a.raw, b.raw) || byKeyDesc(a.std, b.std) || byKeyDesc(a.pct, b.pct);
 }
 
-/** 국어·수학·탐구1·탐구2 중 원점수·표준점수·백분위가 하나라도 있는가 (전 과목 결시가 아닌가) */
-export function _hasAnyScore(student) {
-    return ['korean', 'math', 'inquiry1', 'inquiry2'].some(subj =>
-        ['raw', 'std', 'pct'].some(basis => Number.isFinite(student[subj]?.[basis])));
+/** 전교 석차 대상과 공동순위(1,1,3). 원점수 합(국어+수학+탐구평균)이 있는 학생만 넣는다 */
+export function rankCsatSchool(data, {includeNoInquiry = false} = {}) {
+    // 소수 6자리로 다듬어 0.1+0.2 와 0.3 처럼 2진 오차만 다른 합을 같게 본다
+    const key = (s, basis) => {
+        const v = compositeScore(s, basis, {includeNoInquiry});
+        return v === null ? null : roundHalfUp(v, 6);
+    };
+    const keyed = data.map(s => ({s, raw: key(s, 'raw'), std: key(s, 'std'), pct: key(s, 'pct')}))
+        .filter(k => k.raw !== null)
+        .sort(compareCsatRank);
+    const ranked = [];
+    keyed.forEach((k, i) => {
+        const tied = i > 0 && compareCsatRank(keyed[i - 1], k) === 0;
+        ranked.push({s: k.s, rank: tied ? ranked[i - 1].rank : i + 1});
+    });
+    return ranked;
 }
 
 /* ── 메인 렌더링 함수 ── */
@@ -122,30 +138,12 @@ export function renderCsatSchoolTable() {
         ? (limitElement.value === 'all' ? Infinity : parseInt(limitElement.value, 10))
         : 20;
 
-    // 전 과목 결시는 석차에 넣지 않는다
-    // [핵심 수정] Number() 캐스팅과 || 0 을 통해 NaN, null, undefined를 0점으로 안전하게 치환
-    // 소수 6자리로 다듬어 0.1+0.2 와 0.3 처럼 2진 오차만 다른 합을 같게 본다
-    const sumKey = (s, basis) => roundHalfUp(Number(_getScoreSum(s, basis)) || 0, 6);
-    const keyed = ST.data.filter(_hasAnyScore).map(s => ({
-        s,
-        raw: sumKey(s, 'raw'),
-        std: sumKey(s, 'std'),
-        pct: sumKey(s, 'pct'),
-    })).sort((a, b) => {
-        if (b.raw !== a.raw) return b.raw - a.raw;
-        if (b.std !== a.std) return b.std - a.std;
-        return b.pct - a.pct;
-    });
-
-    // 공동 순위(1,1,3): 원점수·표준점수·백분위 합이 모두 같을 때만 같은 석차.
+    // 합산 = 국어 + 수학 + 탐구평균. 빈칸을 0 으로 더하지 않는다.
     // 표시 인원 경계의 동점자는 모두 보여 준다.
-    const sortedData = [];
-    keyed.forEach((k, i) => {
-        const p = keyed[i - 1];
-        const tied = p && p.raw === k.raw && p.std === k.std && p.pct === k.pct;
-        const rank = tied ? sortedData[i - 1].rank : i + 1;
-        sortedData.push({s: k.s, rank});
-    });
+    const include = includeNoInquiry();
+    const sortedData = rankCsatSchool(ST.data, {includeNoInquiry: include});
+    const note = document.getElementById('csat-school-note');
+    if (note) note.textContent = noInquiryNote(ST.data.filter(s => lacksInquiryOnly(s, 'raw')).length, include);
 
     const schoolTbody = document.getElementById('csat-school-tbody');
     if (schoolTbody) {

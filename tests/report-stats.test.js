@@ -207,11 +207,12 @@ describe('탐구를 한 과목만 본 학생', () => {
         expect(row[3]).toBe('230.0');
     });
 
-    it('전교 석차 표에는 그대로 넣는다', () => {
+    it('전교 석차 표도 탐구평균 합으로 매긴다', () => {
         ST.data = data();
         document.getElementById('csat-top-n-count').value = 'all';
         renderAll();
-        expect(cellTexts('csat-school-tbody').map(r => r[3])).toEqual(['응시', '일부결시']);
+        // 일부결시 230 > 응시 210. 예전에는 탐구를 더해 응시(250)가 앞섰다
+        expect(cellTexts('csat-school-tbody').map(r => r[3])).toEqual(['일부결시', '응시']);
     });
 });
 
