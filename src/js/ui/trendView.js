@@ -4,7 +4,8 @@ import {ST} from '../main.js';
 import {includeNoInquiry} from '../report.js';
 import {sortedExams} from '../exams/examStore.js';
 import {personTrend, schoolTrend} from '../trend/trend.js';
-import {AREAS, areaScore, changeText, changeVsPrev, MERGED, rawOf, strengths} from '../trend/personal.js';
+import {AREAS, areaScore, changeText, changeVsPrev, CSAT_AREAS, csatTimeline, MERGED, rawOf, strengths} from '../trend/personal.js';
+import {CSAT_INQUIRY_MODES, CSAT_SUBJECTS, csatSumsOf, getCsatSubjects} from '../report/report-csat-sum.js';
 import {PCT_MAX, PCT_MIN, STRENGTH_SIMILAR} from '../core/limits.js';
 import {DASH, fmt} from '../utils.js';
 import {showStudentRecord} from '../report/report-modal.js';
@@ -320,6 +321,61 @@ function analysisBlock(rows) {
     return block;
 }
 
+/** 회차별 수능최저 그래프에 그릴 n합 */
+let csatN = 2;
+
+/** 회차별 수능최저: 회차마다 2~5합. 과목 선택은 보고서 탭 수능최저의 선택을 그대로 따른다 */
+function csatBlock(rows, keys) {
+    const timeline = csatTimeline(rows, s => csatSumsOf(s));
+    const picked = getCsatSubjects();
+    const names = [...CSAT_SUBJECTS, ...CSAT_INQUIRY_MODES].filter(([k]) => picked.has(k)).map(([, label]) => label);
+    const block = el('div', {class: 'mt-4 rounded-xl border border-line p-4'});
+    const th = (t, cls = '') => el('th', {class: `border-b border-line bg-canvas px-3 py-2 text-left font-semibold text-ink-soft whitespace-nowrap ${cls}`, text: t});
+    const td = (t, cls = '') => el('td', {class: `border-b border-line-soft px-3 py-2 tabular-nums whitespace-nowrap ${cls}`, text: t});
+    const sumCell = (t, n) => {
+        const v = t.sums[`sum${n}`];
+        if (v === null) return td('— 과목 부족', 'text-right text-ink-soft');
+        return el('td', {class: 'border-b border-line-soft px-3 py-2 text-right whitespace-nowrap'}, [
+            el('div', {class: 'font-semibold tabular-nums', text: String(v)}),
+            el('div', {class: 'text-base text-ink-soft', text: t.sums[`sum${n}_subj`]}),
+        ]);
+    };
+    const table = el('table', {class: 'w-full text-base', attrs: {id: 'trend-csat-table'}}, [
+        el('thead', {}, [el('tr', {}, [th('회차'), ...CSAT_AREAS.map(([, label]) => th(label, 'text-right')), ...[2, 3, 4, 5].map(n => th(`${n}합`, 'text-right'))])]),
+        el('tbody', {}, rows.map((r, i) => {
+            const t = timeline[i];
+            if (t.absent) return el('tr', {}, [td(r.key, 'font-semibold'), el('td', {class: 'border-b border-line-soft px-3 py-2 text-ink-soft', attrs: {colspan: '9'}, text: '이 회차에는 없습니다'})]);
+            if (t.noGrade) return el('tr', {}, [td(r.key, 'font-semibold'), el('td', {class: 'border-b border-line-soft px-3 py-2 text-ink-soft', attrs: {colspan: '9'}, text: '이 회차에는 등급이 없습니다'})]);
+            return el('tr', {}, [td(r.key, 'font-semibold'), ...CSAT_AREAS.map(([k]) => td(plain(t.grades[k]), 'text-right')), ...[2, 3, 4, 5].map(n => sumCell(t, n))]);
+        })),
+    ]);
+    const canvas = el('canvas', {attrs: {id: 'trend-csat-chart'}});
+    const chips = el('div');
+    const drawCsat = () => {
+        clear(chips);
+        chips.append(el('div', {class: 'flex flex-wrap gap-2', attrs: {role: 'group', 'aria-label': '그래프에 그릴 합'}},
+            [2, 3, 4, 5].map(n => el('button', {
+                class: `rounded-full border px-4 py-1 text-base font-semibold ${n === csatN ? 'border-brand bg-brand text-white' : 'border-line bg-surface text-ink-soft hover:text-ink'}`,
+                text: `${n}합`, attrs: {type: 'button', 'aria-pressed': String(n === csatN)},
+                on: {click: () => { csatN = n; drawCsat(); }},
+            }))));
+        // 합은 작을수록 좋으니 축을 뒤집어 위에 둔다. 결시·과목 부족 회차는 선이 끊긴다
+        drawLine('trendCsat', canvas, keys, [{
+            label: `${csatN}합`, data: timeline.map(t => (t.absent || t.noGrade ? null : t.sums[`sum${csatN}`])),
+            borderColor: COLORS[1], backgroundColor: COLORS[1],
+        }], {reverse: true, legend: false, tooltipLabel: (ctx) => ` ${csatN}합 ${ctx.formattedValue}`});
+    };
+    block.append(
+        el('div', {class: 'flex flex-wrap items-center justify-between gap-3'}, [el('h4', {class: 'text-lg font-bold', text: '회차별 수능최저'}), chips]),
+        el('p', {class: 'mt-1 text-base text-ink-soft', text: `보고서 탭 수능최저의 과목 선택을 따릅니다: ${names.length ? names.join(' · ') : '선택한 과목 없음'}`}),
+        el('div', {class: 'mt-3 grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start [&>*]:min-w-0'}, [
+            el('div', {class: 'relative h-60'}, [canvas]),
+            el('div', {class: 'overflow-x-auto rounded-lg border border-line'}, [table]),
+        ]),
+    );
+    return {block, draw: drawCsat};
+}
+
 function renderPerson(root, person, exams, options, keys) {
     clear(root);
     // 석차는 등급으로 매기지 않는다(합산에 등급을 쓰지 않는다). 등급이면 영역 표만 쓰고 석차는 비운다
@@ -416,7 +472,10 @@ function renderPerson(root, person, exams, options, keys) {
             ]),
         ]),
     );
+    const csat = csatBlock(rows, keys);
+    root.append(csat.block);
     drawSubjects();
+    csat.draw();
     if (rankByGrade) return;
     drawLine('trendRank', rankCanvas, keys, [
         {label: '합산 석차', data: rows.map(r => r.rank ?? null), borderColor: COLORS[0], backgroundColor: COLORS[0]},

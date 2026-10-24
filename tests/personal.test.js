@@ -1,5 +1,6 @@
 import {describe, expect, it} from 'vitest';
-import {changeText, changeVsPrev, strengths} from '../src/js/trend/personal.js';
+import {changeText, changeVsPrev, csatTimeline, strengths} from '../src/js/trend/personal.js';
+import {_getCsatRawSums} from '../src/js/report/report-csat-sum.js';
 
 /* 학생 한 명 안에서의 비교. 합성 자료만 쓴다. */
 const sc = (subject, pct, grade, raw = 50) => ({subject, raw, std: null, pct, grade});
@@ -97,5 +98,34 @@ describe('강약점', () => {
         const same = strengths(stu({inquiry1: sc('생활과 윤리', 80, 3), inquiry2: sc('생활과 윤리', 60, 5)}));
         expect(same.ranked.filter(x => x.area.startsWith('inquiry'))).toHaveLength(1);
         expect(same.inquiryGap).toBeNull();
+    });
+});
+
+describe('회차별 수능최저', () => {
+    const g = (subject, grade) => ({subject, raw: 50, pct: 50, grade});
+
+    it('회차마다 선택한 과목으로 n합을 내고, 결시 회차와 등급 없는 회차를 구분한다', () => {
+        const pick = new Set(['korean', 'math', 'english', 'inquiry_sum']);
+        const rows = [
+            row('3', stu({korean: g('화법과 작문', 2), math: g('미적분', 3), english: {raw: 80, grade: 2}, inquiry1: g('물리학Ⅰ', 1), inquiry2: g('화학Ⅰ', 4)})),
+            row('4', null),
+            row('가채점', stu({korean: {subject: '화법과 작문', raw: 80, grade: null}})),
+        ];
+        const t = csatTimeline(rows, s => _getCsatRawSums(s, pick));
+        expect(t[0].sums.sum2).toBe(3);
+        expect(t[0].sums.sum5).toBe(12);
+        expect(t[1]).toEqual({absent: true});
+        expect(t[2].noGrade).toBe(true);
+        expect(t[2].sums.sum2).toBeNull();
+    });
+
+    it('과목이 모자라면 그 n합은 null 이고, 탐구 같은 과목은 탐구1 칸에만 적는다', () => {
+        const pick = new Set(['korean', 'math', 'english', 'inquiry_sum']);
+        const rows = [row('3', stu({korean: g('화법과 작문', 2), inquiry1: g('생활과 윤리', 3), inquiry2: g('생활과 윤리', 3)}))];
+        const [t] = csatTimeline(rows, s => _getCsatRawSums(s, pick));
+        expect(t.grades.inquiry1).toBe(3);
+        expect(t.grades.inquiry2).toBeNull();
+        expect(t.sums.sum2).toBe(5);
+        expect(t.sums.sum3).toBeNull();
     });
 });

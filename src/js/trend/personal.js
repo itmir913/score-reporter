@@ -121,6 +121,25 @@ export function strengths(student) {
     return {ranked, others, inquiryGap: gap !== null && gap > STRENGTH_SIMILAR ? gap : null};
 }
 
+/** 회차별 수능최저에 적는 영역(국·수·영·탐1·탐2). 탐구 병합 학생은 탐구1 에 한 과목만 */
+export const CSAT_AREAS = [['korean', '국어'], ['math', '수학'], ['english', '영어'], ['inquiry1', '탐구1'], ['inquiry2', '탐구2']];
+
+/**
+ * 회차마다 수능최저 n합. 합은 sumsOf(student) — 수능최저 탭의 과목 선택을 따르는 csatSumsOf — 가 낸다.
+ * 결시·과목 부족은 그 합이 null 이다(9등급·0으로 채우지 않는다).
+ * @returns {({absent: true}|{grades: Record<string, number|null>, sums: object, noGrade: boolean})[]}
+ */
+export function csatTimeline(rows, sumsOf) {
+    return rows.map(r => {
+        if (!r.student) return {absent: true};
+        const grades = Object.fromEntries(CSAT_AREAS.map(([k]) => {
+            const d = areaScore(r.student, k);
+            return [k, d && d !== MERGED && isValidGrade(d.grade) ? d.grade : null];
+        }));
+        return {grades, sums: sumsOf(r.student), noGrade: Object.values(grades).every(g => g === null)};
+    });
+}
+
 const arrow = (d) => (d > 0 ? `▲${d}` : d < 0 ? `▼${-d}` : '변화 없음');
 
 /** 「직전 대비」 칸의 글자 */
