@@ -28,6 +28,16 @@ export function toFixedHalfUp(v, d = 0) {
 /** 점수 자리에 값이 없을 때 쓰는 표시. 하이픈(-)은 음수·뺄셈과 헷갈려 긴 대시를 쓴다 */
 export const DASH = '—';
 
+/**
+ * 학년·반·번호를 견줄 때 쓰는 값. 숫자 하나(뒤에 「학년」「반」「번」이 붙어도 된다)면 그 숫자, 앞의 0도 뗀다.
+ * 양식에 따라 「01」·1·「1반」으로 다르게 적어도 같은 반·번호로 본다. 그 밖의 글(「가반」 등)은 그대로
+ */
+export function unitNumberKey(v) {
+    const t = String(v ?? '').normalize('NFC').replace(/\s+/g, '');
+    const m = /^(\d+)(?:학년|반|번)?$/.exec(t);
+    return m ? String(Number(m[1])) : t;
+}
+
 /** 반·번호·학년 뒤에 단위를 붙인다. 이미 「1반」「5번」「3학년」처럼 붙어 있으면 그대로 둔다(「1반반」이 되지 않게) */
 export function withUnit(v, unit) {
     const t = String(v ?? '').trim();

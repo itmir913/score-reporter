@@ -1,4 +1,5 @@
 import {compositeScore, inquiryAvg} from '../core/aggregate.js';
+import {unitNumberKey} from '../utils.js';
 import {createTable} from './table.js';
 import {clear, el} from './dom.js';
 import {applyQuery, describeFilter} from './grid/query.js';
@@ -54,8 +55,9 @@ const num = (v) => (Number.isFinite(v) ? v : null);
 export function studentRow(s, index, basis, {includeNoInquiry = false} = {}) {
     return {
         '#index': index,
-        class: s.class ?? '',
-        number: s.student_id || s.number || '',
+        // 반·번호는 「1」과 「1반」, 「01」과 「1번」을 같은 값으로 적는다(깔때기 값 목록이 둘로 나뉘지 않게)
+        class: unitNumberKey(s.class),
+        number: s.student_id || unitNumberKey(s.number),
         name: s.name ?? '',
         total: compositeScore(s, basis, {includeNoInquiry}),
         kor: num(s.korean?.[basis]),

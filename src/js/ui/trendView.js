@@ -7,7 +7,7 @@ import {personTrend, schoolTrend} from '../trend/trend.js';
 import {AREAS, areaScore, changeText, changeVsPrev, csatTimeline, gapText, MERGED, nextGradeGap, rawOf, strengths, 과와} from '../trend/personal.js';
 import {applyCsatSubjects, CSAT_INQUIRY_MODES, CSAT_SUBJECTS, csatSumsOf, getCsatSubjects} from '../report/report-csat-sum.js';
 import {PCT_MAX, PCT_MIN} from '../core/limits.js';
-import {DASH, fmt, withUnit} from '../utils.js';
+import {DASH, fmt, unitNumberKey, withUnit} from '../utils.js';
 import {showStudentRecord} from '../report/report-modal.js';
 import {clear, el} from './dom.js';
 
@@ -212,7 +212,8 @@ function classGroups(persons, exams) {
         const s = latestRecord(p, exams);
         const grade = String(s?.grade_year ?? '').trim();
         const cls = String(s?.class ?? '').trim();
-        const key = cls ? `${grade}|${cls}` : '|';
+        // 「1」과 「1반」을 같은 학급으로 묶는다
+        const key = cls ? `${unitNumberKey(grade)}|${unitNumberKey(cls)}` : '|';
         const label = cls ? `${grade ? `${withUnit(grade, '학년')} ` : ''}${withUnit(cls, '반')}` : '반 없음';
         if (!map.has(key)) map.set(key, {key, label, persons: []});
         map.get(key).persons.push(p);

@@ -3,7 +3,7 @@ import {ST} from '../main.js';
 import {includeNoInquiry, renderAll} from '../report.js';
 /* 아래 마크업의 on* 속성이 부르는 함수는 모듈 스코프가 아니라 전역에서 찾는다.
  * src/main.js가 window에 올려두므로 여기서 import 하지 않는다. */
-import {DASH, escapeAttr, inquiryScores, roundHalfUp, sameInquirySubject, withUnit} from '../utils.js';
+import {DASH, escapeAttr, inquiryScores, roundHalfUp, sameInquirySubject, unitNumberKey, withUnit} from '../utils.js';
 import {CSAT_SUM_MAX, isValidGrade} from '../core/limits.js';
 import {numberLabel, studentIdxAttr} from './report-modal.js';
 
@@ -172,7 +172,8 @@ export function renderCsatMinRequirement(cache) {
 
     const classSelect = document.getElementById('class-select');
     if (classSelect) {
-        const classes = [...new Set(ST.data.map(s => s.class).filter(c => c))]
+        // 반은 「1」과 「1반」을 같은 반으로 묶는다(unitNumberKey)
+        const classes = [...new Set(ST.data.map(s => unitNumberKey(s.class)).filter(c => c))]
             .sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
         // 목록을 새로 만들면 선택한 반이 첫 반으로 돌아간다. 새 목록에도 있으면 되살린다
         const prevClass = classSelect.value;
@@ -347,7 +348,7 @@ export function renderCsatClassTable(cache) {
             s,
             csat: cache.csatSums[index]
         }))
-        .filter(item => String(item.s.class) === String(selectedClass)) // 타입 불일치 방지용 String 변환 유지
+        .filter(item => unitNumberKey(item.s.class) === String(selectedClass)) // 「1」과 「1반」을 같은 반으로
         .sort((a, b) => {
             // [핵심 수정] parseInt의 한계를 벗어나 문자/숫자 혼합 데이터를 자연스럽게 정렬
             const numA = String(a.s.number || "");
