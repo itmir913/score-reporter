@@ -14,36 +14,13 @@
 import { el, clear, debounce } from './dom.js';
 import { DASH } from '../utils.js';
 
+import { isBlank, valueLabel } from './grid/registry.js';
+import { toggleSort } from './grid/query.js';
+
 /* admission-outcomes 의 src/ui/table.js 를 옮겨 왔다. 바꾼 곳은 셀 글자(cellText)와
- * 합불 표시를 뺀 것, 정렬 토글(toggleSort)을 이 파일에 둔 것뿐이다. */
+ * 합불 표시를 뺀 것뿐이다. 값 글자·정렬 토글은 원본처럼 grid/registry.js·grid/query.js 가 정본이다. */
 
-const isBlank = (value) => value === null || value === undefined || value === '';
-
-/** 숫자는 소수 1자리까지(정수는 그대로), 나머지는 글자 그대로 */
-function valueLabel(key, value) {
-  if (typeof value === 'number') return Number.isInteger(value) ? String(value) : value.toFixed(1);
-  return String(value);
-}
-
-/**
- * 정렬 기준 토글. only 면 그 열 하나로만 정렬한다.
- * 처음 누른 열이 1순위이고, 방향을 뒤집어도 순위는 그대로다.
- */
-export function toggleSort(sorts, key, only = false) {
-  if (only) {
-    const current = sorts.find((sort) => sort.key === key);
-    if (!current) return [{ key, dir: 'asc' }];
-    return current.dir === 'asc' ? [{ key, dir: 'desc' }] : [];
-  }
-  const at = sorts.findIndex((sort) => sort.key === key);
-  if (at === -1) return [...sorts, { key, dir: 'asc' }];
-  if (sorts[at].dir === 'asc') {
-    const next = [...sorts];
-    next[at] = { key, dir: 'desc' };
-    return next;
-  }
-  return sorts.filter((sort) => sort.key !== key);
-}
+export { toggleSort };
 
 /**
  * 행 높이의 **출발값**. CSS의 `--spacing-row`에서 왔다.
