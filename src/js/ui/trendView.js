@@ -4,7 +4,7 @@ import {ST} from '../main.js';
 import {includeNoInquiry} from '../report.js';
 import {sortedExams} from '../exams/examStore.js';
 import {personTrend, schoolTrend} from '../trend/trend.js';
-import {AREAS, areaScore, changeText, changeVsPrev, CSAT_AREAS, csatTimeline, MERGED, rawOf, strengths, 과와} from '../trend/personal.js';
+import {AREAS, areaScore, changeText, changeVsPrev, CSAT_AREAS, csatTimeline, gapText, MERGED, nextGradeGap, rawOf, strengths, 과와} from '../trend/personal.js';
 import {CSAT_INQUIRY_MODES, CSAT_SUBJECTS, csatSumsOf, getCsatSubjects} from '../report/report-csat-sum.js';
 import {PCT_MAX, PCT_MIN, STRENGTH_SIMILAR} from '../core/limits.js';
 import {DASH, fmt, roundHalfUp} from '../utils.js';
@@ -261,7 +261,7 @@ const clickableRow = (r, cells) => el('tr', {
 let analysisExam = null;
 
 /** 회차 분석: 선택한 회차 하나 안에서 과목끼리 견준다(강약점) */
-function analysisBlock(rows) {
+function analysisBlock(rows, exams) {
     const present = rows.filter(r => r.student);
     if (!present.some(r => r.key === analysisExam)) analysisExam = present.at(-1)?.key ?? null;
     const block = el('div', {class: 'mt-3 rounded-xl border border-line p-4'});
@@ -279,21 +279,31 @@ function analysisBlock(rows) {
         ]));
         if (!r) return;
         const {ranked, others, inquiryGap} = strengths(r.student);
+        // 다음 등급까지: 같은 회차·같은 과목 응시자 중 더 높은 등급의 최저 원점수로 어림한다
+        const exam = exams.find(e => e.key === r.key);
+        const gap = (area) => {
+            const g = exam ? nextGradeGap(exam, area, r.student) : {kind: 'fail', reason: '회차 없음'};
+            const cell = td(gapText(g), g.kind === 'ok' ? 'font-semibold' : 'text-ink-soft');
+            // 근거 점수는 마우스를 올리면 보인다
+            if (g.kind === 'ok') cell.title = `더 높은 등급의 최저 원점수 ${g.min}점`;
+            return cell;
+        };
         const th = (t, cls = '') => el('th', {class: `border-b border-line bg-canvas px-3 py-2 text-left font-semibold text-ink-soft whitespace-nowrap ${cls}`, text: t});
         const td = (t, cls = '') => el('td', {class: `border-b border-line-soft px-3 py-2 tabular-nums whitespace-nowrap ${cls}`, text: t});
         const canvas = el('canvas', {attrs: {id: 'trend-strength-chart'}});
         const table = el('table', {class: 'w-full text-base', attrs: {id: 'trend-strength-table'}}, [
-            el('thead', {}, [el('tr', {}, [th('영역'), th('과목명'), th('백분위', 'text-right'), th('등급', 'text-right'), th('비슷한 과목')])]),
+            el('thead', {}, [el('tr', {}, [th('영역'), th('과목명'), th('백분위', 'text-right'), th('등급', 'text-right'), th('다음 등급까지'), th('비슷한 과목')])]),
             el('tbody', {}, [
-                ...ranked.map(x => el('tr', {}, [td(x.label), td(x.subject || DASH), td(plain(x.pct), 'text-right font-semibold'), td(plain(x.grade), 'text-right'),
+                ...ranked.map(x => el('tr', {}, [td(x.label), td(x.subject || DASH), td(plain(x.pct), 'text-right font-semibold'), td(plain(x.grade), 'text-right'), gap(x.area),
                     // 바로 아래 과목과 차이가 작으면 표시만 한다. 그 안의 차이로 강약을 나누지 않는다
                     td(x.similarToNext ? `≈ ${x.next.name}${과와(x.next.name)} 비슷함(차이 ${roundHalfUp(x.next.diff, 1)})` : '', 'text-ink-soft')])),
-                ...others.map(x => el('tr', {}, [td(x.label), td(x.subject || DASH), td(x.noPct ? '백분위 없음' : DASH, 'text-right text-ink-soft'), td(plain(x.grade), 'text-right'), td('')])),
+                ...others.map(x => el('tr', {}, [td(x.label), td(x.subject || DASH), td(x.noPct ? '백분위 없음' : DASH, 'text-right text-ink-soft'), td(plain(x.grade), 'text-right'), gap(x.area), td('')])),
             ]),
         ]);
         const notes = [
             `백분위가 높은 순서입니다. 이웃한 두 과목의 백분위 차이가 ${STRENGTH_SIMILAR} 이하이면 비슷하다고 봅니다. 탐구 백분위는 그 과목 응시자 안에서의 위치입니다. 영어·한국사는 등급만 적습니다.`,
             ...(inquiryGap !== null ? [`탐구 두 과목의 백분위 차이가 ${inquiryGap}입니다.`] : []),
+            '「다음 등급까지」는 같은 회차·같은 과목을 본 우리 학교 학생 가운데 더 높은 등급을 받은 학생의 최저 원점수로 추정한 값입니다. 국어·수학은 공통·선택 과목 구성이 달라 실제와 다를 수 있습니다.',
         ];
         block.append(el('div', {class: 'mt-3 grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start [&>*]:min-w-0'}, [
             ranked.length ? el('div', {class: 'relative h-60'}, [canvas]) : el('p', {class: 'rounded-lg bg-canvas px-4 py-3 text-base text-ink-soft', text: '이 회차에는 비교할 백분위가 없습니다.'}),
@@ -437,7 +447,7 @@ function renderPerson(root, person, exams, options, keys) {
 
     root.append(
         el('p', {class: 'text-lg font-semibold', text: describe(person, exams)}),
-        analysisBlock(rows),
+        analysisBlock(rows, exams),
         el('div', {class: 'mt-3 rounded-xl border border-line p-4'}, [
             el('div', {class: 'flex flex-wrap items-center justify-between gap-3'}, [
                 el('h4', {class: 'text-lg font-bold', text: '회차별 영역 성적'}),

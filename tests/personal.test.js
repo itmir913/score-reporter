@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {changeText, changeVsPrev, csatTimeline, strengths, 과와} from '../src/js/trend/personal.js';
+import {changeText, changeVsPrev, csatTimeline, gapText, nextGradeGap, strengths, 과와} from '../src/js/trend/personal.js';
 import {_getCsatRawSums} from '../src/js/report/report-csat-sum.js';
 
 /* 학생 한 명 안에서의 비교. 합성 자료만 쓴다. */
@@ -137,5 +137,51 @@ describe('과와', () => {
         expect(과와('물리학Ⅰ')).toBe('과');
         expect(과와('화학Ⅱ')).toBe('와');
         expect(과와('미적분')).toBe('과');
+    });
+});
+
+describe('다음 등급까지', () => {
+    const k = (subject, raw, grade) => ({subject, raw, grade});
+    const exam = (students) => ({key: '6', students});
+
+    it('소유자 예: 88점 2등급·87점 3등급 두 명이면 최대 1점', () => {
+        const me = stu({korean: k('화법과 작문', 87, 3)});
+        const r = nextGradeGap(exam([me, stu({korean: k('화법과 작문', 88, 2)})]), 'korean', me);
+        expect(r).toEqual({kind: 'ok', target: 2, gap: 1, min: 88});
+        expect(gapText(r)).toBe('2등급까지 최대 1점');
+    });
+
+    it('선택과목이 다른 학생은 집단 밖이고, 더 높은 등급이 없으면 추론 불가', () => {
+        const me = stu({math: k('미적분', 70, 4)});
+        expect(gapText(nextGradeGap(exam([me, stu({math: k('확률과 통계', 90, 2)})]), 'math', me))).toBe('추론 불가(더 높은 등급 학생 없음)');
+    });
+
+    it('1등급은 최고 등급, 등급·원점수·과목명이 없으면 이유를 적는다', () => {
+        const top = stu({korean: k('화법과 작문', 98, 1)});
+        expect(gapText(nextGradeGap(exam([top]), 'korean', top))).toBe('최고 등급');
+        const noRaw = stu({korean: k('화법과 작문', null, 3)});
+        expect(gapText(nextGradeGap(exam([noRaw]), 'korean', noRaw))).toBe('추론 불가(원점수 없음)');
+        const noGrade = stu({korean: k('화법과 작문', 70, null)});
+        expect(gapText(nextGradeGap(exam([noGrade]), 'korean', noGrade))).toBe('추론 불가(등급 없음)');
+        const noName = stu({korean: k('', 70, 3)});
+        expect(gapText(nextGradeGap(exam([noName]), 'korean', noName))).toBe('추론 불가(과목명 없음)');
+    });
+
+    it('내 점수 이하에서 더 높은 등급이 나오면 어긋남이다', () => {
+        const me = stu({korean: k('화법과 작문', 85, 3)});
+        expect(gapText(nextGradeGap(exam([me, stu({korean: k('화법과 작문', 84, 2)})]), 'korean', me))).toBe('추론 불가(원점수와 등급이 어긋남)');
+    });
+
+    it('탐구는 과목명으로(탐구1·2 어디든) 묶고, 영어·한국사도 같은 규칙이다', () => {
+        const me = stu({inquiry1: k('생활과 윤리', 40, 3), english: {raw: 78, grade: 3}});
+        const other = stu({inquiry2: k('생활과 윤리', 44, 2), english: {raw: 80, grade: 2}});
+        expect(nextGradeGap(exam([me, other]), 'inquiry1', me)).toEqual({kind: 'ok', target: 2, gap: 4, min: 44});
+        expect(gapText(nextGradeGap(exam([me, other]), 'english', me))).toBe('2등급까지 최대 2점');
+    });
+
+    it('한 등급보다 더 높은 학생도 함께 보고 그 가운데 최솟값을 쓴다', () => {
+        const me = stu({korean: k('화법과 작문', 70, 4)});
+        const r = nextGradeGap(exam([me, stu({korean: k('화법과 작문', 90, 1)}), stu({korean: k('화법과 작문', 76, 3)})]), 'korean', me);
+        expect(r.gap).toBe(6);
     });
 });

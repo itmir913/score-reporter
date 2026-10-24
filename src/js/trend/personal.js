@@ -1,5 +1,5 @@
 import {hasScore, inquiryScores, roundHalfUp, sameInquirySubject} from '../utils.js';
-import {isValidGrade, STRENGTH_SIMILAR} from '../core/limits.js';
+import {GRADE_MIN, isValidGrade, STRENGTH_SIMILAR} from '../core/limits.js';
 
 /* ───────────────────────────────────────────
    § 학생 한 명 안에서의 비교 (통계 탭 · 학생별)
@@ -140,6 +140,50 @@ export function csatTimeline(rows, sumsOf) {
         }));
         return {grades, sums: sumsOf(r.student), noGrade: Object.values(grades).every(g => g === null)};
     });
+}
+
+/** 같은 과목을 본 학생의 그 영역 점수. 국어·수학은 같은 선택과목, 탐구는 같은 과목명(탐구1·2 어디든), 영어·한국사는 전원 */
+function sameSubjectScore(s, area, subject) {
+    if (area === 'english' || area === 'hist') return s[area] ?? null;
+    if (INQUIRY.has(area)) return inquiryScores(s).find(d => d?.subject === subject) ?? null;
+    return s[area]?.subject === subject ? s[area] : null;
+}
+
+/**
+ * 다음 등급까지 몇 점인지 어림한다(소유자 결정 2026-10-24).
+ * 같은 회차에서 같은 과목을 본 학생 중 나보다 등급이 높은 학생의 원점수 최솟값을 구한다. 그 점수에 닿으면
+ * 한 등급 위였던 학생이 있으므로 「최대 (그 점수 − 내 점수)점」이다. 집단 크기 같은 문턱은 두지 않는다.
+ * 모든 영역(영어·한국사 포함)이 같은 규칙이다.
+ * @returns {{kind: 'ok', target: number, gap: number, min: number}|{kind: 'top'}|{kind: 'merged'}|{kind: 'fail', reason: string}}
+ */
+export function nextGradeGap(exam, area, student) {
+    const me = areaScore(student, area);
+    if (me === MERGED) return {kind: 'merged'};
+    if (!me || !isValidGrade(me.grade)) return {kind: 'fail', reason: '등급 없음'};
+    const myRaw = rawOf(me);
+    if (myRaw === null) return {kind: 'fail', reason: '원점수 없음'};
+    if (me.grade === GRADE_MIN) return {kind: 'top'};
+    const needsSubject = area !== 'english' && area !== 'hist';
+    if (needsSubject && !named(me)) return {kind: 'fail', reason: '과목명 없음'};
+    let min = null;
+    for (const s of exam.students) {
+        const d = sameSubjectScore(s, area, me.subject);
+        if (!d || !isValidGrade(d.grade) || d.grade >= me.grade) continue;
+        const raw = rawOf(d);
+        if (raw !== null && (min === null || raw < min)) min = raw;
+    }
+    if (min === null) return {kind: 'fail', reason: '더 높은 등급 학생 없음'};
+    // 내 점수 이하에서 더 높은 등급이 나왔다. 국어·수학은 공통·선택 구성 차이일 수 있다
+    if (min <= myRaw) return {kind: 'fail', reason: '원점수와 등급이 어긋남'};
+    return {kind: 'ok', target: me.grade - 1, gap: min - myRaw, min};
+}
+
+/** 「다음 등급까지」 칸의 글자 */
+export function gapText(r) {
+    if (r.kind === 'ok') return `${r.target}등급까지 최대 ${r.gap}점`;
+    if (r.kind === 'top') return '최고 등급';
+    if (r.kind === 'merged') return '탐구1과 같은 과목';
+    return `추론 불가(${r.reason})`;
 }
 
 /* 낱말 뒤의 「과/와」. 받침이 있으면 「과」. 로마 숫자로 끝나는 과목명(물리학Ⅰ·Ⅱ)은 읽는 소리(일·이)로 본다 */
