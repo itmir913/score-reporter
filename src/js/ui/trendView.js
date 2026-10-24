@@ -422,9 +422,10 @@ function csatBlock(rows, keys) {
     block.append(
         el('div', {class: 'flex flex-wrap items-center justify-between gap-3'}, [el('h4', {class: 'text-lg font-bold', text: '회차별 수능최저학력기준'}), chips]),
         picker,
-        el('div', {class: 'mt-3 grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start [&>*]:min-w-0'}, [
-            el('div', {class: 'relative h-60'}, [canvas]),
-            tableBox,
+        // 표에 구성 과목 줄이 있어 차트 4 : 표 6 으로 나눈다
+        el('div', {class: 'mt-3 grid grid-cols-1 gap-6 xl:grid-cols-5 xl:items-start [&>*]:min-w-0'}, [
+            el('div', {class: 'relative h-60 xl:col-span-2'}, [canvas]),
+            el('div', {class: 'xl:col-span-3'}, [tableBox]),
         ]),
     );
     return {block, draw: drawAll};
