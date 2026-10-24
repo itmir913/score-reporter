@@ -1,5 +1,5 @@
 import {hasScore, inquiryScores, roundHalfUp, sameInquirySubject} from '../utils.js';
-import {isValidGrade} from '../core/limits.js';
+import {isValidGrade, STRENGTH_SIMILAR} from '../core/limits.js';
 
 /* ───────────────────────────────────────────
    § 학생 한 명 안에서의 비교 (통계 탭 · 학생별)
@@ -90,6 +90,35 @@ export function changeVsPrev(rows, area) {
         const hasPct = Number.isFinite(cur.pct) && Number.isFinite(p.pct);
         return {pct: hasPct ? cur.pct - p.pct : null, grade, note: hasPct ? null : 'noPct'};
     });
+}
+
+/**
+ * 한 회차 안의 강약점. 국어·수학·탐구의 백분위를 큰 순서로 늘어놓는다(원점수는 만점이 달라 견줄 수 없다).
+ * 영어·한국사는 백분위 비교에서 제외하고 등급만 따로 적는다. 응시하지 않은 영역은 뺀다(빈칸은 0점이 아니다).
+ * - ranked: 백분위 순. similarToNext 는 바로 아래 과목과의 차가 STRENGTH_SIMILAR 이하인지(묶지 않고 표시만)
+ * - others: 백분위로 견주지 않는 영역(영어·한국사 등급, 백분위 없는 과목)
+ * - inquiryGap: 탐구 두 과목의 백분위 차가 STRENGTH_SIMILAR 를 넘으면 그 차, 아니면 null
+ */
+export function strengths(student) {
+    const ranked = [];
+    const others = [];
+    for (const [area, label] of AREAS) {
+        const d = areaScore(student, area);
+        if (d === MERGED || !hasScore(d)) continue;
+        if (PCT_AREAS.has(area) && Number.isFinite(d.pct)) {
+            ranked.push({area, label, subject: d.subject ?? '', pct: d.pct, grade: isValidGrade(d.grade) ? d.grade : null});
+        } else {
+            others.push({area, label, subject: d.subject ?? '', grade: isValidGrade(d.grade) ? d.grade : null, noPct: PCT_AREAS.has(area)});
+        }
+    }
+    ranked.sort((a, b) => b.pct - a.pct);
+    ranked.forEach((item, i) => {
+        const next = ranked[i + 1];
+        item.similarToNext = Boolean(next) && item.pct - next.pct <= STRENGTH_SIMILAR;
+    });
+    const inq = ranked.filter(item => INQUIRY.has(item.area));
+    const gap = inq.length === 2 ? Math.abs(inq[0].pct - inq[1].pct) : null;
+    return {ranked, others, inquiryGap: gap !== null && gap > STRENGTH_SIMILAR ? gap : null};
 }
 
 const arrow = (d) => (d > 0 ? `▲${d}` : d < 0 ? `▼${-d}` : '변화 없음');

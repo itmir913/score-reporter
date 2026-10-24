@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {GRADE_MAX, GRADE_MIN, isValidGrade} from '../src/js/core/limits.js';
+import {GRADE_MAX, GRADE_MIN, isValidGrade, STRENGTH_SIMILAR} from '../src/js/core/limits.js';
 
 describe('isValidGrade: 등급으로 쓸 수 있는 값', () => {
     it('범위 안 정수만 받는다', () => {
@@ -15,4 +15,8 @@ describe('isValidGrade: 등급으로 쓸 수 있는 값', () => {
         expect(isValidGrade(undefined)).toBe(false);
         expect(isValidGrade('2')).toBe(false);
     });
+});
+
+describe('STRENGTH_SIMILAR', () => {
+    it('양의 정수다', () => expect(Number.isInteger(STRENGTH_SIMILAR) && STRENGTH_SIMILAR > 0).toBe(true));
 });

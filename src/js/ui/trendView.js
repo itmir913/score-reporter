@@ -4,7 +4,8 @@ import {ST} from '../main.js';
 import {includeNoInquiry} from '../report.js';
 import {sortedExams} from '../exams/examStore.js';
 import {personTrend, schoolTrend} from '../trend/trend.js';
-import {AREAS, areaScore, changeText, changeVsPrev, MERGED, rawOf} from '../trend/personal.js';
+import {AREAS, areaScore, changeText, changeVsPrev, MERGED, rawOf, strengths} from '../trend/personal.js';
+import {PCT_MAX, PCT_MIN, STRENGTH_SIMILAR} from '../core/limits.js';
 import {DASH, fmt} from '../utils.js';
 import {showStudentRecord} from '../report/report-modal.js';
 import {clear, el} from './dom.js';
@@ -23,10 +24,15 @@ let chosenRecords = null;
 const recordsOf = (p, exams) => new Set(exams.flatMap(e => (p.entries[e.key] === undefined ? [] : [e.students[p.entries[e.key]]])));
 const choose = (p, exams) => { chosenRecords = p ? recordsOf(p, exams) : null; };
 
+/** 차트를 key 자리에 새로 그린다. 같은 자리의 이전 차트는 먼저 지운다 */
+function drawChart(key, canvas, config) {
+    ST.charts[key]?.destroy();
+    ST.charts[key] = new Chart(canvas.getContext('2d'), config);
+}
+
 /* reverse: 작을수록 좋은 값(등급·석차)은 축을 뒤집어 좋은 쪽을 위에 둔다 */
 function drawLine(key, canvas, labels, datasets, {reverse = false, legend = true, tooltipLabel, min, secondAxis = false} = {}) {
-    ST.charts[key]?.destroy();
-    ST.charts[key] = new Chart(canvas.getContext('2d'), {
+    drawChart(key, canvas, {
         type: 'line',
         data: {labels, datasets: datasets.map(d => ({spanGaps: false, tension: 0.2, pointRadius: 4, ...d}))},
         options: {
@@ -250,6 +256,70 @@ const clickableRow = (r, cells) => el('tr', {
     on: {click: () => openRecord(r), keydown: (e) => { if (e.key === 'Enter') openRecord(r); }},
 }, cells);
 
+/** 회차 분석에서 선택한 회차. 이 학생에게 없는 회차면 가장 나중 회차로 되돌린다 */
+let analysisExam = null;
+
+/** 회차 분석: 선택한 회차 하나 안에서 과목끼리 견준다(강약점) */
+function analysisBlock(rows) {
+    const present = rows.filter(r => r.student);
+    if (!present.some(r => r.key === analysisExam)) analysisExam = present.at(-1)?.key ?? null;
+    const block = el('div', {class: 'mt-3 rounded-xl border border-line p-4'});
+    const draw = () => {
+        clear(block);
+        const r = present.find(x => x.key === analysisExam);
+        const chips = el('div', {class: 'flex flex-wrap gap-2', attrs: {role: 'group', 'aria-label': '분석할 회차'}},
+            present.map(x => el('button', {
+                class: `rounded-full border px-4 py-1 text-base font-semibold ${x.key === analysisExam ? 'border-brand bg-brand text-white' : 'border-line bg-surface text-ink-soft hover:text-ink'}`,
+                text: x.key, attrs: {type: 'button', 'aria-pressed': String(x.key === analysisExam)},
+                on: {click: () => { analysisExam = x.key; draw(); }},
+            })));
+        block.append(el('div', {class: 'flex flex-wrap items-center justify-between gap-3'}, [
+            el('h4', {class: 'text-lg font-bold', text: '회차 분석'}), chips,
+        ]));
+        if (!r) return;
+        const {ranked, others, inquiryGap} = strengths(r.student);
+        const th = (t, cls = '') => el('th', {class: `border-b border-line bg-canvas px-3 py-2 text-left font-semibold text-ink-soft whitespace-nowrap ${cls}`, text: t});
+        const td = (t, cls = '') => el('td', {class: `border-b border-line-soft px-3 py-2 tabular-nums whitespace-nowrap ${cls}`, text: t});
+        const canvas = el('canvas', {attrs: {id: 'trend-strength-chart'}});
+        const table = el('table', {class: 'w-full text-base', attrs: {id: 'trend-strength-table'}}, [
+            el('thead', {}, [el('tr', {}, [th('영역'), th('과목명'), th('백분위', 'text-right'), th('등급', 'text-right'), th('')])]),
+            el('tbody', {}, [
+                ...ranked.map(x => el('tr', {}, [td(x.label), td(x.subject || DASH), td(plain(x.pct), 'text-right font-semibold'), td(plain(x.grade), 'text-right'),
+                    // 바로 아래 과목과 차이가 작으면 표시만 한다. 그 안의 차이로 강약을 나누지 않는다
+                    td(x.similarToNext ? '≈ 아래 과목과 비슷함' : '', 'text-ink-soft')])),
+                ...others.map(x => el('tr', {}, [td(x.label), td(x.subject || DASH), td(x.noPct ? '백분위 없음' : DASH, 'text-right text-ink-soft'), td(plain(x.grade), 'text-right'), td('')])),
+            ]),
+        ]);
+        const notes = [
+            `백분위가 큰 순서입니다. 이웃한 두 과목의 차이가 ${STRENGTH_SIMILAR} 이하이면 비슷하다고 봅니다. 탐구 백분위는 그 과목 응시자 안에서의 위치입니다. 영어·한국사는 등급만 적습니다.`,
+            ...(inquiryGap !== null ? [`탐구 두 과목의 백분위 차이가 ${inquiryGap}입니다.`] : []),
+        ];
+        block.append(el('div', {class: 'mt-3 grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start [&>*]:min-w-0'}, [
+            ranked.length ? el('div', {class: 'relative h-60'}, [canvas]) : el('p', {class: 'rounded-lg bg-canvas px-4 py-3 text-base text-ink-soft', text: '이 회차에는 견줄 백분위가 없습니다.'}),
+            el('div', {}, [
+                el('div', {class: 'overflow-x-auto rounded-lg border border-line'}, [table]),
+                ...notes.map(t => el('p', {class: 'mt-2 text-base text-ink-soft', text: t})),
+            ]),
+        ]));
+        // 견줄 백분위가 없는 회차로 바꾸면 이전 회차의 막대가 떼어낸 캔버스에 남지 않게 지운다
+        if (!ranked.length) { ST.charts.trendStrength?.destroy(); delete ST.charts.trendStrength; return; }
+        drawChart('trendStrength', canvas, {
+            type: 'bar',
+            data: {
+                labels: ranked.map(x => (x.subject ? `${x.label}(${x.subject})` : x.label)),
+                datasets: [{data: ranked.map(x => x.pct), backgroundColor: ranked.map(x => SUBJECT_COLORS[x.area] ?? COLORS[0])}],
+            },
+            options: {
+                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                plugins: {legend: {display: false}, tooltip: {callbacks: {label: (ctx) => ` 백분위 ${ctx.formattedValue}`}}},
+                scales: {x: {min: PCT_MIN, max: PCT_MAX}},
+            },
+        });
+    };
+    draw();
+    return block;
+}
+
 function renderPerson(root, person, exams, options, keys) {
     clear(root);
     // 석차는 등급으로 매기지 않는다(합산에 등급을 쓰지 않는다). 등급이면 영역 표만 쓰고 석차는 비운다
@@ -311,6 +381,7 @@ function renderPerson(root, person, exams, options, keys) {
 
     root.append(
         el('p', {class: 'text-lg font-semibold', text: describe(person, exams)}),
+        analysisBlock(rows),
         el('div', {class: 'mt-3 rounded-xl border border-line p-4'}, [
             el('div', {class: 'flex flex-wrap items-center justify-between gap-3'}, [
                 el('h4', {class: 'text-lg font-bold', text: '회차별 영역 성적'}),
