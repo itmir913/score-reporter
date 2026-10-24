@@ -422,7 +422,6 @@ function csatBlock(rows, keys) {
     block.append(
         el('div', {class: 'flex flex-wrap items-center justify-between gap-3'}, [el('h4', {class: 'text-lg font-bold', text: '회차별 수능최저학력기준'}), chips]),
         picker,
-        el('p', {class: 'mt-1 text-base text-ink-soft', text: '여기서 바꾼 과목 선택은 보고서 탭에도 적용됩니다. 줄을 누르면 그 회차의 성적표가 열립니다.'}),
         el('div', {class: 'mt-3 grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start [&>*]:min-w-0'}, [
             el('div', {class: 'relative h-60'}, [canvas]),
             tableBox,
