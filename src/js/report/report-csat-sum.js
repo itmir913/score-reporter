@@ -3,7 +3,7 @@ import {ST} from '../main.js';
 import {includeNoInquiry, renderAll} from '../report.js';
 /* 아래 마크업의 on* 속성이 부르는 함수는 모듈 스코프가 아니라 전역에서 찾는다.
  * src/main.js가 window에 올려두므로 여기서 import 하지 않는다. */
-import {DASH, escapeAttr, roundHalfUp} from '../utils.js';
+import {DASH, escapeAttr, inquiryScores, roundHalfUp, sameInquirySubject} from '../utils.js';
 import {CSAT_SUM_MAX, isValidGrade} from '../core/limits.js';
 import {numberLabel, studentIdxAttr} from './report-modal.js';
 
@@ -17,9 +17,13 @@ export function _getCsatRawSums(student) {
         korean: '국어', math: '수학', english: '영어', inquiry1: '탐구1', inquiry2: '탐구2'
     };
 
+    // 탐구1·2가 같은 과목이면 한 과목(탐구1)으로 본다. 등급이 탐구1에 없으면 탐구2 등급을 쓴다
+    const areas = [['korean', student.korean], ['math', student.math], ['english', student.english]];
+    if (sameInquirySubject(student)) areas.push(['inquiry1', inquiryScores(student)[0]]);
+    else areas.push(['inquiry1', student.inquiry1], ['inquiry2', student.inquiry2]);
+
     const grades = [];
-    ['korean', 'math', 'english', 'inquiry1', 'inquiry2'].forEach(subj => {
-        const score = student[subj];
+    areas.forEach(([subj, score]) => {
         if (score && isValidGrade(score.grade)) {
             // 점수만 넣는 대신 과목명도 함께 저장
             grades.push({grade: score.grade, name: subjNames[subj]});

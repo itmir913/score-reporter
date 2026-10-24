@@ -43,6 +43,33 @@ describe('_getCsatRawSums: 수능 최저 n개 합', () => {
         expect(r.sum3).toBeNull(); // 유효한 등급이 둘뿐이다
     });
 
+    it('탐구1·2가 같은 과목이면 한 번만 넣는다', () => {
+        const s = student(3, 4, 5, 1, 1);
+        s.inquiry1.subject = s.inquiry2.subject = '생활과 윤리';
+        const r = _getCsatRawSums(s);
+        expect(r.sum2).toBe(4);   // 탐구1 1등급 + 국어 3등급
+        expect(r.sum2_subj).toBe('탐구1+국어');
+        expect(r.sum4).toBe(13);
+        expect(r.sum5).toBeNull(); // 후보가 네 과목뿐이다
+    });
+
+    it('같은 과목인데 탐구1 등급이 없으면 탐구2 등급을 쓴다', () => {
+        const s = student(3, 4, 5, null, 2);
+        s.inquiry1 = {subject: '생활과 윤리', raw: 45};
+        s.inquiry2.subject = '생활과 윤리';
+        const r = _getCsatRawSums(s);
+        expect(r.sum2).toBe(5);
+        expect(r.sum2_subj).toBe('탐구1+국어');
+        expect(r.sum5).toBeNull();
+    });
+
+    it('과목명이 달라 별개 과목이면 둘 다 넣는다', () => {
+        const s = student(3, 4, 5, 1, 1);
+        s.inquiry1.subject = '생활과 윤리';
+        s.inquiry2.subject = '사회·문화';
+        expect(_getCsatRawSums(s).sum2).toBe(2);
+    });
+
     it('소수 등급은 세지 않는다', () => {
         const r = _getCsatRawSums(student(2.5, 1, 3, null, null));
         expect(r.sum2).toBe(4);   // 1등급 + 3등급
