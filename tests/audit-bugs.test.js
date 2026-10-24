@@ -54,3 +54,13 @@ describe('2차 적대 감사 버그 재현', () => {
         expect([...entries].sort(order).map(e => e.label)).toEqual(['1', '3', '(빈칸)']);
     });
 });
+
+describe('김영일 내보내기 학번', async () => {
+    const {SCHEMAS} = await import('../src/js/schema.js');
+    const make = Object.values(SCHEMAS).find(sc => sc.customGetters?.student_id)?.customGetters.student_id;
+    it('반·번호·학년에 단위가 붙어 있어도 그 숫자로 학번을 만든다', () => {
+        expect(make({grade_year: '3학년', class: '1반', number: '5번'}, '')).toBe('301005');
+        expect(make({grade_year: 3, class: 1, number: 5}, '')).toBe('301005');
+        expect(make({grade_year: '3', class: '가반', number: '5'}, '')).toBe('300005');
+    });
+});

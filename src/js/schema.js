@@ -342,8 +342,10 @@ export const SCHEMAS = {
             student_id: (s, baseValue) => {
                 if (baseValue) return baseValue;
 
+                // 「1반」「5번」「3학년」처럼 단위가 붙은 글자도 그 숫자로 읽는다(소유자 승인 2026-10-25)
                 const toSafeInt = (v, fallback = 0) => {
-                    const n = Number(v);
+                    const m = /^(\d+)(?:학년|반|번)?$/.exec(String(v ?? '').replace(/\s+/g, ''));
+                    const n = m ? Number(m[1]) : Number(v);
                     return Number.isInteger(n) && n >= 0 ? n : fallback;
                 };
 
