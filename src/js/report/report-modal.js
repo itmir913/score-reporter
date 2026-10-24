@@ -2,7 +2,7 @@ import {ST} from '../main.js';
 import {compositeScore} from '../core/aggregate.js';
 import {globalReportBasis, includeNoInquiry} from '../report.js';
 import {_getCsatRawSums} from './report-csat-sum.js';
-import {DASH, escapeAttr, toFixedHalfUp} from '../utils.js';
+import {DASH, escapeAttr, hasScore, inquiryScores, toFixedHalfUp} from '../utils.js';
 
 /* ───────────────────────────────────────────
    § 모달 제어 및 상세 정보 표시
@@ -221,9 +221,11 @@ export function showSelectedSubjectStudents(type, subjectName) {
     if (!ST.data || ST.data.length === 0) return;
 
     const filtered = ST.data.filter(s => {
-        if (type === 'kor') return s.korean?.subject === subjectName;
-        if (type === 'math') return s.math?.subject === subjectName;
-        if (type === 'inq') return s.inquiry1?.subject === subjectName || s.inquiry2?.subject === subjectName;
+        // 응시 여부는 점수로 판단한다: 과목명이 같고 점수가 하나라도 있어야 명단에 넣는다 (선택과목 통계와 같은 규칙)
+        const took = d => d?.subject === subjectName && hasScore(d);
+        if (type === 'kor') return took(s.korean);
+        if (type === 'math') return took(s.math);
+        if (type === 'inq') return inquiryScores(s).some(took);
         return false;
     });
 

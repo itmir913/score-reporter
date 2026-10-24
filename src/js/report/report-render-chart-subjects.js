@@ -2,7 +2,7 @@ import Chart from 'chart.js/auto';
 import {ST} from '../main.js';
 import {showBinStudentsModal} from './report-modal.js';
 import {basisAvailable, missingBasisMessage} from '../core/aggregate.js';
-import {escapeAttr, sameInquirySubject} from '../utils.js';
+import {escapeAttr, inquiryScores} from '../utils.js';
 import {GRADE_MAX, GRADE_MIN, isValidGrade, PCT_MAX, PCT_MIN, SCORE_BIN, STD_MAX} from '../core/limits.js';
 
 /* ───────────────────────────────────────────
@@ -90,11 +90,10 @@ export function renderSubjectsCharts() {
         // 한국사 (절대평가 등급)
         if (s.hist?.grade != null) addData('한국사', s.hist.grade, 'grade');
 
-        // 탐구 1 (과목명이 있고, 점수/등급이 null이 아닐 때)
-        if (s.inquiry1?.subject && s.inquiry1[chartBasis] != null) addData(s.inquiry1.subject, s.inquiry1[chartBasis]);
-
-        // 탐구 2 (탐구1 과 같은 과목이면 한 번만 센다. 막대 명단도 탐구1 점수로 거른다)
-        if (s.inquiry2?.subject && s.inquiry2[chartBasis] != null && !sameInquirySubject(s)) addData(s.inquiry2.subject, s.inquiry2[chartBasis]);
+        // 탐구 (탐구1·2 과목이 같으면 한 과목으로 합쳐 한 번만 센다. 막대 명단도 같은 값으로 거른다)
+        inquiryScores(s).forEach(d => {
+            if (d.subject && d[chartBasis] != null) addData(d.subject, d[chartBasis]);
+        });
     });
 
     const colors = [{bg: 'rgba(139, 92, 246, 0.7)', border: '#7c3aed'}, {
@@ -170,7 +169,7 @@ export function renderSubjectsCharts() {
                             let targetValue = null;
 
                             // 1. 과목 찾기
-                            if (subjName === '국어 종합') targetValue = s.korean?.[basis]; else if (subjName === '수학 종합') targetValue = s.math?.[basis]; else if (subjName === '영어') targetValue = s.english?.grade; else if (subjName === '한국사') targetValue = s.hist?.grade; else if (s.inquiry1?.subject === subjName) targetValue = s.inquiry1[basis]; else if (s.inquiry2?.subject === subjName) targetValue = s.inquiry2[basis];
+                            if (subjName === '국어 종합') targetValue = s.korean?.[basis]; else if (subjName === '수학 종합') targetValue = s.math?.[basis]; else if (subjName === '영어') targetValue = s.english?.grade; else if (subjName === '한국사') targetValue = s.hist?.grade; else targetValue = inquiryScores(s).find(d => d.subject === subjName)?.[basis] ?? null;
 
                             if (targetValue === null || typeof targetValue !== 'number') return false;
 

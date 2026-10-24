@@ -65,6 +65,21 @@ export function sameInquirySubject(s) {
         && hasScore(s.inquiry1) && hasScore(s.inquiry2);
 }
 
+const SCORE_KEYS = ['raw', 'std', 'pct', 'grade', 'common_raw', 'select_raw'];
+
+/* 탐구 과목 목록. 탐구1·2 과목이 같으면(sameInquirySubject) 한 과목으로 합친다:
+ * 점수 항목마다 탐구1 값이 있으면 탐구1, 없으면 탐구2 값을 쓴다. 평균·선택과목 통계·분포·n합이 모두 이것을 쓴다 */
+export function inquiryScores(s) {
+    if (sameInquirySubject(s)) {
+        const merged = {...s.inquiry1};
+        for (const k of SCORE_KEYS) {
+            if (!Number.isFinite(merged[k]) && Number.isFinite(s.inquiry2[k])) merged[k] = s.inquiry2[k];
+        }
+        return [merged];
+    }
+    return [s?.inquiry1, s?.inquiry2].filter(Boolean);
+}
+
 // HTML 속성용 안전한 이스케이프 함수
 export function escapeAttr(str) {
     if (str === null || str === undefined) return '';

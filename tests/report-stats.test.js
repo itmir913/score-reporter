@@ -141,12 +141,13 @@ describe('네 과목 모두 결시한 학생', () => {
         expect(cellTexts('csat-school-tbody').map(r => r[3])).toEqual(['응시']);
     });
 
-    it('명단 모달의 점수 합은 0 이 아니라 — 이다', () => {
+    it('과목명만 있고 점수가 없는 결시생은 선택과목 명단에 넣지 않는다', () => {
         ST.data = data();
         renderAll();
         showSelectedSubjectStudents('kor', '화법과 작문');
-        const row = cellTexts('bin-modal-tbody').find(r => r[2] === '결시');
-        expect(row[3]).toBe('—');
+        const rows = cellTexts('bin-modal-tbody');
+        expect(rows.some(r => r[2] === '결시')).toBe(false);
+        expect(rows.length).toBeGreaterThan(0);
     });
 
     it('기준 점수가 아무에게도 없으면 이전 분포를 남기지 않는다', () => {

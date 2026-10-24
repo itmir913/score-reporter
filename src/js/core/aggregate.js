@@ -1,4 +1,4 @@
-import {sameInquirySubject} from '../utils.js';
+import {inquiryScores} from '../utils.js';
 
 const BASIS_LABEL = {raw: '원점수', std: '표준점수', pct: '백분위'};
 
@@ -9,10 +9,9 @@ const BASIS_LABEL = {raw: '원점수', std: '표준점수', pct: '백분위'};
 ─────────────────────────────────────────── */
 
 /** 이 기준(raw·std·pct)의 탐구평균. 값이 있는 탐구가 없으면 null.
- *  과목명이 같은 두 칸은 자료 중복이므로 탐구1 하나로 본다. */
+ *  과목명이 같은 두 칸은 자료 중복이므로 한 과목으로 본다(그 기준 값이 탐구1에 없으면 탐구2 값). */
 export function inquiryAvg(s, basis) {
-    const subjects = sameInquirySubject(s) ? ['inquiry1'] : ['inquiry1', 'inquiry2'];
-    const vals = subjects.map(subj => s?.[subj]?.[basis]).filter(Number.isFinite);
+    const vals = inquiryScores(s).map(d => d[basis]).filter(Number.isFinite);
     if (vals.length === 0) return null;
     return vals.reduce((a, b) => a + b, 0) / vals.length;
 }

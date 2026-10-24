@@ -67,3 +67,17 @@ describe('compositeScore', () => {
         expect(lacksInquiryOnly(s, 'std')).toBe(false);
     });
 });
+
+describe('탐구1·2가 같은 과목일 때 (D2)', () => {
+    it('그 기준 값이 탐구1에 없으면 탐구2 값을 쓴다', () => {
+        const s = st({inq1: subj('물리학Ⅰ', 40, null), inq2: subj('물리학Ⅰ', 40, 65)});
+        expect(inquiryAvg(s, 'raw')).toBe(40);
+        expect(inquiryAvg(s, 'std')).toBe(65);
+        expect(lacksInquiryOnly(s, 'std')).toBe(false);
+    });
+
+    it('탐구1 값이 있으면 탐구1 값을 쓴다', () => {
+        const s = st({inq1: subj('물리학Ⅰ', 40, 60), inq2: subj('물리학Ⅰ', 30, 65)});
+        expect(inquiryAvg(s, 'std')).toBe(60);
+    });
+});

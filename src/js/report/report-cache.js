@@ -1,5 +1,5 @@
 import {basisAvailable, compositeScore, lacksInquiryOnly} from '../core/aggregate.js';
-import {sameInquirySubject} from '../utils.js';
+import {hasScore, inquiryScores} from '../utils.js';
 import {_getCsatRawSums} from './report-csat-sum.js';
 
 /* ───────────────────────────────────────────
@@ -29,6 +29,8 @@ export function computeRenderCache(data, basis, {includeNoInquiry = false} = {})
     /* ── 선택과목 통계 누적 헬퍼 ── */
     const accSubject = (statsObj, subjectName, scoreObj) => {
         if (!subjectName || typeof subjectName !== 'string' || !subjectName.trim()) return;
+        // 응시 여부는 점수로 판단한다. 과목명만 있고 점수가 하나도 없으면 세지 않는다
+        if (!hasScore(scoreObj)) return;
         if (!statsObj[subjectName]) {
             statsObj[subjectName] = {
                 count: 0,
@@ -81,9 +83,8 @@ export function computeRenderCache(data, basis, {includeNoInquiry = false} = {})
         /* 3. 선택과목별 집계 */
         accSubject(korSubjectStats, s.korean?.subject, s.korean);
         accSubject(mathSubjectStats, s.math?.subject, s.math);
-        accSubject(inqSubjectStats, s.inquiry1?.subject, s.inquiry1);
-        // 탐구1·탐구2 과목이 같으면 한 학생을 두 번 세지 않는다 (점수는 탐구1 것)
-        if (!sameInquirySubject(s)) accSubject(inqSubjectStats, s.inquiry2?.subject, s.inquiry2);
+        // 탐구1·탐구2 과목이 같으면 한 과목으로 합쳐 한 번만 센다
+        inquiryScores(s).forEach(d => accSubject(inqSubjectStats, d.subject, d));
 
         /* 4. 수능 최저 등급합 */
         csatSums.push(_getCsatRawSums(s));
