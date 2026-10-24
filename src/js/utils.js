@@ -28,8 +28,9 @@ export function toFixedHalfUp(v, d = 0) {
 /** 점수 자리에 값이 없을 때 쓰는 표시. 하이픈(-)은 음수·뺄셈과 헷갈려 긴 대시를 쓴다 */
 export const DASH = '—';
 
+/* 표시용 숫자. 숫자 문자열도 받는다. 사사오입은 toFixedHalfUp 과 같다 */
 export function fmt(v, d = 1) {
-    return v !== null && !isNaN(v) ? parseFloat(v).toFixed(d) : DASH;
+    return toFixedHalfUp(v === null || v === undefined || v === '' ? NaN : Number(v), d);
 }
 
 export function dlBlob(blob, name) {

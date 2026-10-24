@@ -4,6 +4,7 @@ import {includeNoInquiry, renderAll} from '../report.js';
 /* 아래 마크업의 on* 속성이 부르는 함수는 모듈 스코프가 아니라 전역에서 찾는다.
  * src/main.js가 window에 올려두므로 여기서 import 하지 않는다. */
 import {DASH, escapeAttr, roundHalfUp} from '../utils.js';
+import {CSAT_SUM_MAX, isValidGrade} from '../core/limits.js';
 import {numberLabel, studentIdxAttr} from './report-modal.js';
 
 /* ───────────────────────────────────────────
@@ -19,14 +20,14 @@ export function _getCsatRawSums(student) {
     const grades = [];
     ['korean', 'math', 'english', 'inquiry1', 'inquiry2'].forEach(subj => {
         const score = student[subj];
-        if (score && typeof score.grade === 'number' && score.grade > 0 && score.grade <= 9) {
+        if (score && isValidGrade(score.grade)) {
             // 점수만 넣는 대신 과목명도 함께 저장
             grades.push({grade: score.grade, name: subjNames[subj]});
         }
     });
 
     // 등급 기준 오름차순 정렬 (낮은 등급이 먼저 오도록)
-    // grade는 14행에서 이미 1~9 정수로 걸러졌으므로 직접 비교
+    // grade는 위에서 isValidGrade(정수)로 걸러졌으므로 직접 비교
     grades.sort((a, b) => a.grade - b.grade);
 
     // n개의 과목 합산 및 이름 조합 헬퍼 함수
@@ -169,7 +170,7 @@ export function renderCsatSchoolTable() {
 
 /* ── 전체 통계표 (누적 인원) ── */
 export function renderCsatSummaryTable(cache) {
-    const maxSum = 15;
+    const maxSum = CSAT_SUM_MAX;
     const sums2 = Array(maxSum + 1).fill(0);
     const sums3 = Array(maxSum + 1).fill(0);
     const sums4 = Array(maxSum + 1).fill(0);

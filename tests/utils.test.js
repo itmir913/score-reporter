@@ -61,6 +61,15 @@ describe('fmt: 표에 찍을 숫자 문자열', () => {
         expect(fmt(undefined)).toBe('—');
         expect(fmt(NaN)).toBe('—');
     });
+    it('사사오입한다(2진 오차로 내리지 않는다)', () => {
+        expect(fmt(80.35)).toBe('80.4');
+        expect(fmt(1.005, 2)).toBe('1.01');
+    });
+
+    it('숫자 문자열도 받는다', () => {
+        expect(fmt('80.35')).toBe('80.4');
+        expect(fmt('')).toBe('—');
+    });
 });
 
 describe('escapeAttr: HTML 속성 이스케이프', () => {

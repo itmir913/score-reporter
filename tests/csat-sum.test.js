@@ -43,6 +43,12 @@ describe('_getCsatRawSums: 수능 최저 n개 합', () => {
         expect(r.sum3).toBeNull(); // 유효한 등급이 둘뿐이다
     });
 
+    it('소수 등급은 세지 않는다', () => {
+        const r = _getCsatRawSums(student(2.5, 1, 3, null, null));
+        expect(r.sum2).toBe(4);   // 1등급 + 3등급
+        expect(r.sum3).toBeNull();
+    });
+
     it('등급이 없는 학생은 모든 합이 null이다', () => {
         const r = _getCsatRawSums(student(null, null, null, null, null));
         expect(r.sum2).toBeNull();

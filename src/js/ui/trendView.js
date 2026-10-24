@@ -4,7 +4,7 @@ import {ST} from '../main.js';
 import {includeNoInquiry} from '../report.js';
 import {sortedExams} from '../exams/examStore.js';
 import {personTrend, schoolTrend} from '../trend/trend.js';
-import {DASH, toFixedHalfUp} from '../utils.js';
+import {DASH, fmt} from '../utils.js';
 import {showStudentRecord} from '../report/report-modal.js';
 import {clear, el} from './dom.js';
 
@@ -15,7 +15,6 @@ import {clear, el} from './dom.js';
    가로축은 회차 순서(상단에서 바꾼 순서)다. 값이 없는 회차는 선이 끊기고 표는 — 이다.
 ─────────────────────────────────────────── */
 
-const fmt = (v, d = 1) => (Number.isFinite(v) ? toFixedHalfUp(v, d) : DASH);
 /* 선택한 학생. linkStudents 의 결과는 그릴 때마다 새로 만들어지고, 회차 이름·순서가 바뀌면 키도 바뀐다.
  * 그래서 사람이 아니라 그 사람의 학생 레코드(객체)들을 기억해 두고, 다시 그릴 때 그 레코드를 가진 사람을 찾는다 */
 let chosenRecords = null;

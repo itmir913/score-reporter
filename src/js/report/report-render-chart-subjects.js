@@ -3,16 +3,19 @@ import {ST} from '../main.js';
 import {showBinStudentsModal} from './report-modal.js';
 import {basisAvailable, missingBasisMessage} from '../core/aggregate.js';
 import {escapeAttr, sameInquirySubject} from '../utils.js';
+import {GRADE_MAX, GRADE_MIN, isValidGrade, PCT_MAX, PCT_MIN, SCORE_BIN, STD_MAX} from '../core/limits.js';
 
 /* ───────────────────────────────────────────
    § 과목별 성적 분포 종합 (등급 or 백분위)
 ─────────────────────────────────────────── */
 export function renderSubjectsCharts() {
     if (!ST.data) return; // 파일을 새로 올리는 중에는 데이터가 비어 있다
-    const MAX_GRADE = 9;
     const grid = document.getElementById('chart-grid');
     grid.innerHTML = '';
-    const chartBasis = document.getElementById('chart-basis').value; // 'grade', 'pct', 'std'
+    const basisSelect = document.getElementById('chart-basis');
+    const gradeOption = basisSelect.querySelector('option[value="grade"]');
+    if (gradeOption) gradeOption.textContent = `등급 분포 (${GRADE_MIN}~${GRADE_MAX})`;
+    const chartBasis = basisSelect.value; // 'grade', 'pct', 'std'
     // 이 차트의 기준 선택도 전역 기준과 같은 규칙: 값이 없으면 알리고 다른 기준으로 대신하지 않는다
     if (chartBasis !== 'grade' && !basisAvailable(ST.data, chartBasis)) {
         const note = document.createElement('p');
@@ -42,8 +45,8 @@ export function renderSubjectsCharts() {
 
         if (!dataCounts[subjName]) {
             // [수정된 부분 1] 기준(Basis)에 따라 배열의 크기를 동적으로 설정 (표준점수는 20칸)
-            let arrayLength = 10; // 기본 백분위
-            if (finalBasis === 'grade') arrayLength = MAX_GRADE; else if (finalBasis === 'std') arrayLength = 20;
+            let arrayLength = Math.ceil((PCT_MAX - PCT_MIN) / SCORE_BIN); // 기본 백분위
+            if (finalBasis === 'grade') arrayLength = GRADE_MAX - GRADE_MIN + 1; else if (finalBasis === 'std') arrayLength = Math.ceil(STD_MAX / SCORE_BIN);
 
             dataCounts[subjName] = {
                 counts: Array(arrayLength).fill(0), basis: finalBasis, originalName: subjName // 필터링 시 과목 식별용
@@ -51,23 +54,23 @@ export function renderSubjectsCharts() {
         }
 
         if (finalBasis === 'grade') {
-            // 등급은 1~9 정수만 막대에 센다. 막대를 눌러 여는 명단도 같은 규칙을 쓴다(소수 등급이 막대에서만 빠지지 않게)
-            if (Number.isInteger(value) && value >= 1 && value <= MAX_GRADE) dataCounts[subjName].counts[value - 1]++;
+            // 등급은 GRADE_MIN~GRADE_MAX 정수만 막대에 센다. 막대를 눌러 여는 명단도 같은 규칙을 쓴다(소수 등급이 막대에서만 빠지지 않게)
+            if (isValidGrade(value)) dataCounts[subjName].counts[value - GRADE_MIN]++;
         } else if (finalBasis === 'pct') {
-            // 백분위(pct) 처리 로직: 기존 유지 (0 ~ 100)
-            if (value >= 0 && value <= 100) {
-                let bin = Math.floor(value / 10);
-                if (bin === 10) bin = 9;
+            // 백분위(pct) 처리 로직: PCT_MIN ~ PCT_MAX, 만점은 마지막 구간에 넣는다
+            if (value >= PCT_MIN && value <= PCT_MAX) {
+                const lastBin = dataCounts[subjName].counts.length - 1;
+                const bin = Math.min(Math.floor((value - PCT_MIN) / SCORE_BIN), lastBin);
                 dataCounts[subjName].counts[bin]++;
             }
         } else if (finalBasis === 'std') {
             // 표준점수(std) 처리 로직
             if (value >= 0) {
-                let bin = Math.floor(value / 10);
-                // 배열 길이가 20이 되었으므로 135점은 bin 13에 정확히 집계됨
+                let bin = Math.floor(value / SCORE_BIN);
+                // 구간이 STD_MAX / SCORE_BIN 개이므로 135점은 bin 13에 정확히 집계됨
                 const maxBinIndex = dataCounts[subjName].counts.length - 1;
                 if (bin > maxBinIndex) {
-                    bin = maxBinIndex; // 200점을 초과하는 기형적 극단값 방어
+                    bin = maxBinIndex; // STD_MAX 를 초과하는 기형적 극단값 방어
                 }
                 dataCounts[subjName].counts[bin]++;
             }
@@ -107,17 +110,23 @@ export function renderSubjectsCharts() {
         // [수정된 부분 2] X축 라벨을 기준(Basis)에 맞게 동적으로 생성
         let currentLabels = [];
         if (basis === 'grade') {
-            currentLabels = Array.from({length: MAX_GRADE}, (_, i) => (i + 1).toString());
+            currentLabels = Array.from({length: GRADE_MAX - GRADE_MIN + 1}, (_, i) => (i + GRADE_MIN).toString());
         } else if (basis === 'std') {
-            // 표준점수용 20개 구간 생성 ('0~9' 부터 '190~200' 까지)
-            currentLabels = Array.from({length: 20}, (_, i) => {
-                const min = i * 10;
-                const max = (i === 19) ? 200 : (i * 10 + 9);
+            // 표준점수 구간 ('0~9' 부터 마지막 구간은 STD_MAX 까지)
+            const n = Math.ceil(STD_MAX / SCORE_BIN);
+            currentLabels = Array.from({length: n}, (_, i) => {
+                const min = i * SCORE_BIN;
+                const max = (i === n - 1) ? STD_MAX : (min + SCORE_BIN - 1);
                 return `${min}~${max}`;
             });
         } else {
-            // 백분위용 10개 구간
-            currentLabels = ['0~9', '10~19', '20~29', '30~39', '40~49', '50~59', '60~69', '70~79', '80~89', '90~100'];
+            // 백분위 구간 (마지막 구간은 PCT_MAX 까지)
+            const n = Math.ceil((PCT_MAX - PCT_MIN) / SCORE_BIN);
+            currentLabels = Array.from({length: n}, (_, i) => {
+                const min = PCT_MIN + i * SCORE_BIN;
+                const max = (i === n - 1) ? PCT_MAX : (min + SCORE_BIN - 1);
+                return `${min}~${max}`;
+            });
         }
 
         // [수정된 부분 3] 단위 및 라벨 텍스트 분기 처리 (표준점수 추가)
@@ -167,12 +176,12 @@ export function renderSubjectsCharts() {
 
                             // 2. 등급 기준일 때
                             if (basis === 'grade') {
-                                return Number.isInteger(targetValue) && targetValue === idx + 1;
+                                return isValidGrade(targetValue) && targetValue === idx + GRADE_MIN;
                             } else {
                                 // 집계 시 사용한 floor 기반 binning과 동일한 로직으로 비교
                                 // (정수 범위 비교는 89.5 같은 소수점 값을 잘못 걸러냄)
                                 const maxIndex = currentLabels.length - 1;
-                                let bin = Math.floor(targetValue / 10);
+                                let bin = Math.floor((targetValue - (basis === 'pct' ? PCT_MIN : 0)) / SCORE_BIN);
                                 if (bin > maxIndex) bin = maxIndex;
                                 return bin === idx;
                             }

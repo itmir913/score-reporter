@@ -1,4 +1,5 @@
 import {exceljsTo2DArray} from '../main.js';
+import {GRADE_MAX, GRADE_MIN, PCT_MAX, PCT_MIN, RAW_MAX} from '../core/limits.js';
 
 /* ───────────────────────────────────────────
    § 양식 자동 매칭 (헤더 지문)
@@ -76,12 +77,13 @@ export function matchFormats(ws, schemas) {
     return {candidates, autoId: candidates.length === 1 ? candidates[0] : null};
 }
 
-/* 값 범위 교차검증. 자동으로 선택한 양식이라도 열이 엉뚱하면 값이 범위를 벗어난다 */
+/* 값 범위 교차검증. 자동으로 선택한 양식이라도 열이 엉뚱하면 값이 범위를 벗어난다.
+ * 상한은 core/limits.js 에서 가져온다. 등급은 범위만 본다(2.5 같은 소수 등급은 범위 안이면 경고하지 않는다.
+ * 소수 등급을 집계에서 빼는 것은 isValidGrade 를 쓰는 쪽의 일이다) */
 const RANGES = {
-    pct: [0, 100],
-    grade: [1, 9],
+    pct: [PCT_MIN, PCT_MAX],
+    grade: [GRADE_MIN, GRADE_MAX],
 };
-const RAW_MAX = {korean: 100, math: 100, english: 100, inquiry1: 50, inquiry2: 50, hist: 50, fl2: 50};
 
 const SUBJECT_LABEL = {korean: '국어', math: '수학', english: '영어', inquiry1: '탐구1', inquiry2: '탐구2', hist: '한국사', fl2: '제2외국어'};
 const KIND_LABEL = {raw: '원점수', pct: '백분위', grade: '등급'};
