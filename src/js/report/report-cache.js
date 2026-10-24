@@ -1,6 +1,7 @@
 import {basisAvailable, compositeScore, lacksInquiryOnly} from '../core/aggregate.js';
 import {hasScore, inquiryScores} from '../utils.js';
 import {csatSumsOf} from './report-csat-sum.js';
+import {isValidGrade} from '../core/limits.js';
 
 /* ───────────────────────────────────────────
    § renderAll() 공용 캐시 계산
@@ -58,7 +59,8 @@ export function computeRenderCache(data, basis, {includeNoInquiry = false} = {})
             d.sumPct += scoreObj.pct;
             d.validPctCount++;
         }
-        if (typeof scoreObj.grade === 'number') {
+        // 등급은 정수 1~9만 센다(isValidGrade). 0·소수 등급을 평균에 넣지 않는다
+        if (isValidGrade(scoreObj.grade)) {
             d.sumGrade += scoreObj.grade;
             d.validGradeCount++;
         }
@@ -71,7 +73,7 @@ export function computeRenderCache(data, basis, {includeNoInquiry = false} = {})
         const engGrade = s.english?.grade;
         if (Number.isFinite(korVal)) korScores.push(korVal);
         if (Number.isFinite(mathVal)) mathScores.push(mathVal);
-        if (Number.isFinite(engGrade)) engGrades.push(engGrade);
+        if (isValidGrade(engGrade)) engGrades.push(engGrade);
 
         /* 2. 합산 점수 = 국어 + 수학 + 탐구평균 (상위N · 분포 공용)
          *    국어·수학이 없거나 탐구가 없으면(옵션을 켜지 않은 한) null 로 두어 순위·분포에서 뺀다 */

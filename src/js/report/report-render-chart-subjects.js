@@ -2,7 +2,7 @@ import Chart from 'chart.js/auto';
 import {ST} from '../main.js';
 import {showBinStudentsModal} from './report-modal.js';
 import {basisAvailable, missingBasisMessage} from '../core/aggregate.js';
-import {escapeAttr, inquiryScores} from '../utils.js';
+import {escapeAttr, hasScore, inquiryScores} from '../utils.js';
 import {GRADE_MAX, GRADE_MIN, isValidGrade, PCT_MAX, PCT_MIN, SCORE_BIN, STD_MAX} from '../core/limits.js';
 
 /* ───────────────────────────────────────────
@@ -169,7 +169,7 @@ export function renderSubjectsCharts() {
                             let targetValue = null;
 
                             // 1. 과목 찾기
-                            if (subjName === '국어 종합') targetValue = s.korean?.[basis]; else if (subjName === '수학 종합') targetValue = s.math?.[basis]; else if (subjName === '영어') targetValue = s.english?.grade; else if (subjName === '한국사') targetValue = s.hist?.grade; else targetValue = inquiryScores(s).find(d => d.subject === subjName)?.[basis] ?? null;
+                            if (subjName === '국어 종합') targetValue = s.korean?.[basis]; else if (subjName === '수학 종합') targetValue = s.math?.[basis]; else if (subjName === '영어') targetValue = s.english?.grade; else if (subjName === '한국사') targetValue = s.hist?.grade; else targetValue = inquiryScores(s).find(d => d.subject === subjName && hasScore(d))?.[basis] ?? null;
 
                             if (targetValue === null || typeof targetValue !== 'number') return false;
 

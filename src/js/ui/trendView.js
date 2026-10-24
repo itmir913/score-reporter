@@ -7,7 +7,7 @@ import {personTrend, schoolTrend} from '../trend/trend.js';
 import {AREAS, areaScore, changeText, changeVsPrev, csatTimeline, gapText, MERGED, nextGradeGap, rawOf, strengths, 과와} from '../trend/personal.js';
 import {applyCsatSubjects, CSAT_INQUIRY_MODES, CSAT_SUBJECTS, csatSumsOf, getCsatSubjects} from '../report/report-csat-sum.js';
 import {PCT_MAX, PCT_MIN} from '../core/limits.js';
-import {DASH, fmt, roundHalfUp} from '../utils.js';
+import {DASH, fmt} from '../utils.js';
 import {showStudentRecord} from '../report/report-modal.js';
 import {clear, el} from './dom.js';
 
@@ -289,7 +289,8 @@ function analysisBlock(rows, exams) {
             el('h4', {class: 'text-lg font-bold', text: '회차 분석'}), chips,
         ]));
         if (!r) return;
-        const {ranked, others} = strengths(r.student);
+        const {items} = strengths(r.student);
+        const ranked = items.filter(x => x.pct !== null);
         // 다음 등급까지: 같은 회차·같은 과목 응시자 중 더 높은 등급의 최저 원점수로 어림한다
         const exam = exams.find(e => e.key === r.key);
         const gap = (area) => {
@@ -308,11 +309,15 @@ function analysisBlock(rows, exams) {
         const table = el('table', {class: 'w-full text-base', attrs: {id: 'trend-strength-table'}}, [
             el('thead', {}, [el('tr', {}, [th('영역'), th('과목명'), th('백분위', 'text-right'), th('등급', 'text-right'), nextHead])]),
             el('tbody', {}, [
-                // 바로 아래 과목과 차이가 작으면 과목명 아랫줄에 적는다. 그 안의 차이로 강약을 나누지 않는다
-                ...ranked.map(x => el('tr', {}, [td(x.label, 'align-top'),
-                    twoLines(x.subject || DASH, x.similarToNext ? `≈ ${x.next.name}${과와(x.next.name)} 비슷함(차이 ${roundHalfUp(x.next.diff, 1)})` : ''),
-                    td(plain(x.pct), 'text-right font-semibold align-top'), td(plain(x.grade), 'text-right align-top'), gap(x.area)])),
-                ...others.map(x => el('tr', {}, [td(x.label, 'align-top'), td(x.subject || DASH, 'align-top'), td(x.noPct ? '백분위 없음' : DASH, 'text-right text-ink-soft align-top'), td(plain(x.grade), 'text-right align-top'), gap(x.area)])),
+                // 성적표와 같은 영역 차례. 백분위 차가 작은 과목은 과목명 아랫줄에 적는다(그 안의 차이로 강약을 나누지 않는다)
+                ...items.map(x => {
+                    const similar = (x.similar ?? []).map(y => y.name);
+                    const last = similar.at(-1);
+                    const note = similar.length ? `≈ ${similar.join(', ')}${과와(last)} 비슷함` : '';
+                    return el('tr', {}, [td(x.label, 'align-top'), twoLines(x.subject || DASH, note),
+                        x.pct !== null ? td(plain(x.pct), 'text-right font-semibold align-top') : td(x.noPct ? '백분위 없음' : DASH, 'text-right text-ink-soft align-top'),
+                        td(plain(x.grade), 'text-right align-top'), gap(x.area)]);
+                }),
             ]),
         ]);
         block.append(el('div', {class: 'mt-3 grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start [&>*]:min-w-0'}, [

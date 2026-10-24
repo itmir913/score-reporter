@@ -1,6 +1,7 @@
 import {compositeScore, inquiryAvg} from '../core/aggregate.js';
 import {sortedExams} from '../exams/examStore.js';
 import {roundHalfUp} from '../utils.js';
+import {isValidGrade} from '../core/limits.js';
 
 /* ───────────────────────────────────────────
    § 회차별 통계 (계산만, 화면 없음)
@@ -13,6 +14,13 @@ const avg = (vals) => {
     return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
 };
 
+/** 그 기준의 값. 등급이면 정수 1~9만(isValidGrade), 그 밖의 등급 값은 빈칸으로 본다 */
+const scoreAt = (d, basis) => {
+    const v = d?.[basis];
+    if (basis === 'grade') return isValidGrade(v) ? v : null;
+    return Number.isFinite(v) ? v : null;
+};
+
 /** 한 회차의 전교 요약: 과목별 평균, 합산 평균, 합산 대상 인원 */
 export function examSummary(exam, basis, {includeNoInquiry = false} = {}) {
     const s = exam.students;
@@ -22,10 +30,11 @@ export function examSummary(exam, basis, {includeNoInquiry = false} = {}) {
         students: s.length,
         ranked: totals.filter(Number.isFinite).length,
         total: avg(totals),
-        kor: avg(s.map(x => x.korean?.[basis])),
-        math: avg(s.map(x => x.math?.[basis])),
+        kor: avg(s.map(x => scoreAt(x.korean, basis))),
+        math: avg(s.map(x => scoreAt(x.math, basis))),
         inq: avg(s.map(x => inquiryAvg(x, basis))),
-        engGrade: avg(s.map(x => x.english?.grade)),
+        // 등급은 정수 1~9만 평균에 넣는다(isValidGrade)
+        engGrade: avg(s.map(x => (isValidGrade(x.english?.grade) ? x.english.grade : null))),
     };
 }
 
@@ -62,10 +71,10 @@ export function personTrend(person, exams, basis, options) {
             key: exam.key,
             student: s,
             total: compositeScore(s, basis, options),
-            kor: s.korean?.[basis] ?? null,
-            math: s.math?.[basis] ?? null,
+            kor: scoreAt(s.korean, basis),
+            math: scoreAt(s.math, basis),
             inq: inquiryAvg(s, basis),
-            engGrade: s.english?.grade ?? null,
+            engGrade: isValidGrade(s.english?.grade) ? s.english.grade : null,
             rank: ranks.get(index) ?? null,
             of,
         };

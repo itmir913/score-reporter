@@ -74,29 +74,31 @@ describe('직전 응시 회차 대비', () => {
 });
 
 describe('강약점', () => {
-    it('국어·수학·탐구를 백분위 순으로, 영어·한국사는 등급만 따로 둔다', () => {
+    it('성적표와 같은 영역 차례로 늘어놓고, 영어·한국사는 등급만 둔다', () => {
         const r = strengths(stu({korean: sc('화법과 작문', 70, 4), math: sc('미적분', 92, 2), inquiry1: sc('물리학Ⅰ', 81, 3), english: {raw: 85, grade: 2}, hist: {raw: 40, grade: 2}}));
-        expect(r.ranked.map(x => x.area)).toEqual(['math', 'inquiry1', 'korean']);
-        expect(r.others.map(x => [x.area, x.grade])).toEqual([['english', 2], ['hist', 2]]);
+        expect(r.items.map(x => x.area)).toEqual(['korean', 'math', 'english', 'inquiry1', 'hist']);
+        expect(r.items.find(x => x.area === 'english')).toMatchObject({pct: null, grade: 2, noPct: false});
     });
 
-    it('이웃 차가 기준 이하이면 ≈ 표시만 하고 연쇄로 묶지 않는다(92·88·84)', () => {
+    it('백분위 차가 기준 이하인 다른 과목을 적는다(묶지 않음, 92·88·84)', () => {
         const r = strengths(stu({korean: sc('화법과 작문', 84, 2), math: sc('미적분', 92, 2), inquiry1: sc('물리학Ⅰ', 88, 2)}));
-        expect(r.ranked.map(x => x.pct)).toEqual([92, 88, 84]);
-        expect(r.ranked.map(x => x.similarToNext)).toEqual([true, true, false]);
+        const names = (area) => r.items.find(x => x.area === area).similar.map(y => y.name);
+        expect(names('math')).toEqual(['물리학Ⅰ']);
+        expect(names('inquiry1')).toEqual(['화법과 작문', '미적분']);
+        expect(names('korean')).toEqual(['물리학Ⅰ']);
     });
 
-    it('응시하지 않은 과목은 제외하고, 백분위 없는 과목은 따로 적는다', () => {
+    it('응시하지 않은 과목은 제외하고, 백분위 없는 과목은 「백분위 없음」이다', () => {
         const r = strengths(stu({korean: sc('화법과 작문', 80, 3), math: blank('미적분'), inquiry1: sc('물리학Ⅰ', null, 4)}));
-        expect(r.ranked.map(x => x.area)).toEqual(['korean']);
-        expect(r.others).toEqual([{area: 'inquiry1', label: '탐구1', subject: '물리학Ⅰ', grade: 4, noPct: true}]);
+        expect(r.items.map(x => x.area)).toEqual(['korean', 'inquiry1']);
+        expect(r.items[1]).toMatchObject({pct: null, noPct: true, grade: 4});
     });
 
     it('탐구 두 과목 차가 기준을 넘으면 그 차를 알린다. 같은 과목이면 하나로 본다', () => {
         expect(strengths(stu({inquiry1: sc('물리학Ⅰ', 90, 2), inquiry2: sc('화학Ⅰ', 60, 5)})).inquiryGap).toBe(30);
         expect(strengths(stu({inquiry1: sc('물리학Ⅰ', 90, 2), inquiry2: sc('화학Ⅰ', 87, 2)})).inquiryGap).toBeNull();
         const same = strengths(stu({inquiry1: sc('생활과 윤리', 80, 3), inquiry2: sc('생활과 윤리', 60, 5)}));
-        expect(same.ranked.filter(x => x.area.startsWith('inquiry'))).toHaveLength(1);
+        expect(same.items.filter(x => x.area.startsWith('inquiry'))).toHaveLength(1);
         expect(same.inquiryGap).toBeNull();
     });
 });
