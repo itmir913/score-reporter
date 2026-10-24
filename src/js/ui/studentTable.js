@@ -4,6 +4,7 @@ import {clear, el} from './dom.js';
 import {applyQuery, describeFilter} from './grid/query.js';
 import {buildRegistry} from './grid/registry.js';
 import {createFilters} from './grid/filters.js';
+import {openColumns} from './grid/columns.js';
 
 /* ───────────────────────────────────────────
    § 학생 표 (GridTable + GridTool)
@@ -222,12 +223,8 @@ export function mountStudentTable({root, onOpen}) {
         disable('pin-more', 보이는고정 >= view.columns.length || !table.canPinMore());
         disable('reset-sorts', view.sorts.length === 0);
         disable('reset-filters', view.filters.length === 0);
-        // 열 선택·열 초기화·고정·인쇄는 다음 단계(3b·3c)에서 잇는다
-        disable('reset-columns', true);
-        disable('columns', true);
+        // 인쇄는 다음 단계(3c)에서 잇는다
         disable('print', true);
-        disable('pin-less', true);
-        disable('pin-more', true);
     }
 
     // ── 쪽 넘김 ──
@@ -268,6 +265,24 @@ export function mountStudentTable({root, onOpen}) {
     dom.page.addEventListener('blur', 쪽번호적용);
 
     get('reset-sorts').addEventListener('click', () => updateView({sorts: []}));
+    /* 「+」와 「−」는 지금 보이는 수에서 움직인다. 천장이 5인데 셋만 들어가는 화면에서
+     * 「−」가 천장을 4로 내리면 눌렀는데 아무 일도 안 일어난다 */
+    const 고정조정 = (step) => updateView({pinned: Math.max(0, Math.min(view.columns.length, 고정보이는수() + step))});
+    get('pin-less').addEventListener('click', () => 고정조정(-1));
+    get('pin-more').addEventListener('click', () => 고정조정(1));
+    // 열 구성·순서·너비를 한꺼번에 되돌린다. 하나씩 되돌리게 하면 아무도 안 쓴다
+    get('reset-columns').addEventListener('click', () => {
+        const base = emptyView(fields);
+        updateView({columns: base.columns, widths: base.widths, pinned: base.pinned});
+    });
+    get('columns').addEventListener('click', () => {
+        openColumns(document.getElementById('grid-columns'), {
+            registry,
+            columns: view.columns,
+            pinned: view.pinned,
+            onApply: ({columns, pinned}) => { view = {...view, columns, pinned}; refresh(); },
+        });
+    });
     get('reset-filters').addEventListener('click', () => updateView({filters: []}));
 
     // ── 열별 값 목록(깔때기) ──

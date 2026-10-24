@@ -152,3 +152,30 @@ describe('저장·리스너', () => {
         if (row) expect(onOpen).toHaveBeenCalledWith(expect.any(Number));
     });
 });
+
+describe('열 선택·열 초기화·열 고정', () => {
+    it('열 선택에서 열을 제외하고 적용하면 표에서 빠지고, 열 초기화로 돌아온다', () => {
+        HTMLDialogElement.prototype.showModal ??= function () { this.open = true; };
+        HTMLDialogElement.prototype.close ??= function () { this.open = false; };
+        const t = mount();
+        t.render(many(10), 'raw');
+        g('columns').click();
+        const dialog = document.getElementById('grid-columns');
+        [...dialog.querySelectorAll('button[aria-pressed]')].find(b => b.textContent.includes('한국사')).click();
+        [...dialog.querySelectorAll('button')].find(b => b.textContent === '적용').click();
+        expect(t.view.columns).not.toContain('hist');
+        g('reset-columns').click();
+        expect(t.view.columns).toContain('hist');
+        expect(t.view.pinned).toBe(3);
+    });
+
+    it('− 를 누르면 고정 열이 하나 줄고, 0 이면 − 를 쓸 수 없다', () => {
+        const t = mount();
+        t.render(many(10), 'raw');
+        for (let i = 0; i < 3; i += 1) g('pin-less').click();
+        expect(t.view.pinned).toBe(0);
+        expect(g('pin-less').disabled).toBe(true);
+        g('pin-more').click();
+        expect(t.view.pinned).toBe(1);
+    });
+});

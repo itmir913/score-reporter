@@ -142,7 +142,7 @@ export function openColumns(dialog, { registry, columns, pinned, onApply }) {
     ]),
     el('section', {}, [
       el('h3', { class: 'text-lg font-bold tracking-tight', text: '데이터에 있는 열' }),
-      el('p', { class: 'text-base text-ink-soft', text: '누르면 켜지고 꺼집니다. 해석하지 못한 열도 그대로 쓸 수 있습니다.' }),
+      el('p', { class: 'text-base text-ink-soft', text: '누르면 켜지고 꺼집니다.' }),
       pickList
     ])
   ]);
