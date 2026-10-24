@@ -1,6 +1,6 @@
 import {basisAvailable, compositeScore, lacksInquiryOnly} from '../core/aggregate.js';
 import {hasScore, inquiryScores} from '../utils.js';
-import {_getCsatRawSums} from './report-csat-sum.js';
+import {csatSumsOf} from './report-csat-sum.js';
 
 /* ───────────────────────────────────────────
    § renderAll() 공용 캐시 계산
@@ -23,7 +23,7 @@ export function computeRenderCache(data, basis, {includeNoInquiry = false} = {})
     const korSubjectStats = {};
     const mathSubjectStats = {};
     const inqSubjectStats = {};
-    const csatSums = [];  // _getCsatRawSums(s) 결과, data와 동일 인덱스
+    const csatSums = [];  // csatSumsOf(s) 결과(메모), data와 동일 인덱스
     let noInquiryCount = 0;  // 국어·수학은 있는데 탐구가 없는 학생 수
 
     /* ── 선택과목 통계 누적 헬퍼 ── */
@@ -87,7 +87,7 @@ export function computeRenderCache(data, basis, {includeNoInquiry = false} = {})
         inquiryScores(s).forEach(d => accSubject(inqSubjectStats, d.subject, d));
 
         /* 4. 수능 최저 등급합 */
-        csatSums.push(_getCsatRawSums(s));
+        csatSums.push(csatSumsOf(s));
     });
 
     return {

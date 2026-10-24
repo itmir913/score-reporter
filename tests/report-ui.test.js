@@ -439,12 +439,13 @@ describe('원점수가 없는 파일', () => {
 });
 
 describe('수능최저 과목 선택 바', () => {
-    const toggle = (value, checked) => {
+    const pick = (value, checked = true) => {
         const box = document.querySelector(`[data-change="csat-subjects"][value="${value}"]`);
         box.checked = checked;
         box.dispatchEvent(new Event('change', {bubbles: true}));
     };
     const schoolRow = () => [...document.querySelectorAll('#csat-school-tbody tr')[0].children].map(td => td.textContent.replace(/\s+/g, ''));
+    const title = () => document.getElementById('csat-title').textContent;
 
     beforeEach(() => {
         resetCsatSubjects();
@@ -455,24 +456,39 @@ describe('수능최저 과목 선택 바', () => {
         renderAll();
         charts.created = 0;
         expect(schoolRow()[7]).toBe('12(탐구1+국어+영어+수학+탐구2)');
-        toggle('english', false);
+        expect(title()).toBe('수능 최저학력기준 충족 분석(국어+수학+영어+탐구 2과목 합)');
+        pick('english', false);
         const row = schoolRow();
         expect(row).toHaveLength(8);
         expect(row[4]).toBe('3(탐구1+국어)');
         expect(row[6]).toBe('10(탐구1+국어+수학+탐구2)');
         expect(row[7]).toBe('—');
-        expect(document.getElementById('csat-title').textContent).toBe('수능 최저학력기준 충족 분석(국어+수학+탐구1+탐구2)');
+        expect(title()).toBe('수능 최저학력기준 충족 분석(국어+수학+탐구 2과목 합)');
         expect(charts.created).toBe(0);
-        // 누적표의 5합 행은 모두 대시다
         const fiveRow = document.querySelectorAll('#csat-summary-tbody tr')[3];
         expect([...fiveRow.children].slice(1).every(td => td.textContent.trim() === '—')).toBe(true);
+    });
+
+    it('탐구 방식을 바꾸면 그 방식으로 한 과목만 들어간다', () => {
+        ST.data = [student('A', '1', '1')];
+        renderAll();
+        pick('inquiry_top1');
+        expect(schoolRow()[4]).toBe('3(탐구+국어)');
+        expect(schoolRow()[7]).toBe('—');
+        expect(title()).toBe('수능 최저학력기준 충족 분석(국어+수학+영어+탐구 1과목(잘한 과목))');
+        pick('inquiry_avg_floor'); // 1·4 → 2.5 → 2
+        expect(schoolRow()[6]).toBe('9(국어+영어+탐구평균+수학)');
+        pick('');
+        expect(title()).toBe('수능 최저학력기준 충족 분석(국어+수학+영어)');
+        expect(schoolRow()[6]).toBe('—');
     });
 
     it('모두 끄면 제목이 과목 선택 없음을 알린다', () => {
         ST.data = [student('A', '1', '1')];
         renderAll();
-        ['korean', 'math', 'english', 'inquiry1', 'inquiry2'].forEach(k => toggle(k, false));
-        expect(document.getElementById('csat-title').textContent).toContain('과목 선택 없음');
+        ['korean', 'math', 'english'].forEach(k => pick(k, false));
+        pick('');
+        expect(title()).toContain('과목 선택 없음');
         expect(schoolRow().slice(4).every(c => c === '—')).toBe(true);
     });
 });

@@ -12,41 +12,66 @@ import {numberLabel, studentIdxAttr} from './report-modal.js';
 ─────────────────────────────────────────── */
 
 /* n합에 넣을 과목. 수능최저 영역 위 선택 바에서 선택한다. 선택한 과목 수보다 큰 n합은 대시(빈칸)가 된다.
- * 성적이 아니라 화면 설정이지만 브라우저 저장소에 남기지 않는다(새로고침하면 모두 켠 상태로 돌아간다) */
-export const CSAT_SUBJECTS = [['korean', '국어'], ['math', '수학'], ['english', '영어'], ['inquiry1', '탐구1'], ['inquiry2', '탐구2']];
-const subjNames = Object.fromEntries(CSAT_SUBJECTS);
-let csatSubjects = new Set(CSAT_SUBJECTS.map(([k]) => k));
+ * 국어·수학·영어는 켜고 끄고, 탐구는 반영 방식 하나를 선택한다(라디오).
+ *   - 2과목 합: 탐구1·탐구2를 각각 한 과목으로 넣는다(5합까지).
+ *   - 2과목 평균(반올림·절사): 두 등급의 평균을 한 과목으로 넣는다(4합까지). 한 과목만 있으면 그 등급.
+ *   - 1과목: 두 탐구 중 등급이 좋은 하나(4합까지).
+ *   - 제외: 탐구를 넣지 않는다.
+ * 성적이 아니라 화면 설정이지만 브라우저 저장소에 남기지 않는다(새로고침하면 기본값으로 돌아간다) */
+export const CSAT_SUBJECTS = [['korean', '국어'], ['math', '수학'], ['english', '영어']];
+export const CSAT_INQUIRY_MODES = [
+    ['inquiry_sum', '탐구 2과목 합'], ['inquiry_avg_round', '탐구 2과목 평균(반올림)'],
+    ['inquiry_avg_floor', '탐구 2과목 평균(절사)'], ['inquiry_top1', '탐구 1과목(잘한 과목)'],
+];
+const subjNames = Object.fromEntries([...CSAT_SUBJECTS, ...CSAT_INQUIRY_MODES]);
+const INQUIRY_KEYS = CSAT_INQUIRY_MODES.map(([k]) => k);
+const DEFAULT_SUBJECTS = ['korean', 'math', 'english', 'inquiry_sum'];
+let csatSubjects = new Set(DEFAULT_SUBJECTS);
 
 export function getCsatSubjects() {
     return new Set(csatSubjects);
 }
 
+/** 탐구 반영 방식은 하나만 남긴다(먼저 온 것) */
 export function setCsatSubjects(keys) {
-    csatSubjects = new Set([...keys].filter(k => k in subjNames));
+    const valid = [...keys].filter(k => k in subjNames);
+    const inq = valid.find(k => INQUIRY_KEYS.includes(k));
+    csatSubjects = new Set(valid.filter(k => !INQUIRY_KEYS.includes(k) || k === inq));
 }
 
 export function resetCsatSubjects() {
-    setCsatSubjects(CSAT_SUBJECTS.map(([k]) => k));
+    setCsatSubjects(DEFAULT_SUBJECTS);
 }
 
 export function _getCsatRawSums(student, subjects = csatSubjects) {
-    // 탐구1·2가 같은 과목이면 한 과목으로 본다(등급은 탐구1, 없으면 탐구2). 둘 중 하나라도 선택하면 넣는다
-    const areas = [['korean', student.korean], ['math', student.math], ['english', student.english]]
-        .filter(([subj]) => subjects.has(subj));
-    if (sameInquirySubject(student)) {
-        const name = subjects.has('inquiry1') ? 'inquiry1' : 'inquiry2';
-        if (subjects.has(name)) areas.push([name, inquiryScores(student)[0]]);
-    } else {
-        areas.push(...[['inquiry1', student.inquiry1], ['inquiry2', student.inquiry2]].filter(([subj]) => subjects.has(subj)));
-    }
-
     const grades = [];
-    areas.forEach(([subj, score]) => {
-        if (score && isValidGrade(score.grade)) {
+    ['korean', 'math', 'english'].forEach(subj => {
+        const score = student[subj];
+        if (subjects.has(subj) && score && isValidGrade(score.grade)) {
             // 점수만 넣는 대신 과목명도 함께 저장
             grades.push({grade: score.grade, name: subjNames[subj]});
         }
     });
+
+    // 탐구1·2가 같은 과목이면 한 과목으로 본다(등급은 탐구1, 없으면 탐구2)
+    const inquiries = sameInquirySubject(student)
+        ? [{grade: inquiryScores(student)[0].grade, name: '탐구1'}]
+        : [{grade: student.inquiry1?.grade, name: '탐구1'}, {grade: student.inquiry2?.grade, name: '탐구2'}];
+    const validInq = inquiries.filter(g => isValidGrade(g.grade));
+    if (validInq.length) {
+        const avg = validInq.reduce((a, g) => a + g.grade, 0) / validInq.length;
+        if (subjects.has('inquiry_sum')) {
+            grades.push(...validInq);
+        } else if (subjects.has('inquiry_avg_round')) {
+            grades.push({grade: roundHalfUp(avg), name: '탐구평균'});
+        } else if (subjects.has('inquiry_avg_floor')) {
+            grades.push({grade: Math.floor(avg), name: '탐구평균'});
+        } else if (subjects.has('inquiry_top1')) {
+            // 등급이 좋은 탐구 하나. 같으면 탐구1
+            const best = validInq.reduce((a, b) => (b.grade < a.grade ? b : a));
+            grades.push({grade: best.grade, name: '탐구'});
+        }
+    }
 
     // 등급 기준 오름차순 정렬 (낮은 등급이 먼저 오도록)
     // grade는 위에서 isValidGrade(정수)로 걸러졌으므로 직접 비교
@@ -74,8 +99,21 @@ export function _getCsatRawSums(student, subjects = csatSubjects) {
     };
 }
 
+/* n합 메모. 학생 레코드마다, 선택 조합마다 한 번만 계산한다. 과목을 껐다 켜도 이미 본 조합은 다시 계산하지 않는다.
+ * 학생 레코드는 파일을 읽을 때 만들어지고 바뀌지 않는다. 새 파일을 읽으면 새 레코드라 메모도 저절로 새로 시작한다(WeakMap).
+ * 메모는 메모리에만 둔다. 성적을 브라우저 저장소(IndexedDB 등)에 남기지 않는다(CLAUDE.md 개인정보). */
+const csatMemo = new WeakMap();
+
+export function csatSumsOf(student, subjects = csatSubjects) {
+    const key = [...subjects].sort().join(',');
+    let byKey = csatMemo.get(student);
+    if (!byKey) csatMemo.set(student, byKey = new Map());
+    if (!byKey.has(key)) byKey.set(key, _getCsatRawSums(student, subjects));
+    return byKey.get(key);
+}
+
 export function _getCsatSums(student) {
-    const raw = _getCsatRawSums(student);
+    const raw = csatSumsOf(student);
     const format = (val, subj) => val === null
         ? `<span class="text-slate-300">${DASH}</span>`
         : `<div class="flex flex-col">
@@ -155,21 +193,21 @@ export function renderCsatMinRequirement(cache) {
 /* 선택 바의 체크 상태와 구역 제목을 지금 선택한 과목에 맞춘다. 인쇄물에는 바가 없으니 제목이 기준을 알린다 */
 function syncCsatSubjectBar() {
     document.querySelectorAll('[data-change="csat-subjects"]').forEach(box => {
-        box.checked = csatSubjects.has(box.value);
+        box.checked = box.value === '' ? !INQUIRY_KEYS.some(k => csatSubjects.has(k)) : csatSubjects.has(box.value);
     });
     const title = document.getElementById('csat-title');
     if (title) {
-        const names = CSAT_SUBJECTS.filter(([k]) => csatSubjects.has(k)).map(([, label]) => label);
+        const names = [...CSAT_SUBJECTS, ...CSAT_INQUIRY_MODES].filter(([k]) => csatSubjects.has(k)).map(([, label]) => label);
         title.textContent = `수능 최저학력기준 충족 분석(${names.length ? names.join('+') : '과목 선택 없음'})`;
     }
 }
 
-/** 선택 바에서 과목을 켜고 끌 때. n합만 다시 계산하고 수능최저 표만 다시 그린다 */
+/** 선택 바에서 과목·탐구 방식을 바꿀 때. n합만 다시 계산하고 수능최저 표만 다시 그린다 */
 export function handleCsatSubjectsChange() {
-    const boxes = [...document.querySelectorAll('[data-change="csat-subjects"]')];
-    setCsatSubjects(boxes.filter(b => b.checked).map(b => b.value));
+    const inputs = [...document.querySelectorAll('[data-change="csat-subjects"]')];
+    setCsatSubjects(inputs.filter(b => b.checked && b.value).map(b => b.value));
     if (!ST.cache || !ST.data) return;
-    ST.cache.csatSums = ST.data.map(s => _getCsatRawSums(s));
+    ST.cache.csatSums = ST.data.map(s => csatSumsOf(s));
     renderCsatMinRequirement(ST.cache);
 }
 

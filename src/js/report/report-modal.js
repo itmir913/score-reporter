@@ -1,7 +1,7 @@
 import {ST} from '../main.js';
 import {compositeScore} from '../core/aggregate.js';
 import {globalReportBasis, includeNoInquiry} from '../report.js';
-import {_getCsatRawSums} from './report-csat-sum.js';
+import {csatSumsOf} from './report-csat-sum.js';
 import {DASH, escapeAttr, hasScore, inquiryScores, toFixedHalfUp} from '../utils.js';
 
 /* ───────────────────────────────────────────
@@ -242,7 +242,7 @@ export function showCsatStudents(n, targetSum) {
 
     // 1. 해당 조건(n합 targetSum 이하)을 만족하는 학생 필터링
     const targetStudents = ST.data.filter(s => {
-        const raw = _getCsatRawSums(s);
+        const raw = csatSumsOf(s);
         const actualSum = raw[`sum${n}`]; // sum2, sum3, sum4, sum5
         return actualSum !== null && actualSum <= targetSum;
     });
@@ -274,7 +274,7 @@ export function showCsatStudents(n, targetSum) {
     // report.js 의 showCsatStudents 함수 내 tbody 렌더링 부분
     if (tbody) {
         tbody.innerHTML = targetStudents.map(s => {
-            const raw = _getCsatRawSums(s);
+            const raw = csatSumsOf(s);
             const actualSum = raw[`sum${n}`];
             const actualSubj = raw[`sum${n}_subj`]; // 새로 추가된 과목명 데이터 가져오기
             return `

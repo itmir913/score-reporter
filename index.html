@@ -356,7 +356,7 @@
                 <section class="mt-6 print:break-before-page" id="csat_sum">
                     <div class="flex items-center gap-2">
                         <span class="w-1.5 h-6 rounded bg-brand inline-block"></span>
-                        <h3 id="csat-title" class="font-bold text-slate-800 text-xl">수능 최저학력기준 충족 분석(국어+수학+영어+탐구1+탐구2)</h3>
+                        <h3 id="csat-title" class="font-bold text-slate-800 text-xl">수능 최저학력기준 충족 분석(국어+수학+영어+탐구 2과목 합)</h3>
                     </div>
 
                     <!-- n합에 넣을 과목. 선택한 과목 수보다 큰 n합 칸은 대시가 된다(열은 숨기지 않는다) -->
@@ -373,12 +373,24 @@
                             <label class="inline-flex items-center gap-1.5 text-base text-slate-700 cursor-pointer">
                                 <input type="checkbox" value="english" checked data-change="csat-subjects" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">영어
                             </label>
-                            <label class="inline-flex items-center gap-1.5 text-base text-slate-700 cursor-pointer">
-                                <input type="checkbox" value="inquiry1" checked data-change="csat-subjects" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">탐구1
-                            </label>
-                            <label class="inline-flex items-center gap-1.5 text-base text-slate-700 cursor-pointer">
-                                <input type="checkbox" value="inquiry2" checked data-change="csat-subjects" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">탐구2
-                            </label>
+                            <span class="text-base text-slate-400" aria-hidden="true">|</span>
+                            <span role="radiogroup" aria-label="탐구 반영 방식" class="inline-flex flex-wrap items-center gap-x-4 gap-y-1">
+                                <label class="inline-flex items-center gap-1.5 text-base text-slate-700 cursor-pointer">
+                                    <input type="radio" name="csat-inquiry" value="inquiry_sum" checked data-change="csat-subjects" class="border-slate-300 text-blue-600 focus:ring-blue-500">탐구 2과목 합
+                                </label>
+                                <label class="inline-flex items-center gap-1.5 text-base text-slate-700 cursor-pointer">
+                                    <input type="radio" name="csat-inquiry" value="inquiry_avg_round" data-change="csat-subjects" class="border-slate-300 text-blue-600 focus:ring-blue-500">탐구 2과목 평균(반올림)
+                                </label>
+                                <label class="inline-flex items-center gap-1.5 text-base text-slate-700 cursor-pointer">
+                                    <input type="radio" name="csat-inquiry" value="inquiry_avg_floor" data-change="csat-subjects" class="border-slate-300 text-blue-600 focus:ring-blue-500">탐구 2과목 평균(절사)
+                                </label>
+                                <label class="inline-flex items-center gap-1.5 text-base text-slate-700 cursor-pointer">
+                                    <input type="radio" name="csat-inquiry" value="inquiry_top1" data-change="csat-subjects" class="border-slate-300 text-blue-600 focus:ring-blue-500">탐구 1과목(잘한 과목)
+                                </label>
+                                <label class="inline-flex items-center gap-1.5 text-base text-slate-700 cursor-pointer">
+                                    <input type="radio" name="csat-inquiry" value="" data-change="csat-subjects" class="border-slate-300 text-blue-600 focus:ring-blue-500">탐구 제외
+                                </label>
+                            </span>
                         </div>
                     </div>
 

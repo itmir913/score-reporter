@@ -1,5 +1,5 @@
 import {beforeEach, describe, expect, it} from 'vitest';
-import {_getCsatRawSums, rankCsatSchool, resetCsatSubjects, setCsatSubjects} from '../src/js/report/report-csat-sum.js';
+import {_getCsatRawSums, getCsatSubjects, rankCsatSchool, resetCsatSubjects, setCsatSubjects} from '../src/js/report/report-csat-sum.js';
 import {computeRenderCache} from '../src/js/report/report-cache.js';
 
 beforeEach(() => resetCsatSubjects());
@@ -149,25 +149,58 @@ describe('rankCsatSchool: 전교 석차(국어+수학+탐구평균)', () => {
 });
 
 describe('n합에 넣을 과목 선택', () => {
-    it('영어를 빼면 나머지 넷에서 고르고 5합은 없다', () => {
-        const r = _getCsatRawSums(student(3, 4, 1, 2, 5), new Set(['korean', 'math', 'inquiry1', 'inquiry2']));
+    const pick = (...keys) => new Set(keys);
+
+    it('기본은 국어·수학·영어·탐구 2과목 합이라 5합까지 나온다', () => {
+        expect(_getCsatRawSums(student(1, 3, 2, 4, 5)).sum5).toBe(15);
+    });
+
+    it('영어를 빼면 나머지 넷에서 더하고 5합은 없다', () => {
+        const r = _getCsatRawSums(student(3, 4, 1, 2, 5), pick('korean', 'math', 'inquiry_sum'));
         expect(r.sum2).toBe(5);
         expect(r.sum2_subj).toBe('탐구1+국어');
         expect(r.sum4).toBe(14);
         expect(r.sum5).toBeNull();
     });
 
-    it('선택한 과목이 없으면 모든 합이 null이다', () => {
-        const r = _getCsatRawSums(student(1, 1, 1, 1, 1), new Set());
-        expect([r.sum2, r.sum3, r.sum4, r.sum5]).toEqual([null, null, null, null]);
+    it('탐구 1과목은 두 탐구 중 등급이 좋은 하나만 넣는다', () => {
+        const r = _getCsatRawSums(student(3, 4, 5, 6, 2), pick('korean', 'math', 'english', 'inquiry_top1'));
+        expect(r.sum2).toBe(5);
+        expect(r.sum2_subj).toBe('탐구+국어');
+        expect(r.sum4).toBe(14);
+        expect(r.sum5).toBeNull();
     });
 
-    it('같은 탐구 과목은 탐구2만 선택해도 한 과목으로 넣는다', () => {
-        const s = student(3, 4, 5, 1, 1);
-        s.inquiry1.subject = s.inquiry2.subject = '생활과 윤리';
-        const r = _getCsatRawSums(s, new Set(['korean', 'inquiry2']));
-        expect(r.sum2).toBe(4);
-        expect(r.sum2_subj).toBe('탐구2+국어');
+    it('탐구 평균은 반올림·절사를 따로 한다 (2와 3 → 2.5)', () => {
+        const s = student(5, 6, 7, 2, 3);
+        const round = _getCsatRawSums(s, pick('korean', 'math', 'english', 'inquiry_avg_round'));
+        const floor = _getCsatRawSums(s, pick('korean', 'math', 'english', 'inquiry_avg_floor'));
+        expect(round.sum2).toBe(8);
+        expect(round.sum2_subj).toBe('탐구평균+국어');
+        expect(floor.sum2).toBe(7);
+        expect(round.sum5).toBeNull();
+        expect(floor.sum4).toBe(20);
+    });
+
+    it('탐구 평균은 한 과목만 본 학생이면 그 등급을 쓴다', () => {
+        const r = _getCsatRawSums(student(3, null, null, null, 4), pick('korean', 'inquiry_avg_round'));
+        expect(r.sum2).toBe(7);
+    });
+
+    it('탐구 제외면 탐구를 넣지 않는다', () => {
+        const r = _getCsatRawSums(student(3, 4, 5, 1, 1), pick('korean', 'math', 'english'));
+        expect(r.sum3).toBe(12);
+        expect(r.sum4).toBeNull();
+    });
+
+    it('탐구 방식은 하나만 남는다', () => {
+        setCsatSubjects(['korean', 'inquiry_top1', 'inquiry_sum']);
+        expect([...getCsatSubjects()]).toEqual(['korean', 'inquiry_top1']);
+    });
+
+    it('아무것도 없으면 모든 합이 null이다', () => {
+        const r = _getCsatRawSums(student(1, 1, 1, 1, 1), pick());
+        expect([r.sum2, r.sum3, r.sum4, r.sum5]).toEqual([null, null, null, null]);
     });
 
     it('기본 인자는 현재 선택이고, 캐시를 다시 만들어도 같은 결과다', () => {
@@ -177,5 +210,20 @@ describe('n합에 넣을 과목 선택', () => {
         expect(direct[0].sum3).toBe(6);
         expect(direct[0].sum4).toBeNull();
         expect(computeRenderCache(data, 'raw').csatSums).toEqual(direct);
+    });
+});
+
+describe('n합 메모', () => {
+    it('같은 학생·같은 선택이면 다시 계산하지 않고 같은 결과를 준다', async () => {
+        const {csatSumsOf} = await import('../src/js/report/report-csat-sum.js');
+        const s = student(1, 3, 2, 4, 5);
+        const a = csatSumsOf(s);
+        expect(csatSumsOf(s)).toBe(a);
+        setCsatSubjects(['korean', 'math']);
+        const b = csatSumsOf(s);
+        expect(b).not.toBe(a);
+        expect(b.sum3).toBeNull();
+        resetCsatSubjects();
+        expect(csatSumsOf(s)).toBe(a);
     });
 });
