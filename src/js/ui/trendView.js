@@ -4,9 +4,9 @@ import {ST} from '../main.js';
 import {includeNoInquiry} from '../report.js';
 import {sortedExams} from '../exams/examStore.js';
 import {personTrend, schoolTrend} from '../trend/trend.js';
-import {AREAS, areaScore, changeText, changeVsPrev, CSAT_AREAS, csatTimeline, gapText, MERGED, nextGradeGap, rawOf, strengths, 과와} from '../trend/personal.js';
-import {CSAT_INQUIRY_MODES, CSAT_SUBJECTS, csatSumsOf, getCsatSubjects} from '../report/report-csat-sum.js';
-import {PCT_MAX, PCT_MIN, STRENGTH_SIMILAR} from '../core/limits.js';
+import {AREAS, areaScore, changeText, changeVsPrev, csatTimeline, gapText, MERGED, nextGradeGap, rawOf, strengths, 과와} from '../trend/personal.js';
+import {applyCsatSubjects, CSAT_INQUIRY_MODES, CSAT_SUBJECTS, csatSumsOf, getCsatSubjects} from '../report/report-csat-sum.js';
+import {PCT_MAX, PCT_MIN} from '../core/limits.js';
 import {DASH, fmt, roundHalfUp} from '../utils.js';
 import {showStudentRecord} from '../report/report-modal.js';
 import {clear, el} from './dom.js';
@@ -257,6 +257,17 @@ const clickableRow = (r, cells) => el('tr', {
     on: {click: () => openRecord(r), keydown: (e) => { if (e.key === 'Enter') openRecord(r); }},
 }, cells);
 
+/** 보이지 않는 줄바꿈 자리(U+200B). 구성 과목 「국어+수학」을 「+」 뒤에서 줄바꿈할 수 있게 한다 */
+const ZWSP = String.fromCharCode(0x200b);
+
+/* 한 칸에 두 줄: 윗줄은 값, 아랫줄은 작은 글씨 설명. 설명은 줄바꿈해 표가 옆으로 넓어지지 않게 한다 */
+function twoLines(main, sub, cls = '') {
+    return el('td', {class: `border-b border-line-soft px-2 py-2 align-top ${cls}`}, [
+        el('div', {class: 'tabular-nums whitespace-nowrap', text: main}),
+        ...(sub ? [el('div', {class: 'mt-0.5 text-base text-ink-soft', text: sub})] : []),
+    ]);
+}
+
 /** 회차 분석에서 선택한 회차. 이 학생에게 없는 회차면 가장 나중 회차로 되돌린다 */
 let analysisExam = null;
 
@@ -278,38 +289,36 @@ function analysisBlock(rows, exams) {
             el('h4', {class: 'text-lg font-bold', text: '회차 분석'}), chips,
         ]));
         if (!r) return;
-        const {ranked, others, inquiryGap} = strengths(r.student);
+        const {ranked, others} = strengths(r.student);
         // 다음 등급까지: 같은 회차·같은 과목 응시자 중 더 높은 등급의 최저 원점수로 어림한다
         const exam = exams.find(e => e.key === r.key);
         const gap = (area) => {
             const g = exam ? nextGradeGap(exam, area, r.student) : {kind: 'fail', reason: '회차 없음'};
-            const cell = td(gapText(g), g.kind === 'ok' ? 'font-semibold' : 'text-ink-soft');
+            const cell = td(gapText(g), `align-top whitespace-normal ${g.kind === 'ok' ? 'font-semibold' : 'text-ink-soft'}`);
             // 근거 점수는 마우스를 올리면 보인다
             if (g.kind === 'ok') cell.title = `더 높은 등급의 최저 원점수 ${g.min}점`;
             return cell;
         };
-        const th = (t, cls = '') => el('th', {class: `border-b border-line bg-canvas px-3 py-2 text-left font-semibold text-ink-soft whitespace-nowrap ${cls}`, text: t});
-        const td = (t, cls = '') => el('td', {class: `border-b border-line-soft px-3 py-2 tabular-nums whitespace-nowrap ${cls}`, text: t});
+        const th = (t, cls = '') => el('th', {class: `border-b border-line bg-canvas px-2 py-2 text-left font-semibold text-ink-soft whitespace-nowrap ${cls}`, text: t});
+        const td = (t, cls = '') => el('td', {class: `border-b border-line-soft px-2 py-2 tabular-nums whitespace-nowrap ${cls}`, text: t});
         const canvas = el('canvas', {attrs: {id: 'trend-strength-chart'}});
+        // 추정 근거는 열 제목에 마우스를 올리면 보인다
+        const nextHead = th('다음 등급까지');
+        nextHead.title = '같은 회차·같은 과목에서 더 높은 등급을 받은 학생의 최저 원점수로 추정';
         const table = el('table', {class: 'w-full text-base', attrs: {id: 'trend-strength-table'}}, [
-            el('thead', {}, [el('tr', {}, [th('영역'), th('과목명'), th('백분위', 'text-right'), th('등급', 'text-right'), th('다음 등급까지'), th('비슷한 과목')])]),
+            el('thead', {}, [el('tr', {}, [th('영역'), th('과목명'), th('백분위', 'text-right'), th('등급', 'text-right'), nextHead])]),
             el('tbody', {}, [
-                ...ranked.map(x => el('tr', {}, [td(x.label), td(x.subject || DASH), td(plain(x.pct), 'text-right font-semibold'), td(plain(x.grade), 'text-right'), gap(x.area),
-                    // 바로 아래 과목과 차이가 작으면 표시만 한다. 그 안의 차이로 강약을 나누지 않는다
-                    td(x.similarToNext ? `≈ ${x.next.name}${과와(x.next.name)} 비슷함(차이 ${roundHalfUp(x.next.diff, 1)})` : '', 'text-ink-soft')])),
-                ...others.map(x => el('tr', {}, [td(x.label), td(x.subject || DASH), td(x.noPct ? '백분위 없음' : DASH, 'text-right text-ink-soft'), td(plain(x.grade), 'text-right'), gap(x.area), td('')])),
+                // 바로 아래 과목과 차이가 작으면 과목명 아랫줄에 적는다. 그 안의 차이로 강약을 나누지 않는다
+                ...ranked.map(x => el('tr', {}, [td(x.label, 'align-top'),
+                    twoLines(x.subject || DASH, x.similarToNext ? `≈ ${x.next.name}${과와(x.next.name)} 비슷함(차이 ${roundHalfUp(x.next.diff, 1)})` : ''),
+                    td(plain(x.pct), 'text-right font-semibold align-top'), td(plain(x.grade), 'text-right align-top'), gap(x.area)])),
+                ...others.map(x => el('tr', {}, [td(x.label, 'align-top'), td(x.subject || DASH, 'align-top'), td(x.noPct ? '백분위 없음' : DASH, 'text-right text-ink-soft align-top'), td(plain(x.grade), 'text-right align-top'), gap(x.area)])),
             ]),
         ]);
-        const notes = [
-            `백분위가 높은 순서입니다. 이웃한 두 과목의 백분위 차이가 ${STRENGTH_SIMILAR} 이하이면 비슷하다고 봅니다. 탐구 백분위는 그 과목 응시자 안에서의 위치입니다. 영어·한국사는 등급만 적습니다.`,
-            ...(inquiryGap !== null ? [`탐구 두 과목의 백분위 차이가 ${inquiryGap}입니다.`] : []),
-            '「다음 등급까지」는 같은 회차·같은 과목을 본 우리 학교 학생 가운데 더 높은 등급을 받은 학생의 최저 원점수로 추정한 값입니다. 국어·수학은 공통·선택 과목 구성이 달라 실제와 다를 수 있습니다.',
-        ];
         block.append(el('div', {class: 'mt-3 grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start [&>*]:min-w-0'}, [
             ranked.length ? el('div', {class: 'relative h-60'}, [canvas]) : el('p', {class: 'rounded-lg bg-canvas px-4 py-3 text-base text-ink-soft', text: '이 회차에는 비교할 백분위가 없습니다.'}),
             el('div', {}, [
                 el('div', {class: 'overflow-x-auto rounded-lg border border-line'}, [table]),
-                ...notes.map(t => el('p', {class: 'mt-2 text-base text-ink-soft', text: t})),
             ]),
         ]));
         // 견줄 백분위가 없는 회차로 바꾸면 이전 회차의 막대가 떼어낸 캔버스에 남지 않게 지운다
@@ -334,40 +343,67 @@ function analysisBlock(rows, exams) {
 /** 회차별 수능최저 그래프에 그릴 n합 */
 let csatN = 2;
 
-/** 회차별 수능최저: 회차마다 2~5합. 과목 선택은 보고서 탭 수능최저의 선택을 그대로 따른다 */
+/** 회차별 수능최저: 회차마다 2~5합. 과목 선택은 보고서 탭 「수능 최저학력기준」과 같은 상태를 함께 쓴다 */
 function csatBlock(rows, keys) {
-    const timeline = csatTimeline(rows, s => csatSumsOf(s));
-    const picked = getCsatSubjects();
-    const names = [...CSAT_SUBJECTS, ...CSAT_INQUIRY_MODES].filter(([k]) => picked.has(k)).map(([, label]) => label);
     const block = el('div', {class: 'mt-4 rounded-xl border border-line p-4'});
     const th = (t, cls = '') => el('th', {class: `border-b border-line bg-canvas px-3 py-2 text-left font-semibold text-ink-soft whitespace-nowrap ${cls}`, text: t});
     const td = (t, cls = '') => el('td', {class: `border-b border-line-soft px-3 py-2 tabular-nums whitespace-nowrap ${cls}`, text: t});
+    const canvas = el('canvas', {attrs: {id: 'trend-csat-chart'}});
+    const chips = el('div');
+    const picker = el('div', {class: 'mt-3 flex flex-wrap items-center gap-x-4 gap-y-1', attrs: {role: 'group', 'aria-label': 'n합에 넣을 과목'}});
+    const tableBox = el('div', {class: 'overflow-x-auto rounded-lg border border-line'});
+    let timeline = [];
+
+    /* 과목 선택: 국어·수학·영어는 켜고 끄고, 탐구는 반영 방식 하나를 선택한다(보고서 탭과 같은 선택지) */
+    const paintPicker = () => {
+        const picked = getCsatSubjects();
+        const onChange = () => {
+            const keysOn = [...picker.querySelectorAll('input')].filter(i => i.checked && i.value).map(i => i.value);
+            applyCsatSubjects(keysOn);
+            drawAll();
+        };
+        clear(picker).append(
+            el('span', {class: 'text-base font-semibold text-ink-soft', text: 'n합에 넣을 과목:'}),
+            ...CSAT_SUBJECTS.map(([k, label]) => el('label', {class: 'inline-flex items-center gap-1.5 text-base cursor-pointer'}, [
+                el('input', {class: 'rounded border-slate-300', attrs: {type: 'checkbox', value: k, checked: picked.has(k)}, on: {change: onChange}}), label])),
+            el('span', {class: 'text-base text-ink-soft', attrs: {'aria-hidden': 'true'}, text: '|'}),
+            // 탐구 라디오는 보고서 바처럼 따로 묶는다
+            el('span', {class: 'inline-flex flex-wrap items-center gap-x-4 gap-y-1', attrs: {role: 'radiogroup', 'aria-label': '탐구 반영 방식'}},
+                [...CSAT_INQUIRY_MODES, ['', '탐구 제외']].map(([k, label]) => el('label', {class: 'inline-flex items-center gap-1.5 text-base cursor-pointer'}, [
+                    el('input', {attrs: {type: 'radio', name: 'trend-csat-inquiry', value: k,
+                        checked: k ? picked.has(k) : !CSAT_INQUIRY_MODES.some(([m]) => picked.has(m))}, on: {change: onChange}}), label]))),
+        );
+    };
+
     const sumCell = (t, n) => {
         const v = t.sums[`sum${n}`];
         if (v === null) return td('— 과목 부족', 'text-right text-ink-soft');
-        return el('td', {class: 'border-b border-line-soft px-3 py-2 text-right whitespace-nowrap'}, [
+        // 구성 과목은 「+」마다 줄을 바꿀 수 있게 해 칸이 옆으로 넓어지지 않게 한다
+        return el('td', {class: 'border-b border-line-soft px-3 py-2 text-right align-top'}, [
             el('div', {class: 'font-semibold tabular-nums', text: String(v)}),
-            el('div', {class: 'text-base text-ink-soft', text: t.sums[`sum${n}_subj`]}),
+            el('div', {class: 'text-base text-ink-soft', text: t.sums[`sum${n}_subj`].replaceAll('+', `+${ZWSP}`)}),
         ]);
     };
-    const table = el('table', {class: 'w-full text-base', attrs: {id: 'trend-csat-table'}}, [
-        el('thead', {}, [el('tr', {}, [th('회차'), ...CSAT_AREAS.map(([, label]) => th(label, 'text-right')), ...[2, 3, 4, 5].map(n => th(`${n}합`, 'text-right'))])]),
-        el('tbody', {}, rows.map((r, i) => {
-            const t = timeline[i];
-            if (t.absent) return el('tr', {}, [td(r.key, 'font-semibold'), el('td', {class: 'border-b border-line-soft px-3 py-2 text-ink-soft', attrs: {colspan: '9'}, text: '이 회차에는 없습니다'})]);
-            if (t.noGrade) return el('tr', {}, [td(r.key, 'font-semibold'), el('td', {class: 'border-b border-line-soft px-3 py-2 text-ink-soft', attrs: {colspan: '9'}, text: '이 회차에는 등급이 없습니다'})]);
-            return el('tr', {}, [td(r.key, 'font-semibold'), ...CSAT_AREAS.map(([k]) => td(plain(t.grades[k]), 'text-right')), ...[2, 3, 4, 5].map(n => sumCell(t, n))]);
-        })),
-    ]);
-    const canvas = el('canvas', {attrs: {id: 'trend-csat-chart'}});
-    const chips = el('div');
-    const drawCsat = () => {
-        clear(chips);
-        chips.append(el('div', {class: 'flex flex-wrap gap-2', attrs: {role: 'group', 'aria-label': '그래프에 그릴 합'}},
+
+    const paintTable = () => {
+        clear(tableBox).append(el('table', {class: 'w-full text-base', attrs: {id: 'trend-csat-table'}}, [
+            el('thead', {}, [el('tr', {}, [th('회차'), ...[2, 3, 4, 5].map(n => th(`${n}합`, 'text-right'))])]),
+            el('tbody', {}, rows.map((r, i) => {
+                const t = timeline[i];
+                if (t.absent) return el('tr', {}, [td(r.key, 'font-semibold'), el('td', {class: 'border-b border-line-soft px-3 py-2 text-ink-soft', attrs: {colspan: '4'}, text: '이 회차에는 없습니다'})]);
+                // 줄을 누르면 그 회차의 성적표가 열린다
+                if (t.noGrade) return clickableRow(r, [td(r.key, 'font-semibold'), el('td', {class: 'border-b border-line-soft px-3 py-2 text-ink-soft', attrs: {colspan: '4'}, text: '이 회차에는 등급이 없습니다'})]);
+                return clickableRow(r, [td(r.key, 'font-semibold align-top'), ...[2, 3, 4, 5].map(n => sumCell(t, n))]);
+            })),
+        ]));
+    };
+
+    const drawChartOnly = () => {
+        clear(chips).append(el('div', {class: 'flex flex-wrap gap-2', attrs: {role: 'group', 'aria-label': '그래프에 그릴 합'}},
             [2, 3, 4, 5].map(n => el('button', {
                 class: `rounded-full border px-4 py-1 text-base font-semibold ${n === csatN ? 'border-brand bg-brand text-white' : 'border-line bg-surface text-ink-soft hover:text-ink'}`,
                 text: `${n}합`, attrs: {type: 'button', 'aria-pressed': String(n === csatN)},
-                on: {click: () => { csatN = n; drawCsat(); }},
+                on: {click: () => { csatN = n; drawChartOnly(); }},
             }))));
         // 합은 작을수록 좋으니 축을 뒤집어 위에 둔다. 결시·과목 부족 회차는 선이 끊긴다
         drawLine('trendCsat', canvas, keys, [{
@@ -375,15 +411,24 @@ function csatBlock(rows, keys) {
             borderColor: COLORS[1], backgroundColor: COLORS[1],
         }], {reverse: true, legend: false, tooltipLabel: (ctx) => ` ${csatN}합 ${ctx.formattedValue}`});
     };
+
+    function drawAll() {
+        timeline = csatTimeline(rows, s => csatSumsOf(s));
+        paintPicker();
+        paintTable();
+        drawChartOnly();
+    }
+
     block.append(
-        el('div', {class: 'flex flex-wrap items-center justify-between gap-3'}, [el('h4', {class: 'text-lg font-bold', text: '회차별 수능최저'}), chips]),
-        el('p', {class: 'mt-1 text-base text-ink-soft', text: `보고서 탭 「수능 최저학력기준」의 과목 선택을 따릅니다: ${names.length ? names.join(' · ') : '선택한 과목 없음'}`}),
+        el('div', {class: 'flex flex-wrap items-center justify-between gap-3'}, [el('h4', {class: 'text-lg font-bold', text: '회차별 수능최저학력기준'}), chips]),
+        picker,
+        el('p', {class: 'mt-1 text-base text-ink-soft', text: '여기서 바꾼 과목 선택은 보고서 탭에도 적용됩니다. 줄을 누르면 그 회차의 성적표가 열립니다.'}),
         el('div', {class: 'mt-3 grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start [&>*]:min-w-0'}, [
             el('div', {class: 'relative h-60'}, [canvas]),
-            el('div', {class: 'overflow-x-auto rounded-lg border border-line'}, [table]),
+            tableBox,
         ]),
     );
-    return {block, draw: drawCsat};
+    return {block, draw: drawAll};
 }
 
 function renderPerson(root, person, exams, options, keys) {
@@ -391,8 +436,8 @@ function renderPerson(root, person, exams, options, keys) {
     // 석차는 등급으로 매기지 않는다(합산에 등급을 쓰지 않는다). 등급이면 영역 표만 쓰고 석차는 비운다
     const rankByGrade = rankBasis === 'grade';
     const rows = personTrend(person, exams, rankByGrade ? 'pct' : rankBasis, options);
-    const th = (t, cls = '') => el('th', {class: `border-b border-line bg-canvas px-3 py-2 text-left font-semibold text-ink-soft whitespace-nowrap ${cls}`, text: t});
-    const td = (t, cls = '') => el('td', {class: `border-b border-line-soft px-3 py-2 tabular-nums whitespace-nowrap ${cls}`, text: t});
+    const th = (t, cls = '') => el('th', {class: `border-b border-line bg-canvas px-2 py-2 text-left font-semibold text-ink-soft whitespace-nowrap ${cls}`, text: t});
+    const td = (t, cls = '') => el('td', {class: `border-b border-line-soft px-2 py-2 tabular-nums whitespace-nowrap ${cls}`, text: t});
     const absent = (r, span) => el('tr', {}, [td(r.key, 'font-semibold'), el('td', {class: 'border-b border-line-soft px-3 py-2 text-ink-soft', attrs: {colspan: String(span)}, text: '이 회차에는 없습니다'})]);
 
     // ── 회차별 영역 성적: 기준 칩과 과목 칩으로 선택한다 ──
@@ -429,17 +474,17 @@ function renderPerson(root, person, exams, options, keys) {
     // 영역마다 직전 응시 회차 대비 변화(결시는 건너뛰고, 과목이 바뀌면 변화로 치지 않는다)
     const changes = Object.fromEntries(AREAS.map(([k]) => [k, changeVsPrev(rows, k)]));
     const subjectTable = el('table', {class: 'w-full text-base', attrs: {id: 'trend-subject-table'}}, [
-        el('thead', {}, [el('tr', {}, [th('회차'), th('영역'), th('과목명'), th('원점수', 'text-right'), th('표준점수', 'text-right'), th('백분위', 'text-right'), th('등급', 'text-right'), th('직전 응시 대비')])]),
+        el('thead', {}, [el('tr', {}, [th('회차'), th('영역'), th('과목명 · 직전 응시 대비'), th('원점수', 'text-right'), th('표준점수', 'text-right'), th('백분위', 'text-right'), th('등급', 'text-right')])]),
         el('tbody', {}, rows.flatMap((r, i) => (r.student
             ? AREAS.map(([k, text]) => {
                 // 탐구1·2가 같은 과목이면 탐구1 줄에 합친 점수를 적는다(「직전 응시 대비」와 같은 점수). 탐구2 줄은 과목명만
                 const merged = areaScore(r.student, k);
                 const d = merged === MERGED ? {subject: r.student[k]?.subject} : (merged ?? {});
-                return clickableRow(r, [td(r.key, 'font-semibold'), td(text), td(d.subject || DASH),
-                    td(plain(rawOf(d)), 'text-right'), td(plain(d.std), 'text-right'), td(plain(d.pct), 'text-right'), td(plain(d.grade), 'text-right'),
-                    td(changeText(changes[k][i]) || DASH, 'text-ink-soft')]);
+                // 직전 응시 대비는 과목명 아랫줄에 적는다(열을 따로 두면 표가 옆으로 넓어진다)
+                return clickableRow(r, [td(r.key, 'font-semibold align-top'), td(text, 'align-top'), twoLines(d.subject || DASH, changeText(changes[k][i])),
+                    td(plain(rawOf(d)), 'text-right align-top'), td(plain(d.std), 'text-right align-top'), td(plain(d.pct), 'text-right align-top'), td(plain(d.grade), 'text-right align-top')]);
             })
-            : [absent(r, 7)]))),
+            : [absent(r, 6)]))),
     ]);
 
     // ── 합산 석차: 1등이 위로 가게 축을 뒤집는다 ──

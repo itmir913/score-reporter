@@ -205,7 +205,12 @@ function syncCsatSubjectBar() {
 /** 선택 바에서 과목·탐구 방식을 바꿀 때. n합만 다시 계산하고 수능최저 표만 다시 그린다 */
 export function handleCsatSubjectsChange() {
     const inputs = [...document.querySelectorAll('[data-change="csat-subjects"]')];
-    setCsatSubjects(inputs.filter(b => b.checked && b.value).map(b => b.value));
+    applyCsatSubjects(inputs.filter(b => b.checked && b.value).map(b => b.value));
+}
+
+/** 과목 선택을 바꾸고 보고서의 수능최저 표를 맞춘다. 통계 탭의 회차별 수능최저도 같은 선택을 쓴다 */
+export function applyCsatSubjects(keys) {
+    setCsatSubjects(keys);
     if (!ST.cache || !ST.data) return;
     ST.cache.csatSums = ST.data.map(s => csatSumsOf(s));
     renderCsatMinRequirement(ST.cache);
