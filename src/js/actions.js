@@ -34,6 +34,7 @@ import {
     showCsatStudents,
     showSelectedSubjectStudents,
 } from './report/report-modal.js';
+import {openReportPrint} from './report/report-print.js';
 import {handleClassChange, handleCsatSubjectsChange, renderCsatSchoolTable} from './report/report-csat-sum.js';
 import {renderTopN} from './report/report-render-topN.js';
 import {renderScoreDistribution} from './report/report-score-distribution.js';
@@ -63,7 +64,7 @@ const CLICK_ACTIONS = {
         clearAll();
     },
     'load-sample': () => loadSampleData(),
-    'print-page': () => window.print(),
+    'print-page': () => openReportPrint(),
     'print-student': () => printStudentDetail(),
     'export-to': (el) => exportTo(el.dataset.format),
     'row-click': (el) => handleRowClick(el),

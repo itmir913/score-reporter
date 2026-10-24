@@ -160,7 +160,7 @@
          TAB 2: 성적 보고서
     ═══════════════════════════════════ -->
     <div id="tab-report" class="hidden animate-fade-in pb-12">
-        <div class="print-wrap flex flex-col gap-gutter">
+        <div class="flex flex-col gap-gutter">
         <div class="no-print flex flex-wrap items-end justify-between gap-3">
             <div class="min-w-0">
                 <h2 class="text-3xl font-bold tracking-tight">보고서</h2>
@@ -179,7 +179,7 @@
             </div>
 
             <div id="report-content" class="hidden space-y-10">
-                <section class="print-page">
+                <section>
                     <div class="text-center pt-12 pb-16 space-y-4 border-b-2 border-slate-100 mb-12">
                         <!-- 제목과 종합 분석은 회차마다 따로 적는다(report.js). 글자만 받아 붙여 넣은 서식이 섞이지 않게 한다 -->
                         <h1 id="report-title" contenteditable="plaintext-only"
@@ -189,7 +189,7 @@
                         <p id="print-date-top" class="text-lg text-slate-400 font-medium tracking-wide"></p>
                     </div>
 
-                    <div class="mb-16 print:break-after-page">
+                    <div class="mb-16">
                         <div class="flex items-center gap-2 mb-5">
                             <span class="w-1.5 h-6 rounded bg-brand inline-block"></span>
                             <h3 class="font-bold text-slate-800 text-xl">Overall Analysis / 종합 분석</h3>
@@ -242,7 +242,7 @@
                         <p id="basis-missing-note" class="mt-2 rounded-xl bg-amber-50 border border-amber-200 px-4 py-2 text-base font-semibold text-amber-800 empty:hidden"></p>
                     </section>
 
-                    <section class="print-page">
+                    <section>
                         <div class="flex items-center justify-between mb-4 flex-wrap gap-4">
                             <div class="flex items-center gap-2">
                                 <span class="w-1.5 h-6 rounded bg-brand inline-block"></span>
@@ -274,7 +274,7 @@
                         </div>
                     </section>
 
-                    <section class="print-page">
+                    <section>
                         <div class="flex items-center justify-between mb-5 flex-wrap gap-4">
                             <div class="flex items-center gap-3">
                                 <span class="w-1.5 h-6 rounded bg-brand inline-block"></span>
@@ -308,15 +308,15 @@
                         </div>
                     </section>
 
-                    <section class="print-page">
+                    <section>
                         <div class="flex items-center gap-2 mb-4">
                             <span class="w-1.5 h-6 rounded bg-orange-500 inline-block"></span>
                             <h3 class="font-bold text-slate-800 text-xl">선택과목 비율 분석</h3>
                         </div>
                         <div class="flex flex-col gap-6">
                             <!-- 국어·수학은 제목 → 차트 → 표를 세로로 쌓아 넓은 화면에서 두 열로 놓는다 -->
-                            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 print:grid-cols-1 [&>*]:min-w-0">
-                            <div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-col no-print-box print:break-inside-avoid">
+                            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 [&>*]:min-w-0">
+                            <div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-col">
                                 <h3 class="text-center font-bold text-slate-700 mb-6">국어 선택 비율</h3>
                                 <div class="flex flex-col gap-4 items-center">
                                     <div class="relative w-full h-80 md:h-96 flex-shrink-0 mx-auto no-print">
@@ -326,7 +326,7 @@
                                 </div>
                             </div>
 
-                            <div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-col no-print-box print:break-inside-avoid">
+                            <div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-col">
                                 <h3 class="text-center font-bold text-slate-700 mb-6">수학 선택 비율</h3>
                                 <div class="flex flex-col gap-4 items-center">
                                     <div class="relative w-full h-80 md:h-96 flex-shrink-0 mx-auto no-print">
@@ -337,14 +337,14 @@
                             </div>
                             </div>
 
-                            <div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-col no-print-box print:break-inside-avoid">
+                            <div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-col">
                                 <h3 class="text-center font-bold text-slate-700 mb-6">탐구 선택 비율</h3>
                                 <div class="flex flex-col md:flex-row gap-2 items-center md:items-start">
                                     <!-- 탐구는 과목이 많아 범례가 몇 줄을 차지한다. 높이를 넉넉히 주어야 파이가 작아지지 않는다 -->
                                     <div class="relative w-full md:w-[40%] h-80 md:h-96 flex-shrink-0 mx-auto no-print">
                                         <canvas id="inq-select-chart"></canvas>
                                     </div>
-                                    <div id="inq-select-stats" class="w-full md:w-[60%] print:w-full"></div>
+                                    <div id="inq-select-stats" class="w-full md:w-[60%]"></div>
                                 </div>
                             </div>
 
@@ -353,7 +353,7 @@
 
                 </div>
 
-                <section class="mt-6 print:break-before-page" id="csat_sum">
+                <section class="mt-6" id="csat_sum">
                     <div class="flex items-center gap-2">
                         <span class="w-1.5 h-6 rounded bg-brand inline-block"></span>
                         <h3 id="csat-title" class="font-bold text-slate-800 text-xl">수능 최저학력기준 충족 분석(국어+수학+영어+탐구 2과목 합)</h3>
@@ -394,7 +394,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-white border border-slate-200 rounded-xl p-6 mt-6 print-page">
+                    <div class="bg-white border border-slate-200 rounded-xl p-6 mt-6">
                         <h3 class="text-lg font-bold mb-3 flex items-center gap-2">
                             <span class="w-1 h-5 bg-purple-500 rounded"></span>
                             학년 전체 최저학력기준 충족 (누적 인원)
@@ -514,7 +514,7 @@
                     </div>
                 </section>
 
-                <section class="print-page">
+                <section>
                     <div class="flex items-center justify-between mb-4 flex-wrap gap-4">
                         <div class="flex items-center gap-2">
                             <span class="w-1.5 h-6 rounded bg-brand inline-block"></span>
