@@ -4,6 +4,7 @@ import {ST} from '../main.js';
 import {includeNoInquiry} from '../report.js';
 import {sortedExams} from '../exams/examStore.js';
 import {personTrend, schoolTrend} from '../trend/trend.js';
+import {AREAS, areaScore, changeText, changeVsPrev, MERGED, rawOf} from '../trend/personal.js';
 import {DASH, fmt} from '../utils.js';
 import {showStudentRecord} from '../report/report-modal.js';
 import {clear, el} from './dom.js';
@@ -239,16 +240,6 @@ const SUBJECT_COLORS = {korean: '#0d9488', math: '#7c3aed', inquiry1: '#ea580c',
 let subjectBasis = 'pct';
 const hiddenSubjects = new Set();
 
-/** 성적 표의 영역 줄. 영어·한국사는 절대평가라 원점수·등급만 있다 */
-const TABLE_AREAS = [['korean', '국어'], ['math', '수학'], ['english', '영어'], ['inquiry1', '탐구1'], ['inquiry2', '탐구2'], ['hist', '한국사']];
-
-/** 원점수: 원점수 열이 없으면 공통+선택(성적표와 같은 규칙) */
-function rawOf(d) {
-    if (!d) return null;
-    if (Number.isFinite(d.raw)) return d.raw;
-    if (Number.isFinite(d.common_raw) || Number.isFinite(d.select_raw)) return (d.common_raw || 0) + (d.select_raw || 0);
-    return null;
-}
 const valueOf = (d, basis) => (basis === 'raw' ? rawOf(d) : (Number.isFinite(d?.[basis]) ? d[basis] : null));
 const plain = (v) => (Number.isFinite(v) ? String(v) : DASH);
 
@@ -285,6 +276,7 @@ function renderPerson(root, person, exams, options, keys) {
             }, [el('span', {class: 'inline-block size-3 rounded-full', style: {background: on ? SUBJECT_COLORS[k] : '#9ca3af'}}), el('span', {text})]));
         });
         const basisLabel = basisLabelOf(subjectBasis);
+        // 차트는 칸 값 그대로 그린다(탐구1·2 같은 과목 병합은 표에만 적용)
         drawLine('trendStudent', subjectCanvas, keys,
             SUBJECT_LINES.filter(([k]) => !hiddenSubjects.has(k)).map(([k, text]) => ({
                 label: text, data: rows.map(r => (r.student ? valueOf(r.student[k], subjectBasis) : null)),
@@ -298,15 +290,20 @@ function renderPerson(root, person, exams, options, keys) {
             });
     };
 
+    // 영역마다 직전 응시 회차 대비 변화(결시는 건너뛰고, 과목이 바뀌면 변화로 치지 않는다)
+    const changes = Object.fromEntries(AREAS.map(([k]) => [k, changeVsPrev(rows, k)]));
     const subjectTable = el('table', {class: 'w-full text-base', attrs: {id: 'trend-subject-table'}}, [
-        el('thead', {}, [el('tr', {}, [th('회차'), th('영역'), th('과목명'), th('원점수', 'text-right'), th('표준점수', 'text-right'), th('백분위', 'text-right'), th('등급', 'text-right')])]),
-        el('tbody', {}, rows.flatMap(r => (r.student
-            ? TABLE_AREAS.map(([k, text]) => {
-                const d = r.student[k] ?? {};
+        el('thead', {}, [el('tr', {}, [th('회차'), th('영역'), th('과목명'), th('원점수', 'text-right'), th('표준점수', 'text-right'), th('백분위', 'text-right'), th('등급', 'text-right'), th('직전 응시 대비')])]),
+        el('tbody', {}, rows.flatMap((r, i) => (r.student
+            ? AREAS.map(([k, text]) => {
+                // 탐구1·2가 같은 과목이면 탐구1 줄에 합친 점수를 적는다(「직전 응시 대비」와 같은 점수). 탐구2 줄은 과목명만
+                const merged = areaScore(r.student, k);
+                const d = merged === MERGED ? {subject: r.student[k]?.subject} : (merged ?? {});
                 return clickableRow(r, [td(r.key, 'font-semibold'), td(text), td(d.subject || DASH),
-                    td(plain(rawOf(d)), 'text-right'), td(plain(d.std), 'text-right'), td(plain(d.pct), 'text-right'), td(plain(d.grade), 'text-right')]);
+                    td(plain(rawOf(d)), 'text-right'), td(plain(d.std), 'text-right'), td(plain(d.pct), 'text-right'), td(plain(d.grade), 'text-right'),
+                    td(changeText(changes[k][i]) || DASH, 'text-ink-soft')]);
             })
-            : [absent(r, 6)]))),
+            : [absent(r, 7)]))),
     ]);
 
     // ── 합산 석차: 1등이 위로 가게 축을 뒤집는다 ──
@@ -323,7 +320,10 @@ function renderPerson(root, person, exams, options, keys) {
             // 넓은 화면에서는 차트와 표를 나란히 둔다. 영역 표는 길어서 차트가 따라 내려오게 붙여 둔다
             el('div', {class: 'mt-3 grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start [&>*]:min-w-0'}, [
                 el('div', {class: 'relative h-72 xl:sticky xl:top-4'}, [subjectCanvas]),
-                el('div', {class: 'overflow-x-auto rounded-lg border border-line'}, [subjectTable]),
+                el('div', {}, [
+                    el('div', {class: 'overflow-x-auto rounded-lg border border-line'}, [subjectTable]),
+                    el('p', {class: 'mt-2 text-base text-ink-soft', text: '직전 응시 대비는 그 영역을 응시한 바로 앞 회차와 견줍니다. 회차마다 응시 집단이 달라 백분위 차이에 그 영향이 섞입니다.'}),
+                ]),
             ]),
         ]),
         el('div', {class: 'mt-4 rounded-xl border border-line p-4'}, [
