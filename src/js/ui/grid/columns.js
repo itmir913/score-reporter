@@ -111,7 +111,7 @@ export function openColumns(dialog, { registry, columns, pinned, onApply }) {
   }
 
   const pinInput = el('input', {
-    class: 'field mt-1 w-24 text-center figure',
+    class: 'field w-24 text-center figure',
     attrs: { type: 'number', min: 0, max: 6, step: 1, value: pinCount, 'aria-label': '고정할 열 수' },
     on: { change: (event) => { pinCount = Math.max(0, Math.min(6, Number(event.target.value) || 0)); paint(); } }
   });
@@ -135,8 +135,8 @@ export function openColumns(dialog, { registry, columns, pinned, onApply }) {
     pinNote.textContent = chosen.length === 0
       ? '보일 열을 하나 이상 선택하세요.'
       : pinCount === 0
-        ? '고정한 열이 없습니다. 가로로 스크롤하면 왼쪽 열도 함께 밀려납니다.'
-        : `앞 ${pinCount}개 열이 왼쪽에 붙어 있습니다.`;
+        ? '고정한 열이 없습니다. 가로로 스크롤하면 모든 열이 함께 움직입니다.'
+        : `가로로 스크롤해도 앞의 ${pinCount}개 열은 왼쪽에 고정됩니다.`;
   }
 
   // 좁은 화면에서 좌우로 나누면 「자료에 있는 열」이 접혀 내려가 안 보인다.
@@ -146,9 +146,12 @@ export function openColumns(dialog, { registry, columns, pinned, onApply }) {
       el('h3', { class: 'text-lg font-bold tracking-tight', text: '보이는 열' }),
       el('p', { class: 'text-base text-ink-soft', text: '끌어다 놓거나 화살표로 순서를 바꿉니다. 표의 열 이름을 끌어도 됩니다.' }),
       shownList,
+      // 글자와 입력칸을 한 줄에 띄워 세운다. 붙어 있으면 어디까지가 이름인지 흐려진다
       el('div', { class: 'mt-4' }, [
-        el('label', { class: 'text-base font-semibold', text: '왼쪽에 고정할 열 수' }),
-        pinInput,
+        el('label', { class: 'flex items-center gap-3' }, [
+          el('span', { class: 'text-base font-semibold', text: '왼쪽에 고정할 열 수' }),
+          pinInput
+        ]),
         pinNote
       ])
     ]),
