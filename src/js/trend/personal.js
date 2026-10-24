@@ -115,6 +115,8 @@ export function strengths(student) {
     ranked.forEach((item, i) => {
         const next = ranked[i + 1];
         item.similarToNext = Boolean(next) && item.pct - next.pct <= STRENGTH_SIMILAR;
+        // 표에 「○○과 비슷함(차이 n)」으로 적으려고 바로 아래 과목과 차이를 함께 둔다
+        item.next = next ? {name: next.subject || next.label, diff: item.pct - next.pct} : null;
     });
     const inq = ranked.filter(item => INQUIRY.has(item.area));
     const gap = inq.length === 2 ? Math.abs(inq[0].pct - inq[1].pct) : null;
@@ -138,6 +140,16 @@ export function csatTimeline(rows, sumsOf) {
         }));
         return {grades, sums: sumsOf(r.student), noGrade: Object.values(grades).every(g => g === null)};
     });
+}
+
+/* 낱말 뒤의 「과/와」. 받침이 있으면 「과」. 로마 숫자로 끝나는 과목명(물리학Ⅰ·Ⅱ)은 읽는 소리(일·이)로 본다 */
+const 받침소리 = {'Ⅰ': true, 'Ⅱ': false, '1': true, '2': false, '3': true, '4': false, '5': false, '6': true, '7': true, '8': true, '9': false, '0': true};
+export function 과와(word) {
+    const last = String(word ?? '').trim().slice(-1);
+    if (last in 받침소리) return 받침소리[last] ? '과' : '와';
+    const code = last.charCodeAt(0) - 0xac00;
+    if (code >= 0 && code < 11172) return code % 28 ? '과' : '와';
+    return '와';
 }
 
 const arrow = (d) => (d > 0 ? `▲${d}` : d < 0 ? `▼${-d}` : '변화 없음');

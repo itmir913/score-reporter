@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {changeText, changeVsPrev, csatTimeline, strengths} from '../src/js/trend/personal.js';
+import {changeText, changeVsPrev, csatTimeline, strengths, 과와} from '../src/js/trend/personal.js';
 import {_getCsatRawSums} from '../src/js/report/report-csat-sum.js';
 
 /* 학생 한 명 안에서의 비교. 합성 자료만 쓴다. */
@@ -127,5 +127,15 @@ describe('회차별 수능최저', () => {
         expect(t.grades.inquiry2).toBeNull();
         expect(t.sums.sum2).toBe(5);
         expect(t.sums.sum3).toBeNull();
+    });
+});
+
+describe('과와', () => {
+    it('받침에 따라 과·와를 선택하고, 로마 숫자는 읽는 소리로 본다', () => {
+        expect(과와('국어')).toBe('와');
+        expect(과와('화법과 작문')).toBe('과');
+        expect(과와('물리학Ⅰ')).toBe('과');
+        expect(과와('화학Ⅱ')).toBe('와');
+        expect(과와('미적분')).toBe('과');
     });
 });

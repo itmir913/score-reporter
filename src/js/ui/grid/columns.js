@@ -144,7 +144,7 @@ export function openColumns(dialog, { registry, columns, pinned, onApply }) {
   const body = el('div', { class: 'grid gap-5 md:grid-cols-2' }, [
     el('section', {}, [
       el('h3', { class: 'text-lg font-bold tracking-tight', text: '보이는 열' }),
-      el('p', { class: 'text-base text-ink-soft', text: '끌어다 놓거나 화살표로 순서를 바꿉니다. 표의 열 이름을 끌어도 됩니다.' }),
+      el('p', { class: 'text-base text-ink-soft', text: '끌어다 놓거나 화살표 단추로 순서를 바꿉니다. 표의 열 제목을 끌어도 됩니다.' }),
       shownList,
       // 글자와 입력칸을 한 줄에 띄워 세운다. 붙어 있으면 어디까지가 이름인지 흐려진다
       el('div', { class: 'mt-4' }, [
@@ -157,7 +157,7 @@ export function openColumns(dialog, { registry, columns, pinned, onApply }) {
     ]),
     el('section', {}, [
       el('h3', { class: 'text-lg font-bold tracking-tight', text: '데이터에 있는 열' }),
-      el('p', { class: 'text-base text-ink-soft', text: '누르면 켜지고 꺼집니다.' }),
+      el('p', { class: 'text-base text-ink-soft', text: '누르면 표에 보이거나 숨겨집니다.' }),
       pickList
     ])
   ]);

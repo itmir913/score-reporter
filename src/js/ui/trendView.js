@@ -4,10 +4,10 @@ import {ST} from '../main.js';
 import {includeNoInquiry} from '../report.js';
 import {sortedExams} from '../exams/examStore.js';
 import {personTrend, schoolTrend} from '../trend/trend.js';
-import {AREAS, areaScore, changeText, changeVsPrev, CSAT_AREAS, csatTimeline, MERGED, rawOf, strengths} from '../trend/personal.js';
+import {AREAS, areaScore, changeText, changeVsPrev, CSAT_AREAS, csatTimeline, MERGED, rawOf, strengths, 과와} from '../trend/personal.js';
 import {CSAT_INQUIRY_MODES, CSAT_SUBJECTS, csatSumsOf, getCsatSubjects} from '../report/report-csat-sum.js';
 import {PCT_MAX, PCT_MIN, STRENGTH_SIMILAR} from '../core/limits.js';
-import {DASH, fmt} from '../utils.js';
+import {DASH, fmt, roundHalfUp} from '../utils.js';
 import {showStudentRecord} from '../report/report-modal.js';
 import {clear, el} from './dom.js';
 
@@ -283,20 +283,20 @@ function analysisBlock(rows) {
         const td = (t, cls = '') => el('td', {class: `border-b border-line-soft px-3 py-2 tabular-nums whitespace-nowrap ${cls}`, text: t});
         const canvas = el('canvas', {attrs: {id: 'trend-strength-chart'}});
         const table = el('table', {class: 'w-full text-base', attrs: {id: 'trend-strength-table'}}, [
-            el('thead', {}, [el('tr', {}, [th('영역'), th('과목명'), th('백분위', 'text-right'), th('등급', 'text-right'), th('')])]),
+            el('thead', {}, [el('tr', {}, [th('영역'), th('과목명'), th('백분위', 'text-right'), th('등급', 'text-right'), th('비슷한 과목')])]),
             el('tbody', {}, [
                 ...ranked.map(x => el('tr', {}, [td(x.label), td(x.subject || DASH), td(plain(x.pct), 'text-right font-semibold'), td(plain(x.grade), 'text-right'),
                     // 바로 아래 과목과 차이가 작으면 표시만 한다. 그 안의 차이로 강약을 나누지 않는다
-                    td(x.similarToNext ? '≈ 아래 과목과 비슷함' : '', 'text-ink-soft')])),
+                    td(x.similarToNext ? `≈ ${x.next.name}${과와(x.next.name)} 비슷함(차이 ${roundHalfUp(x.next.diff, 1)})` : '', 'text-ink-soft')])),
                 ...others.map(x => el('tr', {}, [td(x.label), td(x.subject || DASH), td(x.noPct ? '백분위 없음' : DASH, 'text-right text-ink-soft'), td(plain(x.grade), 'text-right'), td('')])),
             ]),
         ]);
         const notes = [
-            `백분위가 큰 순서입니다. 이웃한 두 과목의 차이가 ${STRENGTH_SIMILAR} 이하이면 비슷하다고 봅니다. 탐구 백분위는 그 과목 응시자 안에서의 위치입니다. 영어·한국사는 등급만 적습니다.`,
+            `백분위가 높은 순서입니다. 이웃한 두 과목의 백분위 차이가 ${STRENGTH_SIMILAR} 이하이면 비슷하다고 봅니다. 탐구 백분위는 그 과목 응시자 안에서의 위치입니다. 영어·한국사는 등급만 적습니다.`,
             ...(inquiryGap !== null ? [`탐구 두 과목의 백분위 차이가 ${inquiryGap}입니다.`] : []),
         ];
         block.append(el('div', {class: 'mt-3 grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start [&>*]:min-w-0'}, [
-            ranked.length ? el('div', {class: 'relative h-60'}, [canvas]) : el('p', {class: 'rounded-lg bg-canvas px-4 py-3 text-base text-ink-soft', text: '이 회차에는 견줄 백분위가 없습니다.'}),
+            ranked.length ? el('div', {class: 'relative h-60'}, [canvas]) : el('p', {class: 'rounded-lg bg-canvas px-4 py-3 text-base text-ink-soft', text: '이 회차에는 비교할 백분위가 없습니다.'}),
             el('div', {}, [
                 el('div', {class: 'overflow-x-auto rounded-lg border border-line'}, [table]),
                 ...notes.map(t => el('p', {class: 'mt-2 text-base text-ink-soft', text: t})),
@@ -367,7 +367,7 @@ function csatBlock(rows, keys) {
     };
     block.append(
         el('div', {class: 'flex flex-wrap items-center justify-between gap-3'}, [el('h4', {class: 'text-lg font-bold', text: '회차별 수능최저'}), chips]),
-        el('p', {class: 'mt-1 text-base text-ink-soft', text: `보고서 탭 수능최저의 과목 선택을 따릅니다: ${names.length ? names.join(' · ') : '선택한 과목 없음'}`}),
+        el('p', {class: 'mt-1 text-base text-ink-soft', text: `보고서 탭 「수능 최저학력기준」의 과목 선택을 따릅니다: ${names.length ? names.join(' · ') : '선택한 과목 없음'}`}),
         el('div', {class: 'mt-3 grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start [&>*]:min-w-0'}, [
             el('div', {class: 'relative h-60'}, [canvas]),
             el('div', {class: 'overflow-x-auto rounded-lg border border-line'}, [table]),
@@ -449,7 +449,7 @@ function renderPerson(root, person, exams, options, keys) {
                 el('div', {class: 'relative h-72 xl:sticky xl:top-4'}, [subjectCanvas]),
                 el('div', {}, [
                     el('div', {class: 'overflow-x-auto rounded-lg border border-line'}, [subjectTable]),
-                    el('p', {class: 'mt-2 text-base text-ink-soft', text: '직전 응시 대비는 그 영역을 응시한 바로 앞 회차와 견줍니다. 회차마다 응시 집단이 달라 백분위 차이에 그 영향이 섞입니다.'}),
+                    el('p', {class: 'mt-2 text-base text-ink-soft', text: '직전 응시 대비는 그 영역을 응시한 가장 가까운 앞 회차와 비교합니다(결시한 회차는 건너뜁니다). 회차마다 응시 집단이 달라 백분위 차이에는 그 영향도 들어 있습니다.'}),
                 ]),
             ]),
         ]),

@@ -176,7 +176,7 @@ export function mountStudentTable({root, onOpen}) {
         if (걸린것 === 0) {
             dom.chips.append(el('span', {
                 class: 'truncate text-ink-soft',
-                text: '열 제목을 눌러 정렬 / 열을 드래그해 순서 변경 / 열 사이 선을 드래그해 너비 조절 / 행을 누르면 성적표',
+                text: '열 제목을 눌러 정렬 / 열을 드래그해 순서 변경 / 열 사이 선을 드래그해 너비 조절 / 행을 눌러 성적표 열기',
             }));
             return;
         }
@@ -242,7 +242,9 @@ export function mountStudentTable({root, onOpen}) {
         get('last').disabled = page >= 끝;
         const 첫행 = count === 0 ? 0 : page * PAGE + 1;
         const 끝행 = Math.min(count, (page + 1) * PAGE);
-        dom.rowCount.textContent = `${수.format(첫행)}–${수.format(끝행)} / ${수.format(count)}명 · ${ms.toFixed(1)}ms`;
+        dom.rowCount.textContent = `${수.format(첫행)}–${수.format(끝행)} / ${수.format(count)}명`;
+        // 걸린 시간은 화면 글자에서 제외하고 마우스를 올리면 보이게 둔다
+        dom.rowCount.title = `조회 ${ms.toFixed(1)}ms`;
     }
 
     function 쪽가기(next) {
@@ -374,7 +376,7 @@ export function mountStudentTable({root, onOpen}) {
         paintChips();
         // 무엇 때문에 0명인지 말해 준다. 「없습니다」만으로는 어디를 되돌려야 하는지 모른다
         get('empty').textContent = view.filters.length
-            ? '걸려 있는 필터에 맞는 학생이 없습니다. 위 칩에서 필터를 하나씩 떼어 보세요.'
+            ? '지금 필터에 맞는 학생이 없습니다. 위 칩에서 필터를 하나씩 해제해 보세요.'
             : '표시할 학생이 없습니다.';
 
         if (keepScroll) {
@@ -406,7 +408,7 @@ export function mountStudentTable({root, onOpen}) {
                 view = {...view, filters: kept};
             }
             dom.notice.textContent = 해제
-                ? `기준이 바뀌어 점수 범위 필터 ${해제}개를 해제했습니다. 값 선택 필터는 그대로라, 새 기준에 그 값이 없으면 표가 빌 수 있습니다.`
+                ? `기준이 바뀌어 점수 범위 필터 ${해제}개를 해제했습니다. 값 선택 필터는 그대로 두었으므로, 새 기준에 그 값이 없으면 표가 비어 보일 수 있습니다.`
                 : '';
             basis = nextBasis;
             // 회차가 바뀌면 값 목록 안 검색어만 비운다. 필터·정렬은 지킨다
