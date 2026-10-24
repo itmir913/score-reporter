@@ -3,6 +3,8 @@ import {identityKeys} from '../src/js/exams/identity.js';
 import {nextGradeGap} from '../src/js/trend/personal.js';
 import {computeRenderCache} from '../src/js/report/report-cache.js';
 import {examSummary} from '../src/js/trend/trend.js';
+import {withUnit} from '../src/js/utils.js';
+import {entryOrder} from '../src/js/ui/grid/filters.js';
 
 /* 적대적 코드 감사(2026-10-24)에서 재현된 버그. 합성 자료만 쓴다. */
 const blank = (subject = '') => ({subject, raw: null, std: null, pct: null, grade: null});
@@ -36,5 +38,19 @@ describe('감사 버그 재현', () => {
         expect(c.some(k => b.includes(k))).toBe(true);
         // 숫자가 아닌 반 이름은 그대로 둔다
         expect(identityKeys({grade_year: '3', class: '가반', number: '5'}).some(k => k.includes('가반'))).toBe(true);
+    });
+});
+
+describe('2차 적대 감사 버그 재현', () => {
+    it('반·번호에 단위가 이미 붙어 있으면 다시 붙이지 않는다', () => {
+        expect(withUnit('1', '반')).toBe('1반');
+        expect(withUnit('1반', '반')).toBe('1반');
+        expect(withUnit('5번', '번')).toBe('5번');
+        expect(withUnit('', '번')).toBe('');
+    });
+    it('숫자 열 값 목록에서도 (빈칸)은 맨 뒤다', () => {
+        const order = entryOrder({key: 'eng', numeric: true, type: 'number'});
+        const entries = [{value: 3, label: '3'}, {value: null, label: '(빈칸)'}, {value: 1, label: '1'}];
+        expect([...entries].sort(order).map(e => e.label)).toEqual(['1', '3', '(빈칸)']);
     });
 });

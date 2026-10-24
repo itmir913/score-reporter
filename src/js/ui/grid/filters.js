@@ -59,8 +59,9 @@ export function entryOrder(field) {
     return (left, right) => Number(right.value) - Number(left.value);
   }
   if (field.numeric) {
-    // 등급·순위는 작은 값이 앞선다
-    return (left, right) => Number(left.value) - Number(right.value);
+    // 등급·순위는 작은 값이 앞선다. 「(빈칸)」은 숫자 열에서도 맨 뒤다
+    return (left, right) => Number(isBlank(left.value)) - Number(isBlank(right.value))
+      || Number(left.value) - Number(right.value);
   }
   const 빈칸 = (entry) => Number(isBlank(entry.value));
   return (left, right) => 빈칸(left) - 빈칸(right)

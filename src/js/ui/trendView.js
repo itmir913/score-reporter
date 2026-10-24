@@ -7,7 +7,7 @@ import {personTrend, schoolTrend} from '../trend/trend.js';
 import {AREAS, areaScore, changeText, changeVsPrev, csatTimeline, gapText, MERGED, nextGradeGap, rawOf, strengths, 과와} from '../trend/personal.js';
 import {applyCsatSubjects, CSAT_INQUIRY_MODES, CSAT_SUBJECTS, csatSumsOf, getCsatSubjects} from '../report/report-csat-sum.js';
 import {PCT_MAX, PCT_MIN} from '../core/limits.js';
-import {DASH, fmt} from '../utils.js';
+import {DASH, fmt, withUnit} from '../utils.js';
 import {showStudentRecord} from '../report/report-modal.js';
 import {clear, el} from './dom.js';
 
@@ -213,7 +213,7 @@ function classGroups(persons, exams) {
         const grade = String(s?.grade_year ?? '').trim();
         const cls = String(s?.class ?? '').trim();
         const key = cls ? `${grade}|${cls}` : '|';
-        const label = cls ? `${grade ? `${grade}학년 ` : ''}${cls}반` : '반 없음';
+        const label = cls ? `${grade ? `${withUnit(grade, '학년')} ` : ''}${withUnit(cls, '반')}` : '반 없음';
         if (!map.has(key)) map.set(key, {key, label, persons: []});
         map.get(key).persons.push(p);
     }
@@ -227,7 +227,7 @@ function classGroups(persons, exams) {
 function studentLabel(p, exams) {
     const s = latestRecord(p, exams);
     const number = String(s?.number ?? '').trim();
-    const id = number ? `${number}번` : String(s?.student_id ?? '').trim();
+    const id = number ? withUnit(number, '번') : String(s?.student_id ?? '').trim();
     return `${id ? `${id} ` : ''}${s?.name ?? ''}`;
 }
 
@@ -237,7 +237,7 @@ function describe(p, exams) {
     const s = latestRecord(p, exams);
     const grade = String(s?.grade_year ?? '').trim();
     const cls = String(s?.class ?? '').trim();
-    const room = cls ? `${grade ? `${grade}학년 ` : ''}${cls}반` : '';
+    const room = cls ? `${grade ? `${withUnit(grade, '학년')} ` : ''}${withUnit(cls, '반')}` : '';
     return [room, studentLabel(p, exams), `${Object.keys(p.entries).length}회`].filter(Boolean).join(' · ');
 }
 
@@ -525,8 +525,9 @@ function renderPerson(root, person, exams, options, keys) {
             el('div', {class: 'overflow-x-auto rounded-lg border border-line'}, [el('table', {class: 'w-full text-base', attrs: {id: 'trend-rank-table'}}, [
                 el('thead', {}, [el('tr', {}, [th('회차'), th('합산'), th('합산 석차'), th('국어'), th('수학'), th('탐구평균'), th('영어 등급')])]),
                 el('tbody', {}, rows.map(r => (r.student ? clickableRow(r, [
-                    td(r.key, 'font-semibold'), td(fmt(r.total)), td(r.rank ? `${r.rank} / ${r.of}` : DASH),
-                    td(fmt(r.kor)), td(fmt(r.math)), td(fmt(r.inq)), td(fmt(r.engGrade, 0)),
+                    // 등급 기준이면 합산·석차를 매기지 않는다. 계산에 쓴 백분위 값이 등급으로 오해되지 않게 비운다
+                    td(r.key, 'font-semibold'), td(rankByGrade ? DASH : fmt(r.total)), td(!rankByGrade && r.rank ? `${r.rank} / ${r.of}` : DASH),
+                    td(rankByGrade ? DASH : fmt(r.kor)), td(rankByGrade ? DASH : fmt(r.math)), td(rankByGrade ? DASH : fmt(r.inq)), td(fmt(r.engGrade, 0)),
                 ]) : absent(r, 6)))),
             ])]),
             ]),

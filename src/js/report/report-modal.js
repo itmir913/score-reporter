@@ -2,7 +2,7 @@ import {ST} from '../main.js';
 import {compositeScore} from '../core/aggregate.js';
 import {globalReportBasis, includeNoInquiry} from '../report.js';
 import {csatSumsOf} from './report-csat-sum.js';
-import {DASH, escapeAttr, hasScore, inquiryScores, toFixedHalfUp} from '../utils.js';
+import {DASH, escapeAttr, hasScore, inquiryScores, toFixedHalfUp, withUnit} from '../utils.js';
 import {openPopup} from '../ui/popup.js';
 
 /* ───────────────────────────────────────────
@@ -89,7 +89,7 @@ export function classNumberText(s) {
     if (showsStudentId(s)) return String(s.student_id);
     const cls = String(s.class ?? '').trim();
     const num = String(s.number ?? '').trim();
-    return [cls && `${cls}반`, num && `${num}번`].filter(Boolean).join(' ');
+    return [withUnit(cls, '반'), withUnit(num, '번')].filter(Boolean).join(' ');
 }
 
 /**
@@ -131,8 +131,8 @@ export function showBinStudentsModal(label, students) {
         return `
             <tr class="hover:bg-blue-50 cursor-pointer transition-colors group"
                 data-name="${escapeAttr(s.name)}" data-class="${escapeAttr(s.class)}" data-num="${escapeAttr(s.number)}" ${studentIdxAttr(s)} data-action="row-click">
-                <td class="border-b border-slate-200 p-3 text-slate-600">${String(s.class ?? '').trim() ? `${escapeAttr(s.class)}반` : DASH}</td>
-                <td class="border-b border-slate-200 p-3 text-slate-600">${showsStudentId(s) ? escapeAttr(s.student_id) : String(s.number ?? '').trim() ? `${escapeAttr(s.number)}번` : DASH}</td>
+                <td class="border-b border-slate-200 p-3 text-slate-600">${String(s.class ?? '').trim() ? escapeAttr(withUnit(s.class, '반')) : DASH}</td>
+                <td class="border-b border-slate-200 p-3 text-slate-600">${showsStudentId(s) ? escapeAttr(s.student_id) : String(s.number ?? '').trim() ? escapeAttr(withUnit(s.number, '번')) : DASH}</td>
                 <td class="border-b border-slate-200 p-3 font-bold text-slate-800">${escapeAttr(s.name)}</td>
                 <td class="border-b border-slate-200 p-3 text-blue-600 font-bold">
                     ${sum === null ? DASH : toFixedHalfUp(sum, 1)}
@@ -309,7 +309,7 @@ export function printStudentDetail() {
 
     // 제목에는 보고서 제목처럼 회차 이름을 넣는다(「5월 모의고사 성적표」). 회차 이름이 없을 때만 학년도를 쓴다
     const examKey = String(ST.activeExamKey ?? '').trim();
-    const examYear = s.exam_year ? `${s.exam_year}학년도 ` : '';
+    const examYear = s.exam_year ? `${withUnit(s.exam_year, '학년도')} ` : '';
     const title = `${examKey ? `${examKey} ` : examYear}모의고사 성적표`;
 
     // 원점수 표시 헬퍼

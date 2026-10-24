@@ -45,6 +45,8 @@ Object.defineProperty(ST, 'data', {
 // 두면 이름 칸이 "[object Object]" 가 되어 학생으로 섞여 들어갔다.
 function cellToPlain(val) {
     if (val === null || val === undefined) return '';
+    // 참/거짓 셀은 이름·점수 어느 쪽으로도 뜻이 없다. 빈칸으로 둔다(「true」라는 학생이 생기지 않게)
+    if (typeof val === 'boolean') return '';
     if (typeof val !== 'object') return val;
     if (val instanceof Date) return val.toISOString().split('T')[0]; // 날짜 형식
     if ('formula' in val || 'sharedFormula' in val || 'result' in val) {

@@ -28,6 +28,13 @@ export function toFixedHalfUp(v, d = 0) {
 /** 점수 자리에 값이 없을 때 쓰는 표시. 하이픈(-)은 음수·뺄셈과 헷갈려 긴 대시를 쓴다 */
 export const DASH = '—';
 
+/** 반·번호·학년 뒤에 단위를 붙인다. 이미 「1반」「5번」「3학년」처럼 붙어 있으면 그대로 둔다(「1반반」이 되지 않게) */
+export function withUnit(v, unit) {
+    const t = String(v ?? '').trim();
+    if (!t) return '';
+    return t.endsWith(unit) ? t : `${t}${unit}`;
+}
+
 /* 표시용 숫자. 숫자 문자열도 받는다. 사사오입은 toFixedHalfUp 과 같다 */
 export function fmt(v, d = 1) {
     return toFixedHalfUp(v === null || v === undefined || v === '' ? NaN : Number(v), d);

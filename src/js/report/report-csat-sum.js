@@ -3,7 +3,7 @@ import {ST} from '../main.js';
 import {includeNoInquiry, renderAll} from '../report.js';
 /* 아래 마크업의 on* 속성이 부르는 함수는 모듈 스코프가 아니라 전역에서 찾는다.
  * src/main.js가 window에 올려두므로 여기서 import 하지 않는다. */
-import {DASH, escapeAttr, inquiryScores, roundHalfUp, sameInquirySubject} from '../utils.js';
+import {DASH, escapeAttr, inquiryScores, roundHalfUp, sameInquirySubject, withUnit} from '../utils.js';
 import {CSAT_SUM_MAX, isValidGrade} from '../core/limits.js';
 import {numberLabel, studentIdxAttr} from './report-modal.js';
 
@@ -176,7 +176,7 @@ export function renderCsatMinRequirement(cache) {
             .sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
         // 목록을 새로 만들면 선택한 반이 첫 반으로 돌아간다. 새 목록에도 있으면 되살린다
         const prevClass = classSelect.value;
-        classSelect.innerHTML = classes.map(c => `<option value="${escapeAttr(c)}">${escapeAttr(c)}반 보기</option>`).join('');
+        classSelect.innerHTML = classes.map(c => `<option value="${escapeAttr(c)}">${escapeAttr(withUnit(c, '반'))} 보기</option>`).join('');
         if (classes.includes(prevClass)) classSelect.value = prevClass;
         if (classes.length > 0) {
             renderCsatClassTable(cache);
