@@ -32,5 +32,9 @@ describe('감사 버그 재현', () => {
         const a = identityKeys({grade_year: '3', class: '01', number: '05', name: '가'});
         const b = identityKeys({grade_year: 3, class: 1, number: 5, name: '가'});
         expect(a.some(k => b.includes(k))).toBe(true);
+        const c = identityKeys({grade_year: '3학년', class: '1반', number: '5번', name: '가'});
+        expect(c.some(k => b.includes(k))).toBe(true);
+        // 숫자가 아닌 반 이름은 그대로 둔다
+        expect(identityKeys({grade_year: '3', class: '가반', number: '5'}).some(k => k.includes('가반'))).toBe(true);
     });
 });
