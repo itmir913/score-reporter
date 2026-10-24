@@ -179,3 +179,42 @@ describe('열 선택·열 초기화·열 고정', () => {
         expect(t.view.pinned).toBe(1);
     });
 });
+
+describe('인쇄 팝업', () => {
+    const fakeWindow = () => {
+        const doc = document.implementation.createHTMLDocument('');
+        return {document: doc, print: vi.fn(), close: vi.fn()};
+    };
+
+    it('조건에 맞는 전체 행(쪽과 무관)을 보이는 열만으로 그리고, 값은 글자로 넣는다', () => {
+        const pw = fakeWindow();
+        const open = vi.spyOn(window, 'open').mockReturnValue(pw);
+        const t = mount();
+        const data = many(1200);
+        data[0].name = '<b>태그</b>';
+        t.render(data, 'raw', {title: '9월'});
+        t.view.filters.push({key: 'class', op: 'in', values: ['1']});
+        t.view.columns = ['class', 'name', 'kor'];
+        t.render(data, 'raw');
+        g('print').click();
+        expect(open).toHaveBeenCalledOnce();
+        const doc = pw.document;
+        expect(doc.title).toBe('학생 명단 — 9월');
+        expect(doc.querySelectorAll('tbody tr')).toHaveLength(120);
+        expect([...doc.querySelectorAll('th')].map(th => th.textContent)).toEqual(['반', '이름', '국어 원점수']);
+        expect(doc.querySelector('tbody b')).toBeNull();
+        expect(doc.body.textContent).toContain('<b>태그</b>');
+        expect(doc.querySelector('.meta').textContent).toContain('조건: 반: 1');
+        // 결시(빈칸)는 0 이 아니라 — 로 찍힌다
+        expect([...doc.querySelectorAll('tbody tr')].some(tr => tr.children[2].textContent === '—')).toBe(true);
+        open.mockRestore();
+    });
+
+    it('맞는 학생이 없으면 인쇄를 쓸 수 없다', () => {
+        const t = mount();
+        t.render(many(10), 'raw');
+        t.view.filters.push({key: 'class', op: 'in', values: ['없는반']});
+        t.render(t.students, 'raw');
+        expect(g('print').disabled).toBe(true);
+    });
+});

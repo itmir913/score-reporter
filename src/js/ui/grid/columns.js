@@ -157,7 +157,8 @@ export function openColumns(dialog, { registry, columns, pinned, onApply }) {
       el('button', { class: 'btn', text: '취소', attrs: { type: 'button' }, on: { click: () => dialog.close() } }),
       el('button', {
         class: 'btn btn-primary', text: '적용', attrs: { type: 'button' },
-        on: { click: () => { onApply({ columns: chosen, pinned: pinCount }); dialog.close(); } }
+        // 열이 하나도 없으면 표가 빈다. 그런 적용은 받지 않는다
+        on: { click: () => { if (chosen.length === 0) return; onApply({ columns: chosen, pinned: pinCount }); dialog.close(); } }
       })
     ])
   }));

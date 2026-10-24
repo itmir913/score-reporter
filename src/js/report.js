@@ -124,7 +124,7 @@ function renderStudentTable(cache) {
         studentTableRoot = root;
         studentTable = mountStudentTable({root, onOpen: showStudentAt});
     }
-    studentTable.render(ST.data, cache.basis, {includeNoInquiry: cache.includeNoInquiry});
+    studentTable.render(ST.data, cache.basis, {includeNoInquiry: cache.includeNoInquiry, title: ST.activeExamKey});
 }
 
 /* ───────────────────────────────────────────

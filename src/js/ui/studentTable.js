@@ -5,6 +5,7 @@ import {applyQuery, describeFilter} from './grid/query.js';
 import {buildRegistry} from './grid/registry.js';
 import {createFilters} from './grid/filters.js';
 import {openColumns} from './grid/columns.js';
+import {printRows} from './grid/print.js';
 
 /* ───────────────────────────────────────────
    § 학생 표 (GridTable + GridTool)
@@ -123,6 +124,8 @@ export function mountStudentTable({root, onOpen}) {
     let 마지막조건 = '';
     let 보는행 = [];
     let 열린열 = null;
+    /** 인쇄 제목에 쓰는 회차 이름 */
+    let title = null;
     let 마지막가로 = 0;
 
     const table = createTable({
@@ -223,8 +226,7 @@ export function mountStudentTable({root, onOpen}) {
         disable('pin-more', 보이는고정 >= view.columns.length || !table.canPinMore());
         disable('reset-sorts', view.sorts.length === 0);
         disable('reset-filters', view.filters.length === 0);
-        // 인쇄는 다음 단계(3c)에서 잇는다
-        disable('print', true);
+        disable('print', 보는행.length === 0);
     }
 
     // ── 쪽 넘김 ──
@@ -274,6 +276,21 @@ export function mountStudentTable({root, onOpen}) {
     get('reset-columns').addEventListener('click', () => {
         const base = emptyView(fields);
         updateView({columns: base.columns, widths: base.widths, pinned: base.pinned});
+    });
+    /* 종이에는 조건에 맞는 전체를 낸다. 화면은 한 쪽만 그리지만, 인쇄를 누른 사람이 원하는 것은
+     * 지금 걸어 둔 조건의 결과이지 500행에서 잘린 조각이 아니다. 보이는 열·순서도 화면 그대로다 */
+    get('print').addEventListener('click', () => {
+        const 조건 = [
+            ...view.sorts.map(sort => `${label(sort.key)} ${sort.dir === 'asc' ? '▲' : '▼'}`),
+            ...view.filters.map(filter => describeFilter(filter, label(filter.key))),
+        ];
+        printRows({
+            title: `학생 명단 — ${title ?? ''}`.trim(),
+            meta: `${수.format(보는행.length)}명 · 기준 ${BASIS_LABEL[basis]}${조건.length ? ` · 조건: ${조건.join(', ')}` : ''}`,
+            rows: 보는행,
+            registry,
+            columns: view.columns,
+        });
     });
     get('columns').addEventListener('click', () => {
         openColumns(document.getElementById('grid-columns'), {
@@ -372,6 +389,7 @@ export function mountStudentTable({root, onOpen}) {
     const api = {
         closePopover,
         render(students, nextBasis, options = {}) {
+            title = options.title ?? title;
             current = api;
             fields = studentFields(nextBasis);
             rows = (students ?? []).map((s, i) => studentRow(s, i, nextBasis, options));
