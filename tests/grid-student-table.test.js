@@ -218,3 +218,30 @@ describe('인쇄 팝업', () => {
         expect(g('print').disabled).toBe(true);
     });
 });
+
+describe('열 선택 적용 조건·팝업 차단 안내', () => {
+    it('열을 모두 끄면 「적용」을 쓸 수 없고 까닭을 적는다', () => {
+        HTMLDialogElement.prototype.showModal ??= function () { this.open = true; };
+        const t = mount();
+        t.render(many(5), 'raw');
+        g('columns').click();
+        const dialog = document.getElementById('grid-columns');
+        // 누를 때마다 목록을 새로 그리므로 매번 다시 찾는다
+        for (let b; (b = dialog.querySelector('button[aria-pressed]:not([aria-pressed="false"])'));) b.click();
+        const apply = [...dialog.querySelectorAll('button')].find(b => b.textContent === '적용');
+        expect(apply.disabled).toBe(true);
+        expect(dialog.textContent).toContain('보일 열을 하나 이상 선택하세요.');
+    });
+
+    it('팝업이 막히면 공용 문구로 한 번 알린다', async () => {
+        const {POPUP_BLOCKED} = await import('../src/js/ui/popup.js');
+        const open = vi.spyOn(window, 'open').mockReturnValue(null);
+        const alert = vi.spyOn(window, 'alert').mockImplementation(() => {});
+        const t = mount();
+        t.render(many(5), 'raw');
+        g('print').click();
+        expect(alert).toHaveBeenCalledWith(POPUP_BLOCKED);
+        open.mockRestore();
+        alert.mockRestore();
+    });
+});

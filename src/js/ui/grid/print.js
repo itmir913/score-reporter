@@ -1,4 +1,5 @@
 import {cellText} from '../table.js';
+import {fontFaces, openPopup} from '../popup.js';
 
 /* ───────────────────────────────────────────
    § 학생 표 인쇄: 빈 팝업에 지금 조건에 맞는 전체 행을 장식 없는 표로 그린다
@@ -38,18 +39,16 @@ const STYLE = `
  */
 export function printRows({title, meta, rows, registry, columns}) {
     // 팝업 차단을 피하려고 클릭 직후 바로 연다
-    const pw = window.open('', '_blank', 'width=1100,height=900');
-    if (!pw) {
-        alert('팝업이 차단되었습니다. 브라우저의 팝업 허용 설정을 확인해주세요.');
-        return false;
-    }
+    const pw = openPopup('width=1100,height=900');
+    if (!pw) return false;
     const doc = pw.document;
     doc.open();
     doc.write('<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title></title></head><body></body></html>');
     doc.close();
     doc.title = title;
     const style = doc.createElement('style');
-    style.textContent = STYLE;
+    // 보고서 인쇄와 같은 글꼴(Pretendard)을 싣는다
+    style.textContent = fontFaces() + STYLE;
     doc.head.append(style);
 
     const make = (tag, text, className) => {

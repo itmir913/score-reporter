@@ -3,6 +3,7 @@ import {compositeScore} from '../core/aggregate.js';
 import {globalReportBasis, includeNoInquiry} from '../report.js';
 import {csatSumsOf} from './report-csat-sum.js';
 import {DASH, escapeAttr, hasScore, inquiryScores, toFixedHalfUp} from '../utils.js';
+import {openPopup} from '../ui/popup.js';
 
 /* ───────────────────────────────────────────
    § 모달 제어 및 상세 정보 표시
@@ -476,11 +477,8 @@ export function printStudentDetail() {
 </body>
 </html>`;
 
-    const pw = window.open('', '_blank', 'width=800,height=620');
-    if (!pw) {
-        alert('팝업이 차단되었습니다. 브라우저의 팝업 허용 설정을 확인해주세요.');
-        return;
-    }
+    const pw = openPopup('width=800,height=620');
+    if (!pw) return;
     pw.document.write(html);
     pw.document.close();
 }

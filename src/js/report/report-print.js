@@ -2,6 +2,7 @@ import Chart from 'chart.js/auto';
 import {ST} from '../main.js';
 import {DEFAULT_ANALYSIS, globalReportBasis} from '../report.js';
 import {escapeAttr} from '../utils.js';
+import {fontFaces, openPopup} from '../ui/popup.js';
 
 /* ───────────────────────────────────────────
    § 보고서 PDF 인쇄: 빈 팝업에 인쇄용 보고서를 새로 짠다
@@ -63,23 +64,6 @@ function chartImage(canvas, width, height) {
 const text = (id) => document.getElementById(id)?.textContent.trim() ?? '';
 const tableOf = (id) => document.getElementById(id)?.closest('table');
 const note = (id) => (text(id) ? `<p class="note">${escapeAttr(text(id))}</p>` : '');
-
-/* 문서에 실린 웹 글꼴(Pretendard)을 팝업에도 싣는다. 주소는 원래 스타일시트 기준으로 절대 주소로 바꾼다 */
-function fontFaces() {
-    const out = [];
-    for (const sheet of document.styleSheets) {
-        let rules;
-        try { rules = sheet.cssRules; } catch { continue; }
-        const base = sheet.href || location.href;
-        for (const rule of rules) {
-            if (rule.type !== CSSRule.FONT_FACE_RULE) continue;
-            out.push(rule.cssText.replace(/url\((['"]?)([^'")]+)\1\)/g, (m, q, u) => {
-                try { return `url("${new URL(u, base).href}")`; } catch { return m; }
-            }));
-        }
-    }
-    return out.join('\n');
-}
 
 const section = (title, body) => (body ? `<section><h2>${escapeAttr(title)}</h2>${body}</section>` : '');
 
@@ -192,11 +176,8 @@ ${section('과목별 성적 분포 종합', subjectCharts && `<div class="grid">
 export function openReportPrint() {
     if (!ST.data?.length) return;
     // 팝업 차단을 피하려고 클릭 직후 바로 연다. 내용은 그 다음에 채운다
-    const pw = window.open('', '_blank', 'width=900,height=1000');
-    if (!pw) {
-        alert('팝업이 차단되었습니다. 브라우저의 팝업 허용 설정을 확인해주세요.');
-        return;
-    }
+    const pw = openPopup('width=900,height=1000');
+    if (!pw) return;
     pw.document.write(buildReportHtml());
     pw.document.close();
 }

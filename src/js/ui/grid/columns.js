@@ -116,15 +116,27 @@ export function openColumns(dialog, { registry, columns, pinned, onApply }) {
     on: { change: (event) => { pinCount = Math.max(0, Math.min(6, Number(event.target.value) || 0)); paint(); } }
   });
 
+  const applyButton = el('button', {
+    class: 'btn btn-primary', text: '적용', attrs: { type: 'button' },
+    on: { click: () => { onApply({ columns: chosen, pinned: pinCount }); dialog.close(); } }
+  });
+
   function paint() {
     pinCount = Math.min(pinCount, chosen.length);
     // 열을 지워 고정 수가 깎이면 칸의 숫자도 따라가야 한다. 아래 글귀와 어긋나 보였다
     pinInput.value = String(pinCount);
     paintShown();
     paintPicker();
-    pinNote.textContent = pinCount === 0
-      ? '고정한 열이 없습니다. 가로로 스크롤하면 왼쪽 열도 함께 밀려납니다.'
-      : `앞 ${pinCount}개 열이 왼쪽에 붙어 있습니다.`;
+    /*
+     * **보일 열이 없으면 「적용」을 쓸 수 없게 두고 까닭을 적는다.** 눌러도 아무 일이 없는
+     * 단추를 두지 않는다 — 막혀 있으면 막힌 까닭이 보여야 한다.
+     */
+    applyButton.disabled = chosen.length === 0;
+    pinNote.textContent = chosen.length === 0
+      ? '보일 열을 하나 이상 선택하세요.'
+      : pinCount === 0
+        ? '고정한 열이 없습니다. 가로로 스크롤하면 왼쪽 열도 함께 밀려납니다.'
+        : `앞 ${pinCount}개 열이 왼쪽에 붙어 있습니다.`;
   }
 
   // 좁은 화면에서 좌우로 나누면 「자료에 있는 열」이 접혀 내려가 안 보인다.
@@ -155,11 +167,7 @@ export function openColumns(dialog, { registry, columns, pinned, onApply }) {
     onClose: () => dialog.close(),
     footer: el('div', { class: 'flex w-full items-center justify-end gap-3' }, [
       el('button', { class: 'btn', text: '취소', attrs: { type: 'button' }, on: { click: () => dialog.close() } }),
-      el('button', {
-        class: 'btn btn-primary', text: '적용', attrs: { type: 'button' },
-        // 열이 하나도 없으면 표가 빈다. 그런 적용은 받지 않는다
-        on: { click: () => { if (chosen.length === 0) return; onApply({ columns: chosen, pinned: pinCount }); dialog.close(); } }
-      })
+      applyButton
     ])
   }));
 }
