@@ -493,13 +493,50 @@
                 </section>
 
                 <section id="student-grid" class="no-print">
-                    <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-                        <div class="flex items-center gap-2">
-                            <span class="w-1.5 h-6 rounded bg-brand inline-block"></span>
-                            <h3 class="font-bold text-ink text-xl">학생 명단</h3>
-                            <span data-grid="count" class="text-base text-ink-soft tabular-nums"></span>
+                    <div class="mb-3 flex items-center gap-2">
+                        <span class="w-1.5 h-6 rounded bg-brand inline-block"></span>
+                        <h3 class="font-bold text-ink text-xl">학생 명단</h3>
+                    </div>
+                    <!--
+                      표 도구줄. admission-outcomes 의 도구줄을 그대로 옮겼다(두 줄로 못 박는다).
+                      위는 쪽 넘김(왼쪽)과 설정(오른쪽), 아래는 걸린 조건(정렬·필터 칩)과 행 수다.
+                      쓸 수 없는 단추도 자리를 지킨다. 폭이 모자라면 설정 묶음만 다음 줄로 넘어간다.
+                    -->
+                    <div class="mb-3 flex flex-col gap-2">
+                        <div class="flex min-h-9 flex-wrap items-center gap-2">
+                            <div class="flex shrink-0 items-center gap-2 whitespace-nowrap">
+                                <button type="button" data-grid="first" class="pager-btn" aria-label="첫 쪽" title="첫 쪽">⏮</button>
+                                <button type="button" data-grid="prev" class="pager-btn" aria-label="이전 쪽" title="이전 쪽">◀</button>
+                                <input data-grid="page" class="pager-input" inputmode="numeric" aria-label="쪽 번호" value="1">
+                                <span data-grid="pages" class="text-ink-soft">/ 1쪽</span>
+                                <button type="button" data-grid="next" class="pager-btn" aria-label="다음 쪽" title="다음 쪽">▶</button>
+                                <button type="button" data-grid="last" class="pager-btn" aria-label="마지막 쪽" title="마지막 쪽">⏭</button>
+                            </div>
+
+                            <div class="ml-auto flex flex-wrap items-center justify-end gap-2">
+                                <div class="flex min-h-9 items-center gap-1 rounded-md border border-line bg-surface px-2">
+                                    <span class="whitespace-nowrap text-base text-ink-soft">열 고정</span>
+                                    <button type="button" data-grid="pin-less" class="btn btn-sm min-h-7 border-transparent px-1.5"
+                                            aria-label="고정할 열 하나 줄이기">−</button>
+                                    <span data-grid="pin-count" class="min-w-4 text-center text-base font-semibold tabular-nums"
+                                          aria-live="polite"></span>
+                                    <button type="button" data-grid="pin-more" class="btn btn-sm min-h-7 border-transparent px-1.5"
+                                            aria-label="고정할 열 하나 늘리기">+</button>
+                                </div>
+                                <button type="button" data-grid="print" class="btn btn-sm" title="지금 조건에 맞는 학생 전체를 인쇄용 창으로 엽니다">인쇄</button>
+                                <button type="button" data-grid="columns" class="btn btn-sm">열 선택</button>
+                                <button type="button" data-grid="reset-columns" class="btn btn-sm" title="열 구성·순서·너비를 기본값으로">열 초기화</button>
+                                <button type="button" data-grid="reset-sorts" class="btn btn-sm">정렬 초기화</button>
+                                <button type="button" data-grid="reset-filters" class="btn btn-sm">필터 초기화</button>
+                            </div>
                         </div>
-                        <p class="text-base text-ink-soft">헤더를 누르면 정렬, 끌면 순서·너비가 바뀝니다. 행을 누르면 성적표가 열립니다.</p>
+
+                        <div class="flex min-h-9 items-center gap-2">
+                            <span data-grid="chip-label" class="shrink-0 font-medium text-ink-soft">설명</span>
+                            <div data-grid="chips" class="scroll-stable flex min-w-0 flex-1 items-center gap-2 overflow-x-auto"></div>
+                            <span data-grid="row-count" class="shrink-0 whitespace-nowrap text-right tabular-nums text-ink-soft" aria-live="polite"></span>
+                        </div>
+                        <p data-grid="notice" class="text-base text-amber-700 empty:hidden"></p>
                     </div>
                     <div data-grid="scroller" class="card relative max-h-[70vh] overflow-auto">
                         <table class="grid-table">
@@ -728,5 +765,11 @@
     </div>
 </div>
 
+<!--
+  학생 표의 열별 값 목록(깔때기)과 열 선택 상자. 표의 스크롤 상자 밖, body 바로 아래에 둔다 —
+  보고서 탭(#tab-report)에는 transform 이 남아 있어 그 안의 fixed 가 화면 기준으로 서지 않는다.
+-->
+<div id="grid-popover" class="no-print card fixed z-50 hidden w-72 shadow-xl" role="dialog" aria-label="열 값 목록"></div>
+<dialog id="grid-columns" class="w-[min(58rem,94vw)] rounded-xl p-0 backdrop:bg-ink/50"></dialog>
 </body>
 </html>

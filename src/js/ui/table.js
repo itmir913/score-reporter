@@ -94,6 +94,17 @@ export function cellText(key, value, field) {
  * @param {(row: object) => void} [options.onRowOpen]
  * @param {(state: object) => void} [options.onStateChange] 정렬·너비가 바뀔 때
  */
+/** 스크롤 상자 → 그 표의 인쇄 모드 전환. 문서에서 떨어진 상자는 인쇄 때 지운다 */
+const 인쇄대상 = new Map();
+const 인쇄알림 = (켬) => {
+  for (const [scroller, 전환] of 인쇄대상) {
+    if (!scroller.isConnected) { 인쇄대상.delete(scroller); continue; }
+    전환(켬);
+  }
+};
+globalThis.addEventListener?.('beforeprint', () => 인쇄알림(true));
+globalThis.addEventListener?.('afterprint', () => 인쇄알림(false));
+
 export function createTable({ scroller, colgroup, headRow, searchRow, body, empty, onRowOpen, onStateChange, onColumnSearch, columnSearch = () => '', columnFiltered = () => false, onColumnFilter, onPinnedChange }) {
   /** @type {object[]} */
   let rows = [];
@@ -502,9 +513,9 @@ export function createTable({ scroller, colgroup, headRow, searchRow, body, empt
     renderBody(true);
   };
 
-  // 단추로 눌렀을 때도, Ctrl+P로 눌렀을 때도 같은 자리에서 받는다
-  globalThis.addEventListener?.('beforeprint', () => 인쇄모드(true));
-  globalThis.addEventListener?.('afterprint', () => 인쇄모드(false));
+  // 단추로 눌렀을 때도, Ctrl+P로 눌렀을 때도 같은 자리에서 받는다.
+  // 리스너는 파일에 한 번만 건다. 같은 스크롤 상자에 표를 다시 붙이면 새 표가 자리를 넘겨받는다
+  인쇄대상.set(scroller, 인쇄모드);
 
   function renderBody(force = false) {
     const { start, end } = windowRange();

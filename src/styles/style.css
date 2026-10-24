@@ -227,11 +227,6 @@ canvas, img {
     }
 }
 
-/* 학생 표는 열마다 글자 검색만 쓴다. 값 목록(≡) 단추는 admission-outcomes 의 필터판 몫이라 감춘다 */
-#student-grid .col-search button {
-    display: none;
-}
-
 /* 좁은 화면에서 회차가 있으면 상단바 제목을 숨겨 회차 줄에 자리를 준다(회차가 없으면 제목을 그대로 둔다) */
 @media (width < 40rem) {
     header:has(#exam-rail .exam-chip) > h1 {

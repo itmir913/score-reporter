@@ -84,7 +84,7 @@ describe('학생 표', () => {
         await importFiles(fakeFile('3월.xlsx', await bytesOf(SCHEMAS.univcoop)));
         const rows = [...document.querySelectorAll('#student-grid [data-grid="body"] tr[data-sid]')];
         expect(rows.length).toBe(13);
-        expect(document.querySelector('#student-grid [data-grid="count"]').textContent).toBe('13명');
+        expect(document.querySelector('#student-grid [data-grid="row-count"]').textContent).toMatch(/^1–13 \/ 13명/);
         rows[0].click();
         expect(document.getElementById('modal-student-info').innerText).toContain('성적표');
     }, 20000);
