@@ -356,7 +356,27 @@
                 <section class="mt-6 print:break-before-page" id="csat_sum">
                     <div class="flex items-center gap-2">
                         <span class="w-1.5 h-6 rounded bg-brand inline-block"></span>
-                        <h3 class="font-bold text-slate-800 text-xl">수능 최저학력기준 충족 분석(국어+수학+영어+탐구1+탐구2)</h3>
+                        <h3 id="csat-title" class="font-bold text-slate-800 text-xl">수능 최저학력기준 충족 분석(국어+수학+영어+탐구1+탐구2)</h3>
+                    </div>
+
+                    <!-- n합에 넣을 과목. 선택한 과목 수보다 큰 n합 칸은 대시가 된다(열은 숨기지 않는다) -->
+                    <div id="csat-subject-bar" role="group" aria-label="n합에 넣을 과목" class="no-print sticky top-0 z-30 mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 bg-white/95 backdrop-blur-sm border border-slate-200 rounded-xl px-4 py-2 shadow-sm">
+                        <span class="text-base font-semibold text-slate-700">n합에 넣을 과목:</span>
+                        <label class="inline-flex items-center gap-1.5 text-base text-slate-700 cursor-pointer">
+                            <input type="checkbox" value="korean" checked data-change="csat-subjects" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">국어
+                        </label>
+                        <label class="inline-flex items-center gap-1.5 text-base text-slate-700 cursor-pointer">
+                            <input type="checkbox" value="math" checked data-change="csat-subjects" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">수학
+                        </label>
+                        <label class="inline-flex items-center gap-1.5 text-base text-slate-700 cursor-pointer">
+                            <input type="checkbox" value="english" checked data-change="csat-subjects" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">영어
+                        </label>
+                        <label class="inline-flex items-center gap-1.5 text-base text-slate-700 cursor-pointer">
+                            <input type="checkbox" value="inquiry1" checked data-change="csat-subjects" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">탐구1
+                        </label>
+                        <label class="inline-flex items-center gap-1.5 text-base text-slate-700 cursor-pointer">
+                            <input type="checkbox" value="inquiry2" checked data-change="csat-subjects" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">탐구2
+                        </label>
                     </div>
 
                     <div class="bg-white border border-slate-200 rounded-xl p-6 mt-6 print-page">

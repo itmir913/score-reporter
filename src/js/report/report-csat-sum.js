@@ -11,16 +11,34 @@ import {numberLabel, studentIdxAttr} from './report-modal.js';
    § 수능 최저학력기준 분석 로직
 ─────────────────────────────────────────── */
 
-export function _getCsatRawSums(student) {
-    // 과목명 매핑을 위한 객체
-    const subjNames = {
-        korean: '국어', math: '수학', english: '영어', inquiry1: '탐구1', inquiry2: '탐구2'
-    };
+/* n합에 넣을 과목. 수능최저 영역 위 선택 바에서 선택한다. 선택한 과목 수보다 큰 n합은 대시(빈칸)가 된다.
+ * 성적이 아니라 화면 설정이지만 브라우저 저장소에 남기지 않는다(새로고침하면 모두 켠 상태로 돌아간다) */
+export const CSAT_SUBJECTS = [['korean', '국어'], ['math', '수학'], ['english', '영어'], ['inquiry1', '탐구1'], ['inquiry2', '탐구2']];
+const subjNames = Object.fromEntries(CSAT_SUBJECTS);
+let csatSubjects = new Set(CSAT_SUBJECTS.map(([k]) => k));
 
-    // 탐구1·2가 같은 과목이면 한 과목(탐구1)으로 본다. 등급이 탐구1에 없으면 탐구2 등급을 쓴다
-    const areas = [['korean', student.korean], ['math', student.math], ['english', student.english]];
-    if (sameInquirySubject(student)) areas.push(['inquiry1', inquiryScores(student)[0]]);
-    else areas.push(['inquiry1', student.inquiry1], ['inquiry2', student.inquiry2]);
+export function getCsatSubjects() {
+    return new Set(csatSubjects);
+}
+
+export function setCsatSubjects(keys) {
+    csatSubjects = new Set([...keys].filter(k => k in subjNames));
+}
+
+export function resetCsatSubjects() {
+    setCsatSubjects(CSAT_SUBJECTS.map(([k]) => k));
+}
+
+export function _getCsatRawSums(student, subjects = csatSubjects) {
+    // 탐구1·2가 같은 과목이면 한 과목으로 본다(등급은 탐구1, 없으면 탐구2). 둘 중 하나라도 선택하면 넣는다
+    const areas = [['korean', student.korean], ['math', student.math], ['english', student.english]]
+        .filter(([subj]) => subjects.has(subj));
+    if (sameInquirySubject(student)) {
+        const name = subjects.has('inquiry1') ? 'inquiry1' : 'inquiry2';
+        if (subjects.has(name)) areas.push([name, inquiryScores(student)[0]]);
+    } else {
+        areas.push(...[['inquiry1', student.inquiry1], ['inquiry2', student.inquiry2]].filter(([subj]) => subjects.has(subj)));
+    }
 
     const grades = [];
     areas.forEach(([subj, score]) => {
@@ -108,6 +126,8 @@ export function rankCsatSchool(data, {includeNoInquiry = false} = {}) {
 export function renderCsatMinRequirement(cache) {
     if (!ST.data || ST.data.length === 0) return;
 
+    syncCsatSubjectBar();
+
     // ★ cache 전달
     renderCsatSummaryTable(cache);
     renderCsatSchoolTable();
@@ -130,6 +150,27 @@ export function renderCsatMinRequirement(cache) {
             }
         }
     }
+}
+
+/* 선택 바의 체크 상태와 구역 제목을 지금 선택한 과목에 맞춘다. 인쇄물에는 바가 없으니 제목이 기준을 알린다 */
+function syncCsatSubjectBar() {
+    document.querySelectorAll('[data-change="csat-subjects"]').forEach(box => {
+        box.checked = csatSubjects.has(box.value);
+    });
+    const title = document.getElementById('csat-title');
+    if (title) {
+        const names = CSAT_SUBJECTS.filter(([k]) => csatSubjects.has(k)).map(([, label]) => label);
+        title.textContent = `수능 최저학력기준 충족 분석(${names.length ? names.join('+') : '과목 선택 없음'})`;
+    }
+}
+
+/** 선택 바에서 과목을 켜고 끌 때. n합만 다시 계산하고 수능최저 표만 다시 그린다 */
+export function handleCsatSubjectsChange() {
+    const boxes = [...document.querySelectorAll('[data-change="csat-subjects"]')];
+    setCsatSubjects(boxes.filter(b => b.checked).map(b => b.value));
+    if (!ST.cache || !ST.data) return;
+    ST.cache.csatSums = ST.data.map(s => _getCsatRawSums(s));
+    renderCsatMinRequirement(ST.cache);
 }
 
 /* ── 전교 석차 표 ──

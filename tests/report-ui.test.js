@@ -30,6 +30,7 @@ const report = await import('../src/js/report.js');
 const {renderAll} = report;
 const modal = await import('../src/js/report/report-modal.js');
 const {initActions} = await import('../src/js/actions.js');
+const {resetCsatSubjects} = await import('../src/js/report/report-csat-sum.js');
 
 // 선택 상자의 change 를 실제 위임 경로로 보낸다. document 에 한 번만 건다
 initActions();
@@ -434,5 +435,44 @@ describe('원점수가 없는 파일', () => {
         report.setGlobalBasis('raw');
         load([row({raw: 80})]);
         expect(report.globalReportBasis).toBe('raw');
+    });
+});
+
+describe('수능최저 과목 선택 바', () => {
+    const toggle = (value, checked) => {
+        const box = document.querySelector(`[data-change="csat-subjects"][value="${value}"]`);
+        box.checked = checked;
+        box.dispatchEvent(new Event('change', {bubbles: true}));
+    };
+    const schoolRow = () => [...document.querySelectorAll('#csat-school-tbody tr')[0].children].map(td => td.textContent.replace(/\s+/g, ''));
+
+    beforeEach(() => {
+        resetCsatSubjects();
+    });
+
+    it('과목을 끄면 큰 n합 칸은 대시가 되고 열은 그대로다', () => {
+        ST.data = [student('A', '1', '1')];
+        renderAll();
+        charts.created = 0;
+        expect(schoolRow()[7]).toBe('12(탐구1+국어+영어+수학+탐구2)');
+        toggle('english', false);
+        const row = schoolRow();
+        expect(row).toHaveLength(8);
+        expect(row[4]).toBe('3(탐구1+국어)');
+        expect(row[6]).toBe('10(탐구1+국어+수학+탐구2)');
+        expect(row[7]).toBe('—');
+        expect(document.getElementById('csat-title').textContent).toBe('수능 최저학력기준 충족 분석(국어+수학+탐구1+탐구2)');
+        expect(charts.created).toBe(0);
+        // 누적표의 5합 행은 모두 대시다
+        const fiveRow = document.querySelectorAll('#csat-summary-tbody tr')[3];
+        expect([...fiveRow.children].slice(1).every(td => td.textContent.trim() === '—')).toBe(true);
+    });
+
+    it('모두 끄면 제목이 과목 선택 없음을 알린다', () => {
+        ST.data = [student('A', '1', '1')];
+        renderAll();
+        ['korean', 'math', 'english', 'inquiry1', 'inquiry2'].forEach(k => toggle(k, false));
+        expect(document.getElementById('csat-title').textContent).toContain('과목 선택 없음');
+        expect(schoolRow().slice(4).every(c => c === '—')).toBe(true);
     });
 });

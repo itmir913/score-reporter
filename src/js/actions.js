@@ -34,7 +34,7 @@ import {
     showCsatStudents,
     showSelectedSubjectStudents,
 } from './report/report-modal.js';
-import {handleClassChange, renderCsatSchoolTable} from './report/report-csat-sum.js';
+import {handleClassChange, handleCsatSubjectsChange, renderCsatSchoolTable} from './report/report-csat-sum.js';
 import {renderTopN} from './report/report-render-topN.js';
 import {renderScoreDistribution} from './report/report-score-distribution.js';
 import {renderSubjectsCharts} from './report/report-render-chart-subjects.js';
@@ -85,6 +85,7 @@ const CHANGE_ACTIONS = {
     // 표시 인원은 그 표에만 영향을 준다. renderAll 은 캐시와 차트까지 모두 다시 만든다
     'render-top-n': () => { if (ST.cache) renderTopN(ST.cache); },
     'render-csat-school': () => renderCsatSchoolTable(),
+    'csat-subjects': () => handleCsatSubjectsChange(),
     'render-score-distribution': () => renderScoreDistribution(),
     'render-subjects-charts': () => renderSubjectsCharts(),
     'class-change': () => handleClassChange(),

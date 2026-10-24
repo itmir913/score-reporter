@@ -1,5 +1,8 @@
-import {describe, expect, it} from 'vitest';
-import {_getCsatRawSums, rankCsatSchool} from '../src/js/report/report-csat-sum.js';
+import {beforeEach, describe, expect, it} from 'vitest';
+import {_getCsatRawSums, rankCsatSchool, resetCsatSubjects, setCsatSubjects} from '../src/js/report/report-csat-sum.js';
+import {computeRenderCache} from '../src/js/report/report-cache.js';
+
+beforeEach(() => resetCsatSubjects());
 
 /** 등급만 담은 학생 레코드를 만든다. null은 "해당 과목 응시 기록 없음". */
 const student = (korean, math, english, inquiry1, inquiry2) => ({
@@ -142,5 +145,37 @@ describe('rankCsatSchool: 전교 석차(국어+수학+탐구평균)', () => {
         const a = st('가', sc(90), sc(80), sc(40));
         const b = {...st('나', sc(90), sc(80), sc(40)), english: sc(0)};
         expect(names(rankCsatSchool([a, b]))).toEqual(['1:가', '1:나']);
+    });
+});
+
+describe('n합에 넣을 과목 선택', () => {
+    it('영어를 빼면 나머지 넷에서 고르고 5합은 없다', () => {
+        const r = _getCsatRawSums(student(3, 4, 1, 2, 5), new Set(['korean', 'math', 'inquiry1', 'inquiry2']));
+        expect(r.sum2).toBe(5);
+        expect(r.sum2_subj).toBe('탐구1+국어');
+        expect(r.sum4).toBe(14);
+        expect(r.sum5).toBeNull();
+    });
+
+    it('선택한 과목이 없으면 모든 합이 null이다', () => {
+        const r = _getCsatRawSums(student(1, 1, 1, 1, 1), new Set());
+        expect([r.sum2, r.sum3, r.sum4, r.sum5]).toEqual([null, null, null, null]);
+    });
+
+    it('같은 탐구 과목은 탐구2만 선택해도 한 과목으로 넣는다', () => {
+        const s = student(3, 4, 5, 1, 1);
+        s.inquiry1.subject = s.inquiry2.subject = '생활과 윤리';
+        const r = _getCsatRawSums(s, new Set(['korean', 'inquiry2']));
+        expect(r.sum2).toBe(4);
+        expect(r.sum2_subj).toBe('탐구2+국어');
+    });
+
+    it('기본 인자는 현재 선택이고, 캐시를 다시 만들어도 같은 결과다', () => {
+        const data = [student(1, 3, 2, 4, 5), student(2, 2, null, 1, 3)];
+        setCsatSubjects(['korean', 'math', 'english']);
+        const direct = data.map(s => _getCsatRawSums(s));
+        expect(direct[0].sum3).toBe(6);
+        expect(direct[0].sum4).toBeNull();
+        expect(computeRenderCache(data, 'raw').csatSums).toEqual(direct);
     });
 });
