@@ -1,7 +1,7 @@
 import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {buildWorkbook} from './helpers/baseline-fixture.js';
+import {BASELINE_STUDENTS, buildWorkbook} from './helpers/baseline-fixture.js';
 
 /* jsdom 에는 canvas 가 없어 Chart.js 가 그리지 못한다 */
 vi.mock('chart.js/auto', () => ({
@@ -76,6 +76,17 @@ describe('회차 레일', () => {
         vi.restoreAllMocks();
         expect(railKeys()).toEqual(['4']);
         expect(ST.activeExamKey).toBe('4');
+    }, 20000);
+});
+
+describe('불러온 뒤 여는 회차', () => {
+    it('파일 목록이 1월, 10월, 9월 순이어도 시간 순서가 가장 늦은 10월을 연다', async () => {
+        // 같은 내용은 한 번만 들어가니 학생 수를 달리해 서로 다른 파일로 만든다
+        const files = await Promise.all(['1월', '10월', '9월'].map(async (name, i) =>
+            fakeFile(`${name}.xlsx`, new Uint8Array(await buildWorkbook(SCHEMAS.univcoop, BASELINE_STUDENTS.slice(i)).xlsx.writeBuffer()))));
+        await importFiles(...files);
+        expect(railKeys()).toEqual(['1월', '9월', '10월']);
+        expect(ST.activeExamKey).toBe('10월');
     }, 20000);
 });
 

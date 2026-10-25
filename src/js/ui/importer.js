@@ -1,4 +1,4 @@
-import {addExam, fileHashHex, normalizeExamKey, suggestExamKey} from '../exams/examStore.js';
+import {addExam, fileHashHex, normalizeExamKey, sortedExams, suggestExamKey} from '../exams/examStore.js';
 import {expandUploads, loadWorkbook, needsPassword} from '../ingest/files.js';
 import {countOutOfRange, matchFormats, outOfRangeByColumn} from '../ingest/formatMatch.js';
 import {exceljsTo2DArray} from '../main.js';
@@ -136,7 +136,8 @@ export function blockers(rows, existing = []) {
     return problems;
 }
 
-/** 선택한 줄들을 회차로 넣는다. 돌려주는 것: 새 회차 목록과 회차마다의 주의 사항 */
+/** 선택한 줄들을 회차로 넣는다. 돌려주는 것: 새 회차 목록, 회차마다의 주의 사항,
+ *  이번에 넣은 회차 중 시간 순서가 가장 늦은 회차의 키(파일 목록 순서 1월, 10월, 9월을 따르지 않는다) */
 export function commitRows(rows, exams) {
     let list = exams;
     const notes = [];
@@ -151,7 +152,9 @@ export function commitRows(rows, exams) {
         if (out) warn.push(`범위를 벗어난 점수 ${out}개(양식을 확인하세요)`);
         notes.push({key, count: students.length, warn});
     }
-    return {exams: list, notes};
+    const added = new Set(notes.map(n => n.key));
+    const latestKey = sortedExams(list).filter(e => added.has(e.key)).at(-1)?.key ?? null;
+    return {exams: list, notes, latestKey};
 }
 
 /* ── 화면: 「파일 추가」 탭 안의 표 ── */

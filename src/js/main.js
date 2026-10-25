@@ -182,7 +182,7 @@ export function commitImports() {
         return;
     }
     ST.exams = result.exams;
-    ST.activeExamKey = result.notes[result.notes.length - 1]?.key ?? ST.activeExamKey;
+    ST.activeExamKey = result.latestKey ?? ST.activeExamKey;
     IMPORT.rows = IMPORT.rows.filter(r => !r.include);
     IMPORT.skipped = [];
     afterExamsChanged();
