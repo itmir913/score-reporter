@@ -97,3 +97,25 @@ describe('CSV 셀은 글자 그대로 읽는다', async () => {
         expect(ws.getRow(2).getCell(1).value).toBe('0105');
     });
 });
+
+describe('김영일 학번으로 반·번호 회차와 잇기', async () => {
+    const {linkStudents} = await import('../src/js/exams/identity.js');
+    it('학번 301005 는 3학년 1반 5번과 같은 학생이다', () => {
+        const kim = identityKeys({grade_year: '3', student_id: '301005', name: '갑'});
+        const dae = identityKeys({grade_year: 3, class: 1, number: 5, name: '갑'});
+        expect(kim.some(k => dae.includes(k))).toBe(true);
+    });
+    it('학년 칸과 학번 첫 자리가 다르거나, 반·번호가 있으면 계산하지 않는다', () => {
+        expect(identityKeys({grade_year: '2', student_id: '301005'}).some(k => k.startsWith('cn:'))).toBe(false);
+        expect(identityKeys({grade_year: '3', class: 2, number: 7, student_id: '301005'}).filter(k => k.startsWith('cn:'))).toEqual(['cn:3|2|7']);
+        expect(identityKeys({student_id: 'S0105'}).some(k => k.startsWith('cn:'))).toBe(false);
+    });
+    it('두 회차가 실제로 한 사람으로 이어진다', () => {
+        const exams = [
+            {key: '3월', order: 0, students: [{grade_year: 3, class: 1, number: 5, name: '갑'}]},
+            {key: '6월', order: 1, students: [{grade_year: 3, student_id: '301005', name: '갑'}]},
+        ];
+        const {persons} = linkStudents(exams);
+        expect(persons).toHaveLength(1);
+    });
+});
