@@ -36,6 +36,10 @@ export function areaScore(s, area) {
 
 const named = (d) => typeof d?.subject === 'string' && d.subject.trim() !== '';
 
+/* 회차 사이에서 과목명을 견줄 때 쓰는 열쇠. 양식마다 표기가 달라(김영일은 공백을 지우고, 유니브는 Ⅰ를 1로 적는다)
+ * 같은 과목이 다른 과목으로 보이지 않게 공백을 지우고 로마 숫자를 아라비아 숫자로 맞춘다 */
+const subjectKey = (name) => String(name ?? '').replace(/\s+/g, '').replace(/Ⅰ/g, '1').replace(/Ⅱ/g, '2');
+
 /**
  * 앞 회차에서 비교할 짝을 찾는다. 바로 앞 회차가 아니라 그 영역을 응시한 가장 가까운 앞 회차다.
  * @returns {{score: object}|{changed: true}|null} null 이면 첫 응시
@@ -47,12 +51,14 @@ function previousOf(rows, i, area, cur) {
         if (INQUIRY.has(area)) {
             const prev = [areaScore(s, 'inquiry1'), areaScore(s, 'inquiry2')].filter(d => d && d !== MERGED && hasScore(d));
             if (prev.length === 0) continue;
-            // 두 회차 모두 과목명이 있으면 과목명으로 짝을 찾는다(탐구1·2 칸 순서가 바뀌어도 같은 과목끼리)
-            if (named(cur) && prev.every(named)) {
-                const same = prev.find(d => d.subject === cur.subject);
+            // 이번 과목명이 있으면 앞 회차의 과목명 있는 칸에서 같은 과목을 찾는다(탐구1·2 칸 순서가 바뀌어도 같은 과목끼리).
+            // 과목명 있는 칸이 있는데 같은 과목이 없으면 과목이 바뀐 것이다
+            const namedPrev = prev.filter(named);
+            if (named(cur) && namedPrev.length) {
+                const same = namedPrev.find(d => subjectKey(d.subject) === subjectKey(cur.subject));
                 return same ? {score: same} : {changed: true};
             }
-            // 과목명이 없는 쪽이 있으면 같은 칸끼리 견준다
+            // 과목명으로 견줄 수 없으면 같은 칸끼리 견준다
             const slot = areaScore(s, area);
             if (slot && slot !== MERGED && hasScore(slot)) return {score: slot};
             continue;
@@ -60,7 +66,7 @@ function previousOf(rows, i, area, cur) {
         const prev = s[area];
         if (!hasScore(prev)) continue;
         // 국어·수학은 선택과목이 바뀌면 변화가 아니라 다른 과목이다. 과목명이 없는 쪽이 있으면 칸끼리 견준다
-        if (named(cur) && named(prev) && cur.subject !== prev.subject) return {changed: true};
+        if (named(cur) && named(prev) && subjectKey(cur.subject) !== subjectKey(prev.subject)) return {changed: true};
         return {score: prev};
     }
     return null;

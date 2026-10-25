@@ -60,7 +60,7 @@ const CLICK_ACTIONS = {
     'set-basis': (el) => setGlobalBasis(el.dataset.basis),
     'close-modal': (el) => closeModal(el.dataset.modal),
     'clear-all': () => {
-        if (ST.exams.length && !confirm('불러온 회차를 모두 지울까요? 저장하지 않았다면 되돌릴 수 없습니다.')) return;
+        if (ST.exams.length && !confirm('불러온 회차를 모두 지울까요? 다시 보려면 원본 엑셀 파일을 다시 불러와야 합니다.')) return;
         clearAll();
     },
     'load-sample': () => loadSampleData(),

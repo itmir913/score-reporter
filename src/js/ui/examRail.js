@@ -97,7 +97,7 @@ function renameAsk(key) {
 }
 
 function removeAsk(key) {
-    if (!confirm(`「${key}」 회차를 지울까요? 저장하지 않았다면 되돌릴 수 없습니다.`)) return;
+    if (!confirm(`「${key}」 회차를 지울까요? 다시 보려면 원본 엑셀 파일을 다시 불러와야 합니다.`)) return;
     update(removeExam(ST.exams, key));
     renderReport();
     renderExportCards();

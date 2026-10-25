@@ -200,7 +200,9 @@ export async function loadWorkbook({name, bytes}, {askPassword, isCancelled = ()
             } catch {
                 csvText = new TextDecoder('euc-kr').decode(buffer);
             }
-            xlsWorkbook = XLSX.read(csvText, {type: 'string'});
+            // raw: 셀을 글자 그대로 둔다. 그러지 않으면 SheetJS 가 「82%」「1,234」「3/4」를 미리 숫자·날짜로 바꿔
+            // 숫자 읽기 규칙(core/score.js toScore)을 거치지 않는다. xlsx 로 읽을 때와 같은 결과가 나와야 한다
+            xlsWorkbook = XLSX.read(csvText, {type: 'string', raw: true});
         } else {
             try {
                 xlsWorkbook = XLSX.read(buffer, {type: 'array'});

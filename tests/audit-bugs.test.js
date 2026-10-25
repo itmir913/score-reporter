@@ -64,3 +64,36 @@ describe('김영일 내보내기 학번', async () => {
         expect(make({grade_year: '3', class: '가반', number: '5'}, '')).toBe('300005');
     });
 });
+
+describe('3차 적대 감사 버그 재현', async () => {
+    const {changeVsPrev} = await import('../src/js/trend/personal.js');
+    const sc = (subject, pct, grade, raw = 40) => ({subject, raw, std: null, pct, grade});
+    const row = (key, s) => ({key, student: s});
+    it('앞 회차에 과목명 없는 탐구 칸이 섞여 있어도 과목명으로 짝을 찾는다', () => {
+        const rows = [
+            row('3', stu({inquiry1: sc('생활과 윤리', 80, 3), inquiry2: {subject: '', raw: 0, pct: null, grade: null}})),
+            row('6', stu({inquiry1: sc('사회·문화', 70, 4), inquiry2: sc('생활과 윤리', 85, 2)})),
+        ];
+        expect(changeVsPrev(rows, 'inquiry1')[1].note).toBe('changed');
+        expect(changeVsPrev(rows, 'inquiry2')[1]).toEqual({pct: 5, grade: 1, note: null});
+    });
+    it('양식마다 다른 과목명 표기(공백·Ⅰ/1)는 같은 과목으로 본다', () => {
+        const rows = [
+            row('3', stu({korean: sc('화법과작문', 70, 4), inquiry1: sc('물리학1', 60, 5)})),
+            row('6', stu({korean: sc('화법과 작문', 80, 3), inquiry1: sc('물리학Ⅰ', 70, 4)})),
+        ];
+        expect(changeVsPrev(rows, 'korean')[1]).toEqual({pct: 10, grade: 1, note: null});
+        expect(changeVsPrev(rows, 'inquiry1')[1]).toEqual({pct: 10, grade: 1, note: null});
+    });
+});
+
+describe('CSV 셀은 글자 그대로 읽는다', async () => {
+    const {loadWorkbook} = await import('../src/js/ingest/files.js');
+    it('82%·1,234·3/4·0105 를 SheetJS 가 숫자·날짜로 미리 바꾸지 않는다', async () => {
+        const csv = '아이디,값1,값2,값3\n0105,82%,"1,234",3/4\n';
+        const wb = await loadWorkbook({name: 't.csv', bytes: new TextEncoder().encode(csv)});
+        const ws = wb.worksheets[0];
+        expect([2, 3, 4].map(c => ws.getRow(2).getCell(c).value)).toEqual(['82%', '1,234', '3/4']);
+        expect(ws.getRow(2).getCell(1).value).toBe('0105');
+    });
+});
