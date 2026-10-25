@@ -4,8 +4,6 @@
 
 성적 데이터는 브라우저 밖으로 나가지 않습니다. 파일 파싱부터 리포트 생성까지 전부 클라이언트에서 처리하며, 서버로 아무것도 전송하지 않습니다.
 
-이 저장소는 [teacher-utility-kit](https://github.com/itmir913/teacher-utility-kit)의 `score-reporter` 폴더를 커밋 이력째 분리한 것입니다. 초기 이름이던 `grade_manager` 시절(2026-03-25 초안)부터의 이력을 담고 있습니다.
-
 ---
 
 ## 시작하기
