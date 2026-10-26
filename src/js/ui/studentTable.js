@@ -97,12 +97,15 @@ document.addEventListener('click', () => {
 globalThis.addEventListener?.('keydown', (event) => {
     if (event.key === 'Escape') current?.closePopover();
 });
-/* 페이지는 #app-main 이 세로로 민다. 밀면 깔때기 단추가 제자리를 떠나므로 닫는다.
+/* 페이지는 문서가 세로로 민다. 밀면 깔때기 단추가 제자리를 떠나므로 닫는다.
  * 다만 팝오버 안에서 값을 고르면 표가 짧아져 브라우저가 스크롤을 끌어올린다 —
- * 그 스크롤로는 닫지 않는다(사람이 민 것이 아니다). */
+ * 그 스크롤로는 닫지 않는다(사람이 민 것이 아니다).
+ *
+ * 문서 스크롤은 `document`를 대상으로 온다. 안쪽 상자(표 자신)가 미는 것과
+ * 구분해야 한다 — 그쪽은 열 이름 줄이 붙어 있어 단추도 그대로다. */
 document.addEventListener('scroll', (event) => {
     if (!current || Date.now() - 팝오버누른때 < 300) return;
-    if (event.target?.id === 'app-main') current.closePopover();
+    if (event.target === document) current.closePopover();
 }, {capture: true, passive: true});
 
 /**

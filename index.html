@@ -19,8 +19,9 @@
 </head>
 <body>
 
-<!-- 상단바: 회차 레일이 주인이다. 화면은 상단바 아래만 스크롤된다(admission-outcomes 와 같다) -->
-<header class="no-print flex h-bar shrink-0 items-center gap-2 border-b border-line bg-surface px-2 sm:gap-4 sm:px-5">
+<!-- 상단바: 회차 레일이 주인이다. 문서가 스크롤하고 이 띠만 제자리에 남는다(admission-outcomes 와 같다).
+     안쪽에 sticky 로 붙는 기준 띠들(#report_basis, #csat-subject-sticky)보다 위에 서야 하므로 z-50 이다 -->
+<header class="no-print sticky top-0 z-50 flex h-bar shrink-0 items-center gap-2 border-b border-line bg-surface px-2 sm:gap-4 sm:px-5">
     <h1 class="shrink-0 whitespace-nowrap text-lg font-bold tracking-tight">
         <span class="hidden md:inline">모의고사 성적 분석</span><span class="md:hidden">모의고사</span>
     </h1>
@@ -42,7 +43,7 @@
     </nav>
 </header>
 
-<main id="app-main" class="min-h-0 flex-1 overflow-y-auto scroll-stable">
+<main id="app-main" class="flex-1">
 <!-- 바깥 여백은 admission-outcomes 시작 화면과 같은 값이다(좁은 화면 max-w-3xl, 넓은 화면 lg:max-w-7xl).
      아래 여백은 상자가 아니라 각 탭이 갖는다: 「파일 추가」는 footer 의 py-5, 나머지 탭은 pb-12 -->
 <div class="mx-auto w-full max-w-3xl px-6 pt-6 lg:max-w-7xl">
@@ -213,7 +214,7 @@
 
                 <div class="relative flex flex-col gap-10">
 
-                    <section class="no-print sticky top-0 z-40" id="report_basis">
+                    <section class="no-print sticky top-bar z-40" id="report_basis">
                         <div class="card mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-2">
                             <div class="flex items-center gap-3">
                                 <i class="fa-solid fa-sliders text-slate-400 text-lg"></i>
@@ -361,7 +362,7 @@
 
                     <!-- n합에 넣을 과목. 선택한 과목 수보다 큰 n합 칸은 대시가 된다(열은 숨기지 않는다) -->
                     <!-- flow-root: 안쪽 카드의 mt-4 가 바깥으로 겹쳐 빠지지 않게 한다(#report_basis 는 flex 항목이라 저절로 그렇다) -->
-                    <div class="no-print sticky top-0 z-30 flow-root" id="csat-subject-sticky">
+                    <div class="no-print sticky top-bar z-30 flow-root" id="csat-subject-sticky">
                         <div id="csat-subject-bar" role="group" aria-label="n합에 넣을 과목" class="card mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2">
                             <span class="text-base font-semibold text-slate-700">n합에 넣을 과목:</span>
                             <label class="inline-flex items-center gap-1.5 text-base text-slate-700 cursor-pointer">
