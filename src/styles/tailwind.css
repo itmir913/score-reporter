@@ -121,6 +121,13 @@
 
     /* 상단바 높이만큼. `scrollIntoView`로 옮겨 간 자리가 그 띠 밑에 깔리지 않게 한다 */
     scroll-padding-top: var(--spacing-bar);
+
+    /*
+     * 문서 스크롤바 자리를 늘 비워 둔다 (agent-playbook design/no-scrollbar-layout-shift).
+     * 회차를 바꾸거나 카드를 접어 문서 길이가 화면보다 짧아지는 순간 막대가 사라지면,
+     * 가운데 정렬한 본문과 상단바가 막대 너비만큼 옆으로 뛴다.
+     */
+    scrollbar-gutter: stable;
   }
 
   /*
