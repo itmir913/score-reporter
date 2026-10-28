@@ -349,7 +349,7 @@ export function renderImportTable(root, state, options) {
     }
 
     // 좁은 화면에서는 칸을 짜부라뜨리지 않고 표 안에서 가로로 스크롤한다
-    root.append(el('div', {class: 'card scroll-stable overflow-x-auto'}, [
+    root.append(el('div', {class: 'card overflow-x-auto'}, [
         el('table', {class: 'w-full min-w-[56rem] text-base'}, [
             el('thead', {}, [el('tr', {}, [th(''), th('파일명'), th('상태'), th('회차 이름'), th('진학 프로그램 양식'), th('시트명'), th('미리보기', PREVIEW_CELL), th('')])]),
             body,

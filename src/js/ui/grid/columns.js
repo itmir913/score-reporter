@@ -26,8 +26,8 @@ export function openColumns(dialog, { registry, columns, pinned, onApply }) {
 
   // 두 목록이 각자 스크롤한다. 대화상자까지 함께 스크롤되면 스크롤바가 둘로 겹쳐
   // 어느 쪽이 움직이는지 알 수 없다
-  const shownList = el('ol', { class: 'mt-2 max-h-[22rem] scroll-stable space-y-1 overflow-y-auto' });
-  const pickList = el('div', { class: 'mt-2 max-h-[22rem] scroll-stable space-y-4 overflow-y-auto' });
+  const shownList = el('ol', { class: 'mt-2 max-h-[22rem] space-y-1 overflow-y-scroll' });
+  const pickList = el('div', { class: 'mt-2 max-h-[22rem] space-y-4 overflow-y-scroll' });
   const pinNote = el('p', { class: 'mt-1 text-base text-ink-soft' });
 
   function move(key, delta) {

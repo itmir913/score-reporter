@@ -139,7 +139,7 @@
     display: flex !important;
 }
 
-/* 스크롤바는 브라우저 기본 모양을 쓰고, 자리만 늘 비워 둔다(tailwind.css 의 scroll-stable, admission-outcomes 와 같다) */
+/* 스크롤바는 브라우저 기본 모양을 쓰고, 세로 스크롤 상자는 막대를 늘 그린다(tailwind.css 의 overflow-y-scroll 설명) */
 
 .ftag {
     display: inline-flex;

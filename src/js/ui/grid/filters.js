@@ -240,7 +240,7 @@ export function createFilters({ read, onChange }) {
     const entries = 모든값
       .filter((entry) => !needle || entry.terms.some((term) => term.toLowerCase().includes(needle)));
 
-    const list = el('div', { class: 'max-h-64 scroll-stable space-y-0.5 overflow-y-auto' },
+    const list = el('div', { class: 'max-h-64 space-y-0.5 overflow-y-scroll' },
       entries.map((entry) => {
         const id = `f-${field.key}-${String(entry.value)}`;
         return el('label', {
