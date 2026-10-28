@@ -126,8 +126,11 @@
      * 문서 스크롤바 자리를 늘 비워 둔다 (agent-playbook design/no-scrollbar-layout-shift).
      * 회차를 바꾸거나 카드를 접어 문서 길이가 화면보다 짧아지는 순간 막대가 사라지면,
      * 가운데 정렬한 본문과 상단바가 막대 너비만큼 옆으로 뛴다.
+     *
+     * `scrollbar-gutter: stable`이 아니라 막대를 늘 그린다. 실측(Chrome 152)에서
+     * 문서 스크롤러에 준 gutter는 짧은 페이지에서 자리를 비워 두지 않았다.
      */
-    scrollbar-gutter: stable;
+    overflow-y: scroll;
   }
 
   /*
