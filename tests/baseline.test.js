@@ -40,7 +40,7 @@ beforeAll(async () => {
 });
 
 it('5종 양식을 모두 다룬다', () => {
-    expect(FORMATS).toEqual(['daegyohyeop', 'daegyohyeop_preview', 'univcoop', 'kimyoungil', 'kkumkugo']);
+    expect(FORMATS).toEqual(['daegyohyeop', 'daegyohyeop_preview', 'univcoop', 'univ-2022-common', 'univ-2015-common', 'kimyoungil', 'kkumkugo']);
 });
 
 describe.each(FORMATS)('읽기: %s', (id) => {
