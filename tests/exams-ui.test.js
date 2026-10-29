@@ -83,7 +83,7 @@ describe('불러온 뒤 여는 회차', () => {
     it('파일 목록이 1월, 10월, 9월 순이어도 시간 순서가 가장 늦은 10월을 연다', async () => {
         // 같은 내용은 한 번만 들어가니 학생 수를 달리해 서로 다른 파일로 만든다
         const files = await Promise.all(['1월', '10월', '9월'].map(async (name, i) =>
-            fakeFile(`${name}.xlsx`, new Uint8Array(await buildWorkbook(SCHEMAS.univcoop, BASELINE_STUDENTS.slice(i)).xlsx.writeBuffer()))));
+            fakeFile(`${name}.xlsx`, new Uint8Array(await buildWorkbook(SCHEMAS['univ-2015-grade3'], BASELINE_STUDENTS.slice(i)).xlsx.writeBuffer()))));
         await importFiles(...files);
         expect(railKeys()).toEqual(['1월', '9월', '10월']);
         expect(ST.activeExamKey).toBe('10월');
@@ -92,7 +92,7 @@ describe('불러온 뒤 여는 회차', () => {
 
 describe('학생 표', () => {
     it('지금 회차의 학생을 보이고, 행을 누르면 성적표를 연다', async () => {
-        await importFiles(fakeFile('3월.xlsx', await bytesOf(SCHEMAS.univcoop)));
+        await importFiles(fakeFile('3월.xlsx', await bytesOf(SCHEMAS['univ-2015-grade3'])));
         const rows = [...document.querySelectorAll('#student-grid [data-grid="body"] tr[data-sid]')];
         expect(rows.length).toBe(13);
         expect(document.querySelector('#student-grid [data-grid="row-count"]').textContent).toMatch(/^1–13 \/ 13명/);

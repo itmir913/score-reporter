@@ -145,7 +145,7 @@ describe('탐구·제2외국어 과목명', () => {
     });
 
     it('유니브는 예전처럼 숫자로 바꾼다', async () => {
-        const schema = SCHEMAS.univcoop;
+        const schema = SCHEMAS['univ-2015-grade3'];
         const rows = await exportAndRead([withSubjects()], schema);
         expect(subjects(rows[schema.headerRows], schema)).toEqual(['물리학1', '생명과학2', '일본어1']);
     });
@@ -168,7 +168,7 @@ describe('탐구·제2외국어 과목명', () => {
     });
 
     it('유니브에서 읽은 숫자 과목명은 대교협으로 내보내면 로마자다', async () => {
-        const univ = SCHEMAS.univcoop;
+        const univ = SCHEMAS['univ-2015-grade3'];
         const r = Array(60).fill('');
         r[univ._idx.name] = '홍길동';
         r[univ._idx.inq1_subject] = '물리학1';
@@ -186,7 +186,7 @@ describe('탐구·제2외국어 과목명', () => {
 
     // 대교협만 바꾼다. 다른 양식의 과목명 변환은 예전 그대로다
     it.each([
-        ['univcoop', ['물리학1', '생활과윤리', '일본어1']],
+        ['univ-2015-grade3', ['물리학1', '생활과윤리', '일본어1']],
         ['kkumkugo', ['물리학Ⅰ', '생활과윤리', '일본어Ⅰ']],
         ['kimyoungil', ['물리학Ⅰ', '생활과윤리', '일본어1']],
     ])('%s 의 과목명 변환은 그대로다', async (id, expected) => {

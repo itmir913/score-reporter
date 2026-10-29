@@ -232,11 +232,11 @@ export const SCHEMAS = {
     }),
 
     /**
-     * 유니브 스키마
+     * 유니브 2015 개정 교육과정 3학년 스키마
      */
-    univcoop: new FormatSchema({
-        id: 'univcoop',
-        label: '유니브',
+    'univ-2015-grade3': new FormatSchema({
+        id: 'univ-2015-grade3',
+        label: '유니브(2015 개정 3학년)',
         color: 'blue',
         icon: 'fa-building-columns',
         headerRows: 2,

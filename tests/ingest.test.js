@@ -152,7 +152,7 @@ describe('zip 과 비밀번호 파일', () => {
 
     beforeAll(async () => {
         if (!globalThis.crypto?.subtle) globalThis.crypto = crypto.webcrypto;
-        plain = await xlsxBytes(SCHEMAS.univcoop.exportHeaders);
+        plain = await xlsxBytes(SCHEMAS['univ-2015-grade3'].exportHeaders);
         encrypted = new Uint8Array(toContainer(encryptAgile(Buffer.from(plain), {password: PASSWORD})));
     });
 
@@ -185,7 +185,7 @@ describe('zip 과 비밀번호 파일', () => {
 
     it('직접 올린 비밀번호 파일을 해제해 읽는다', async () => {
         const wb = await loadWorkbook({name: '3월.xlsx', bytes: encrypted}, {askPassword: async () => PASSWORD});
-        expect(matchFormats(firstSheet(wb), SCHEMAS).autoId).toBe('univcoop');
+        expect(matchFormats(firstSheet(wb), SCHEMAS).autoId).toBe('univ-2015-grade3');
     });
 
     it('zip 안의 비밀번호 파일도 같은 경로로 해제해 읽는다', async () => {
@@ -194,7 +194,7 @@ describe('zip 과 비밀번호 파일', () => {
         let asked = 0;
         const wb = await loadWorkbook(files[0], {askPassword: async () => (asked++, PASSWORD)});
         expect(asked).toBe(1);
-        expect(matchFormats(firstSheet(wb), SCHEMAS).autoId).toBe('univcoop');
+        expect(matchFormats(firstSheet(wb), SCHEMAS).autoId).toBe('univ-2015-grade3');
     });
 
     it('비밀번호가 틀리면 WrongPasswordError, 취소하면 null', async () => {

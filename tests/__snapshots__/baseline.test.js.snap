@@ -3108,7 +3108,7 @@ exports[`내보내기 > daegyohyeop → univ-2022-common 1`] = `
 ]
 `;
 
-exports[`내보내기 > daegyohyeop → univcoop 1`] = `
+exports[`내보내기 > daegyohyeop → univ-2015-grade3 1`] = `
 [
   [
     "계열번호",
@@ -6896,7 +6896,7 @@ exports[`내보내기 > univ-2022-common → 같은 양식 1`] = `
 ]
 `;
 
-exports[`내보내기 > univcoop → 같은 양식 1`] = `
+exports[`내보내기 > univ-2015-grade3 → 같은 양식 1`] = `
 [
   [
     "계열번호",
@@ -13318,7 +13318,7 @@ exports[`리포트: univ-2022-common > 기준 std 1`] = `
 }
 `;
 
-exports[`리포트: univcoop > 기준 pct 1`] = `
+exports[`리포트: univ-2015-grade3 > 기준 pct 1`] = `
 {
   "csatSchool": [
     [
@@ -13671,7 +13671,7 @@ exports[`리포트: univcoop > 기준 pct 1`] = `
 }
 `;
 
-exports[`리포트: univcoop > 기준 raw 1`] = `
+exports[`리포트: univ-2015-grade3 > 기준 raw 1`] = `
 {
   "csatSchool": [
     [
@@ -14023,7 +14023,7 @@ exports[`리포트: univcoop > 기준 raw 1`] = `
 }
 `;
 
-exports[`리포트: univcoop > 기준 std 1`] = `
+exports[`리포트: univ-2015-grade3 > 기준 std 1`] = `
 {
   "csatSchool": [
     [
@@ -19020,7 +19020,7 @@ exports[`읽기: univ-2022-common > 레코드 1`] = `
 ]
 `;
 
-exports[`읽기: univcoop > 레코드 1`] = `
+exports[`읽기: univ-2015-grade3 > 레코드 1`] = `
 [
   {
     "class": "2",

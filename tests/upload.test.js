@@ -47,9 +47,9 @@ async function xlsxWithSheet(sheetName) {
 describe('표에 늘어놓기', () => {
     it('여러 파일·zip 을 한 줄씩 늘어놓고, 파일마다 양식을 맞추고 회차 이름을 제안한다', async () => {
         const zip = zipSync({'2026-04 학평.xlsx': await xlsxOf(SCHEMAS.kimyoungil)});
-        await addUploads([fakeFile('2026-03 학평.xlsx', await xlsxOf(SCHEMAS.univcoop)), fakeFile('묶음.zip', zip)]);
+        await addUploads([fakeFile('2026-03 학평.xlsx', await xlsxOf(SCHEMAS['univ-2015-grade3'])), fakeFile('묶음.zip', zip)]);
         expect(IMPORT.rows.map(r => [r.name, r.status, r.formatId, r.key])).toEqual([
-            ['2026-03 학평.xlsx', 'ready', 'univcoop', '2026-03'],
+            ['2026-03 학평.xlsx', 'ready', 'univ-2015-grade3', '2026-03'],
             ['2026-04 학평.xlsx', 'ready', 'kimyoungil', '2026-04'],
         ]);
         expect(document.querySelectorAll('#import-area tbody tr[data-import]')).toHaveLength(2);
@@ -58,9 +58,9 @@ describe('표에 늘어놓기', () => {
     });
 
     it('「불러오기」 한 번으로 모두 회차로 넣는다', async () => {
-        await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop)), fakeFile('4월.xlsx', await xlsxOf(SCHEMAS.kkumkugo))]);
+        await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS['univ-2015-grade3'])), fakeFile('4월.xlsx', await xlsxOf(SCHEMAS.kkumkugo))]);
         document.getElementById('import-commit').click();
-        expect(ST.exams.map(e => [e.key, e.formatId, e.students.length])).toEqual([['3월', 'univcoop', 13], ['4월', 'kkumkugo', 13]]);
+        expect(ST.exams.map(e => [e.key, e.formatId, e.students.length])).toEqual([['3월', 'univ-2015-grade3', 13], ['4월', 'kkumkugo', 13]]);
         expect(IMPORT.rows).toEqual([]);
         // 가상 학생 중 한 명은 탐구 과목이 같아 경고가 붙는다
         expect(document.getElementById('toast-msg').innerText).toMatch(/^2개 회차를 불러왔습니다\. 「3월」 탐구 과목 중복 1명/);
@@ -70,19 +70,19 @@ describe('표에 늘어놓기', () => {
     it('파일을 올리면 표로 스크롤한다', async () => {
         const spy = vi.fn();
         document.getElementById('import-area').scrollIntoView = spy;
-        await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop))]);
+        await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS['univ-2015-grade3']))]);
         expect(spy).toHaveBeenCalledWith({behavior: 'smooth', block: 'start'});
     });
 
     it('같은 파일을 또 올리면 표에 다시 넣지 않는다', async () => {
-        const bytes = await xlsxOf(SCHEMAS.univcoop);
+        const bytes = await xlsxOf(SCHEMAS['univ-2015-grade3']);
         await addUploads([fakeFile('3월.xlsx', bytes)]);
         await addUploads([fakeFile('3월 사본.xlsx', bytes)]);
         expect(IMPORT.rows).toHaveLength(1);
     });
 
     it('이미 불러온 파일이면 표에 알린다', async () => {
-        const bytes = await xlsxOf(SCHEMAS.univcoop);
+        const bytes = await xlsxOf(SCHEMAS['univ-2015-grade3']);
         await addUploads([fakeFile('3월.xlsx', bytes)]);
         commitImports();
         await addUploads([fakeFile('3월.xlsx', bytes)]);
@@ -90,7 +90,7 @@ describe('표에 늘어놓기', () => {
     });
 
     it('엑셀이 아닌 파일은 건너뛰고 까닭을 적는다', async () => {
-        await addUploads([fakeFile('성적.xlsm', new Uint8Array(8)), fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop))]);
+        await addUploads([fakeFile('성적.xlsm', new Uint8Array(8)), fakeFile('3월.xlsx', await xlsxOf(SCHEMAS['univ-2015-grade3']))]);
         expect(IMPORT.rows).toHaveLength(1);
         expect(tableText()).toContain('건너뛴 파일 1개: 성적.xlsm(엑셀 파일이 아닙니다.)');
     });
@@ -98,7 +98,7 @@ describe('표에 늘어놓기', () => {
     // 최신 Chrome 의 File 에는 bytes() 메서드가 있다. zip 항목의 바이트로 잘못 보면
     // "Cannot read properties of undefined (reading 'slice')" 로 실패했다
     it('File 의 bytes() 메서드를 바이트로 잘못 보지 않는다', async () => {
-        const bytes = await xlsxOf(SCHEMAS.univcoop);
+        const bytes = await xlsxOf(SCHEMAS['univ-2015-grade3']);
         await addUploads([{...fakeFile('3월.xlsx', bytes), bytes: async () => bytes}]);
         expect(row().status).toBe('ready');
     });
@@ -117,7 +117,7 @@ describe('표에 늘어놓기', () => {
 
 describe('감사 반영', () => {
     it('한 묶음 안의 같은 파일(엑셀과 그것을 담은 zip)도 한 번만 올린다', async () => {
-        const bytes = await xlsxOf(SCHEMAS.univcoop);
+        const bytes = await xlsxOf(SCHEMAS['univ-2015-grade3']);
         await addUploads([fakeFile('a.xlsx', bytes), fakeFile('a.zip', zipSync({'a.xlsx': bytes}))]);
         expect(IMPORT.rows).toHaveLength(1);
     });
@@ -129,7 +129,7 @@ describe('감사 반영', () => {
     });
 
     it('양식을 잘못 고르면 불러오기 전에 그 줄에 범위 밖 점수를 알린다', async () => {
-        await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop))]);
+        await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS['univ-2015-grade3']))]);
         const sel = document.querySelector('[aria-label="3월.xlsx 진학 프로그램 양식"]');
         sel.value = 'kkumkugo';
         sel.dispatchEvent(new Event('change'));
@@ -137,7 +137,7 @@ describe('감사 반영', () => {
     });
 
     it('칸을 바꿔 표를 다시 그려도 포커스가 그 칸에 남는다', async () => {
-        await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop))]);
+        await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS['univ-2015-grade3']))]);
         const sel = document.querySelector('[aria-label="3월.xlsx 진학 프로그램 양식"]');
         sel.focus();
         sel.value = 'kkumkugo';
@@ -154,25 +154,25 @@ describe('감사 반영', () => {
 
 describe('양식', () => {
     it('헤더가 맞지 않으면 고르지 않고, 고를 때까지 불러오기를 막는다. 사람이 고를 수 있다', async () => {
-        const headers = SCHEMAS.univcoop.exportHeaders.map(r => [...r]);
+        const headers = SCHEMAS['univ-2015-grade3'].exportHeaders.map(r => [...r]);
         headers[1][5] = '변경';
-        await addUploads([fakeFile('3월.xlsx', new Uint8Array(await buildWorkbook({...SCHEMAS.univcoop, exportHeaders: headers}).xlsx.writeBuffer()))]);
+        await addUploads([fakeFile('3월.xlsx', new Uint8Array(await buildWorkbook({...SCHEMAS['univ-2015-grade3'], exportHeaders: headers}).xlsx.writeBuffer()))]);
         expect(row().formatId).toBeNull();
         expect(tableText()).toContain('확인 필요');
         expect(document.getElementById('import-commit').disabled).toBe(true);
         expect(document.getElementById('import-note').textContent).toBe('3월.xlsx: 진학 프로그램 양식을 선택하세요.');
         const sel = document.querySelector('[aria-label="3월.xlsx 진학 프로그램 양식"]');
-        sel.value = 'univcoop';
+        sel.value = 'univ-2015-grade3';
         sel.dispatchEvent(new Event('change'));
-        expect(row().formatId).toBe('univcoop');
+        expect(row().formatId).toBe('univ-2015-grade3');
         expect(document.getElementById('import-commit').disabled).toBe(false);
     });
 
     it('자동으로 선택한 양식도 바꿀 수 있고, 미리보기는 앞 5줄과 읽는 열 이름을 보인다', async () => {
-        await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop))]);
+        await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS['univ-2015-grade3']))]);
         document.querySelector('[aria-label="3월.xlsx 미리보기"]').click();
         const preview = document.querySelector('#import-area tbody tr:not([data-import]) table');
-        expect(preview.querySelectorAll(':scope > tbody > tr')).toHaveLength(SCHEMAS.univcoop.headerRows + 5);
+        expect(preview.querySelectorAll(':scope > tbody > tr')).toHaveLength(SCHEMAS['univ-2015-grade3'].headerRows + 5);
         expect(preview.querySelector('thead').textContent).toContain('국어 원점수');
         const sel = document.querySelector('[aria-label="3월.xlsx 진학 프로그램 양식"]');
         sel.value = 'kkumkugo';
@@ -182,7 +182,7 @@ describe('양식', () => {
 });
 
 it('양식 칸의 안내용 첫 항목은 고를 수 없다', async () => {
-    await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop))]);
+    await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS['univ-2015-grade3']))]);
     const first = document.querySelector('[aria-label="3월.xlsx 진학 프로그램 양식"]').options[0];
     expect(first.textContent).toBe('양식 선택');
     expect(first.disabled).toBe(true);
@@ -190,7 +190,7 @@ it('양식 칸의 안내용 첫 항목은 고를 수 없다', async () => {
 
 describe('회차 이름', () => {
     it('비었거나 겹치면 불러오기를 막는다', async () => {
-        await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop)), fakeFile('3월 재시험.xlsx', await xlsxOf(SCHEMAS.kkumkugo))]);
+        await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS['univ-2015-grade3'])), fakeFile('3월 재시험.xlsx', await xlsxOf(SCHEMAS.kkumkugo))]);
         expect(blockers(IMPORT.rows, ST.exams)).toEqual(['회차 이름 「3월」이 겹칩니다.']);
         const input = document.querySelector('[aria-label="3월 재시험.xlsx 회차 이름"]');
         input.value = '';
@@ -204,7 +204,7 @@ describe('회차 이름', () => {
 
     it('이미 있는 회차 이름도 막는다', async () => {
         loadSampleData();
-        await addUploads([fakeFile('샘플.xlsx', await xlsxOf(SCHEMAS.univcoop))]);
+        await addUploads([fakeFile('샘플.xlsx', await xlsxOf(SCHEMAS['univ-2015-grade3']))]);
         row().key = '6월 샘플';
         renderImports();
         expect(document.getElementById('import-note').textContent).toBe('회차 이름 「6월 샘플」이 겹칩니다.');
@@ -217,18 +217,18 @@ describe('비밀번호 파일', () => {
         new Uint8Array(toContainer(encryptAgile(Buffer.from(await xlsxOf(schema)), {password})));
 
     it('열지 않고 「비밀번호 필요」로 두고, 그 줄에서 비밀번호를 넣어 연다', async () => {
-        await addUploads([fakeFile('3월.xlsx', await encrypted(SCHEMAS.univcoop))]);
+        await addUploads([fakeFile('3월.xlsx', await encrypted(SCHEMAS['univ-2015-grade3']))]);
         expect(row().status).toBe('locked');
         expect(tableText()).toContain('비밀번호 필요');
         expect(document.getElementById('import-note').textContent).toBe('3월.xlsx: 비밀번호를 넣어 주세요.');
         document.querySelector('[aria-label="3월.xlsx 비밀번호"]').value = PASSWORD;
         document.querySelector('[aria-label="3월.xlsx 비밀번호 확인"]').click();
         await vi.waitFor(() => expect(row().status).toBe('ready'));
-        expect(row().formatId).toBe('univcoop');
+        expect(row().formatId).toBe('univ-2015-grade3');
     });
 
     it('비밀번호가 틀리면 그 줄에 알린다', async () => {
-        await addUploads([fakeFile('3월.xlsx', await encrypted(SCHEMAS.univcoop))]);
+        await addUploads([fakeFile('3월.xlsx', await encrypted(SCHEMAS['univ-2015-grade3']))]);
         expect(await unlock(row(), '틀림')).toBe(false);
         renderImports();
         expect(tableText()).toContain('비밀번호가 맞지 않습니다.');
@@ -236,7 +236,7 @@ describe('비밀번호 파일', () => {
 
     it('여러 파일에 같은 비밀번호를 한 번에 넣는다. 다른 비밀번호 파일은 잠긴 채 남는다', async () => {
         await addUploads([
-            fakeFile('3월.xlsx', await encrypted(SCHEMAS.univcoop)),
+            fakeFile('3월.xlsx', await encrypted(SCHEMAS['univ-2015-grade3'])),
             fakeFile('4월.xlsx', await encrypted(SCHEMAS.kkumkugo)),
             fakeFile('5월.xlsx', await encrypted(SCHEMAS.kimyoungil, '다른비밀번호')),
         ]);
@@ -289,7 +289,7 @@ function encryptedXls() {
 
 describe('목록 다루기', () => {
     it('「제거」는 그 줄을, 「전체 제거」는 표의 파일을 모두 제거한다. 회차는 건드리지 않는다', async () => {
-        await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop)), fakeFile('4월.xlsx', await xlsxOf(SCHEMAS.kkumkugo))]);
+        await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS['univ-2015-grade3'])), fakeFile('4월.xlsx', await xlsxOf(SCHEMAS.kkumkugo))]);
         document.querySelector('[aria-label="3월.xlsx 목록에서 제거"]').click();
         expect(IMPORT.rows.map(r => r.name)).toEqual(['4월.xlsx']);
         [...document.querySelectorAll('#import-area button')].find(b => b.textContent === '전체 제거').click();
@@ -298,7 +298,7 @@ describe('목록 다루기', () => {
     });
 
     it('체크를 끈 파일은 불러오지 않고 표에 남는다', async () => {
-        await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop)), fakeFile('4월.xlsx', await xlsxOf(SCHEMAS.kkumkugo))]);
+        await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS['univ-2015-grade3'])), fakeFile('4월.xlsx', await xlsxOf(SCHEMAS.kkumkugo))]);
         const box = document.querySelector('[aria-label="4월.xlsx 불러오기"]');
         box.checked = false;
         box.dispatchEvent(new Event('change'));
@@ -308,7 +308,7 @@ describe('목록 다루기', () => {
     });
 
     it('불러온 회차의 경고(탐구 과목 중복·범위 이탈)를 알림으로 모은다', async () => {
-        await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop))]);
+        await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS['univ-2015-grade3']))]);
         row().formatId = 'kkumkugo'; // 일부러 맞지 않는 양식
         renderImports();
         document.getElementById('import-commit').click();
@@ -329,7 +329,7 @@ describe('clearAll (전체 지우기)', () => {
     it('데이터를 비우면 리포트와 내보내기도 빈 상태로 돌아간다', async () => {
         vi.spyOn(console, 'error').mockImplementation(() => {});
         loadSampleData();
-        await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS.univcoop))]);
+        await addUploads([fakeFile('3월.xlsx', await xlsxOf(SCHEMAS['univ-2015-grade3']))]);
         vi.restoreAllMocks();
         expect(ST.data).toHaveLength(100);
         expect(document.getElementById('export-cards').innerHTML).not.toBe('');

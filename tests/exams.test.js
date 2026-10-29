@@ -4,7 +4,7 @@ import {
 } from '../src/js/exams/examStore.js';
 import {identityKeys, linkStudents} from '../src/js/exams/identity.js';
 
-const exam = (key, students = []) => ({key, formatId: 'univcoop', fileName: `${key}.xlsx`, fileHash: 'h', students});
+const exam = (key, students = []) => ({key, formatId: 'univ-2015-grade3', fileName: `${key}.xlsx`, fileHash: 'h', students});
 const keys = (list) => sortedExams(list).map(e => e.key);
 const build = (...ks) => ks.reduce((list, k) => addExam(list, exam(k)), []);
 
