@@ -53,7 +53,7 @@ export const FIELD_LABELS = {
        § FormatSchema 클래스
     ─────────────────────────────────────────── */
 export class FormatSchema {
-    constructor({id, label, color, icon, headerRows, fields, exportHeaders, customGetters, extraColumns, unmappedNote}) {
+    constructor({id, label, color, icon, headerRows, fields, exportHeaders, customGetters, extraColumns, unmappedNote, fixedSubjects}) {
         this.id = id;
         this.label = label;
         this.color = color;
@@ -65,6 +65,8 @@ export class FormatSchema {
         // 사람이 확인해 「담을 필드가 없다」고 정한 열(열 문자)과 그 메모. 읽지 않고 묻지도 않는다
         this.extraColumns = extraColumns || [];
         this.unmappedNote = unmappedNote || '';
+        // 과목명 열이 없는 양식에서 과목명 대신 쓸 이름. 그 과목 점수가 하나라도 있을 때만 붙인다
+        this.fixedSubjects = fixedSubjects || {};
 
         // 숫자 필드에 대해 자동으로 ensureNumericOrZero 적용
         const numericSuffixes = ['_raw', '_std', '_pct', '_grade'];
@@ -95,6 +97,11 @@ export class FormatSchema {
     }
 
     str(row, key) {
+        const fixed = this.fixedSubjects[key];
+        if (fixed !== undefined) {
+            const base = key.replace(/_subject$/, '');
+            return ['_raw', '_std', '_pct', '_grade'].some(sfx => this._raw(row, base + sfx) !== null) ? fixed : '';
+        }
         const v = this._raw(row, key);
         return v !== null ? String(v).trim() : '';
     }
@@ -332,8 +339,12 @@ export const SCHEMAS = {
         customGetters: {
             fl2_subject: convertRomanToNumber,
         },
+        fixedSubjects: {
+            inq1_subject: '사회탐구',
+            inq2_subject: '과학탐구',
+        },
         extraColumns: ['Z', 'AA', 'AB', 'AC'],
-        unmappedNote: '사회탐구는 탐구1, 과학탐구는 탐구2로 읽는다. 직업탐구는 담을 필드가 없어 읽지 않는다',
+        unmappedNote: '사회탐구는 탐구1(과목명 「사회탐구」), 과학탐구는 탐구2(과목명 「과학탐구」)로 읽는다. 직업탐구는 담을 필드가 없어 읽지 않는다',
     }),
 
     /**

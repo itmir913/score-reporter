@@ -8,6 +8,7 @@ import {
     removeSpaces,
     SCHEMAS,
 } from '../src/js/schema.js';
+import {colToIdx} from '../src/js/utils.js';
 
 // 변환 함수들의 첫 인자는 학생 레코드다. 값 변환에는 쓰이지 않아 null을 넘긴다.
 const S = null;
@@ -191,5 +192,20 @@ describe('확인된 미매핑 열(extraColumns)', () => {
         const s = SCHEMAS[id];
         const used = new Set(Object.values(s.fields).filter(Boolean));
         expect(s.extraColumns.filter(c => used.has(c))).toEqual([]);
+    });
+});
+
+describe('과목명 열이 없는 탐구(fixedSubjects)', () => {
+    const s = SCHEMAS['univ-2022-common'];
+    const row = (cells) => { const r = []; for (const [c, v] of Object.entries(cells)) r[colToIdx(c)] = v; return r; };
+
+    it('점수가 있으면 사회탐구·과학탐구라는 과목명을 붙인다', () => {
+        const r = row({R: 40, Y: 3});
+        expect(s.str(r, 'inq1_subject')).toBe('사회탐구');
+        expect(s.str(r, 'inq2_subject')).toBe('과학탐구');
+    });
+
+    it('점수가 모두 비면 과목명도 비운다', () => {
+        expect(s.str(row({R: 40}), 'inq2_subject')).toBe('');
     });
 });
