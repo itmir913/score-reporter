@@ -383,6 +383,28 @@ describe('반이 빈 양식의 번호 칸', () => {
         expect(info[1].textContent).toBe('—');
         expect(info[2].textContent).toBe('30105');
     });
+
+    it('다른 회차 성적표를 인쇄하면 제목에 그 회차 이름이 찍힌다', () => {
+        const before = ST.activeExamKey;
+        ST.activeExamKey = '10월';
+        const printedHtml = () => {
+            let html = '';
+            const open = vi.spyOn(window, 'open').mockImplementation(() => ({
+                document: {write: (h) => { html += h; }, close: () => {}}
+            }));
+            modal.printStudentDetail();
+            open.mockRestore();
+            return html;
+        };
+        const s = data()[0];
+        modal.showStudentRecord(s, '3월');
+        expect(printedHtml()).toContain('3월 모의고사 성적표');
+
+        // 지금 회차에서 다시 열면 지금 회차 이름으로 돌아온다
+        modal.showStudentRecord(s);
+        expect(printedHtml()).toContain('10월 모의고사 성적표');
+        ST.activeExamKey = before;
+    });
 });
 
 describe('원점수가 없는 파일', () => {

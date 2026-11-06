@@ -10,6 +10,7 @@ import {openPopup} from '../ui/popup.js';
 ─────────────────────────────────────────── */
 
 export let _printStudent = null;
+let _printExamKey = '';
 
 /** 지금 성적표에 열려 있는 학생 */
 export const currentStudent = () => _printStudent;
@@ -174,6 +175,7 @@ export function showStudentRecord(s, examKey) {
 
 function _showStudent(s, examKey = '') {
     _printStudent = s;
+    _printExamKey = examKey;
 
     const who = classNumberText(s);
     document.getElementById('modal-student-info').innerText = `${examKey ? `${examKey} · ` : ''}${who ? `${who} ` : ''}${s.name} 성적표`;
@@ -308,7 +310,8 @@ export function printStudentDetail() {
     if (!s) return;
 
     // 제목에는 보고서 제목처럼 회차 이름을 넣는다(「5월 모의고사 성적표」). 회차 이름이 없을 때만 학년도를 쓴다
-    const examKey = String(ST.activeExamKey ?? '').trim();
+    // 통계 탭에서 다른 회차 성적표를 열었으면 지금 회차가 아니라 그 회차 이름을 쓴다
+    const examKey = String(_printExamKey || ST.activeExamKey || '').trim();
     const examYear = s.exam_year ? `${withUnit(s.exam_year, '학년도')} ` : '';
     const title = `${examKey ? `${examKey} ` : examYear}모의고사 성적표`;
 
