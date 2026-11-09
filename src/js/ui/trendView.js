@@ -481,6 +481,7 @@ function renderPerson(root, person, exams, options, keys) {
     const changes = Object.fromEntries(AREAS.map(([k]) => [k, changeVsPrev(rows, k)]));
     const subjectTable = el('table', {class: 'w-full text-base', attrs: {id: 'trend-subject-table'}}, [
         el('thead', {}, [el('tr', {}, [th('회차'), th('영역'), th('과목명 · 직전 응시 대비'), th('원점수', 'text-right'), th('표준점수', 'text-right'), th('백분위', 'text-right'), th('등급', 'text-right')])]),
+        // 회차가 바뀔 때마다 바탕을 번갈아 칠한다(한 회차가 여러 줄이라 어디서 끊기는지 보이게)
         el('tbody', {}, rows.flatMap((r, i) => (r.student
             ? AREAS.map(([k, text]) => {
                 // 탐구1·2가 같은 과목이면 탐구1 줄에 합친 점수를 적는다(「직전 응시 대비」와 같은 점수). 탐구2 줄은 과목명만
@@ -490,7 +491,7 @@ function renderPerson(root, person, exams, options, keys) {
                 return clickableRow(r, [td(r.key, 'font-semibold align-top'), td(text, 'align-top'), twoLines(d.subject || DASH, changeText(changes[k][i])),
                     td(plain(rawOf(d)), 'text-right align-top'), td(plain(d.std), 'text-right align-top'), td(plain(d.pct), 'text-right align-top'), td(plain(d.grade), 'text-right align-top')]);
             })
-            : [absent(r, 6)]))),
+            : [absent(r, 6)]).map(tr => { if (i % 2) tr.classList.add('bg-canvas'); return tr; }))),
     ]);
 
     // ── 합산 석차: 1등이 위로 가게 축을 뒤집는다 ──
@@ -505,9 +506,10 @@ function renderPerson(root, person, exams, options, keys) {
                 subjectBasisChips,
             ]),
             el('div', {class: 'mt-3'}, [subjectChips]),
-            // 넓은 화면에서는 차트와 표를 나란히 둔다. 영역 표는 길어서 차트가 따라 내려오게 붙여 둔다
+            // 넓은 화면에서는 차트와 표를 나란히 둔다. 영역 표는 길어서 차트가 따라 내려오게 붙여 둔다.
+            // 상단바 높이만큼 내려 붙여야 상단바에 가리지 않는다(top-4 는 상단바 밑으로 들어갔다)
             el('div', {class: 'mt-3 grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start [&>*]:min-w-0'}, [
-                el('div', {class: 'relative h-72 xl:sticky xl:top-4'}, [subjectCanvas]),
+                el('div', {class: 'relative h-72 xl:sticky xl:top-[calc(var(--spacing-bar)+1rem)]'}, [subjectCanvas]),
                 el('div', {}, [
                     el('div', {class: 'overflow-x-auto rounded-lg border border-line'}, [subjectTable]),
                     el('p', {class: 'mt-2 text-base text-ink-soft', text: '직전 응시 대비는 그 영역을 응시한 가장 가까운 앞 회차와 비교합니다(결시한 회차는 건너뜁니다). 회차마다 응시 집단이 달라 백분위 차이에는 그 영향도 들어 있습니다.'}),
